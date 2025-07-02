@@ -6,12 +6,11 @@ import { Badge } from "@/components/ui/badge"
 import { Reply, Clock, CheckCircle, Users, FileText, AlertTriangle, Calendar, Home, Key } from "lucide-react"
 import { useRealTime } from "@/contexts/real-time-context"
 import { formatDistanceToNow } from "date-fns"
-import { useEffect, useState } from "react"
 
 export default function BuyerRepliesToRequisitionsPage() {
-  const { updates } = useRealTime()
-  const [requisitionsStatus, setRequisitionsStatus] = useState<"awaiting" | "completed">("awaiting")
-  const [requisitionsData, setRequisitionsData] = useState({
+  const { data, isConnected } = useRealTime()
+
+  const requisitionsData = data?.repliesToRequisitions || {
     status: "awaiting",
     requisitionsSent: 6,
     responsesReceived: 4,
@@ -19,109 +18,10 @@ export default function BuyerRepliesToRequisitionsPage() {
     completionApproved: false,
     completionDate: "2024-04-26T14:00:00Z",
     lastUpdated: new Date().toISOString(),
-    completedBy: "",
-    completedAt: "",
-    totalRequisitions: 6,
-    repliedRequisitions: 4,
-    nextStage: "",
-  })
-
-  // Listen for real-time updates and localStorage changes
-  useEffect(() => {
-    // Check for completion status in localStorage on mount
-    const checkCompletionStatus = () => {
-      const completionStatus = localStorage.getItem("requisitions-completion-status")
-      if (completionStatus) {
-        try {
-          const completionData = JSON.parse(completionStatus)
-          if (completionData.status === "completed") {
-            setRequisitionsStatus("completed")
-            setRequisitionsData((prev) => ({
-              ...prev,
-              ...completionData,
-            }))
-          }
-        } catch (error) {
-          console.error("Error parsing completion status:", error)
-        }
-      }
-    }
-
-    // Check on mount
-    checkCompletionStatus()
-
-    // Listen for real-time updates
-    const requisitionsUpdate = updates.find(
-      (update) => update.type === "requisitions_completed" && update.stage === "replies-to-requisitions",
-    )
-
-    if (requisitionsUpdate?.data) {
-      const completionData = requisitionsUpdate.data
-      setRequisitionsStatus("completed")
-      setRequisitionsData((prev) => ({
-        ...prev,
-        ...completionData,
-      }))
-    }
-
-    // Listen for storage changes (cross-tab sync)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "requisitions-completion-status" && e.newValue) {
-        try {
-          const completionData = JSON.parse(e.newValue)
-          if (completionData.status === "completed") {
-            setRequisitionsStatus("completed")
-            setRequisitionsData((prev) => ({
-              ...prev,
-              ...completionData,
-            }))
-          }
-        } catch (error) {
-          console.error("Error parsing completion status from storage:", error)
-        }
-      }
-    }
-
-    // Listen for platform reset
-    const handlePlatformReset = () => {
-      setRequisitionsStatus("awaiting")
-      setRequisitionsData({
-        status: "awaiting",
-        requisitionsSent: 6,
-        responsesReceived: 4,
-        outstandingItems: 2,
-        completionApproved: false,
-        completionDate: "2024-04-26T14:00:00Z",
-        lastUpdated: new Date().toISOString(),
-        completedBy: "",
-        completedAt: "",
-        totalRequisitions: 6,
-        repliedRequisitions: 4,
-        nextStage: "",
-      })
-    }
-
-    window.addEventListener("storage", handleStorageChange)
-    window.addEventListener("platform-reset", handlePlatformReset)
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange)
-      window.removeEventListener("platform-reset", handlePlatformReset)
-    }
-  }, [updates])
-
-  const isCompleted = requisitionsStatus === "completed"
-  const completionDate = new Date(requisitionsData.completionDate)
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
   }
+
+  const isCompleted = requisitionsData.status === "completed"
+  const completionDate = new Date(requisitionsData.completionDate)
 
   return (
     <TransactionLayout currentStage="replies-to-requisitions" userRole="buyer">
@@ -155,8 +55,8 @@ export default function BuyerRepliesToRequisitionsPage() {
               <CardTitle className="flex items-center justify-between">
                 Requisitions Status
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                  <span className="text-xs text-muted-foreground">Live</span>
+                  <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`} />
+                  <span className="text-xs text-muted-foreground">{isConnected ? "Live" : "Offline"}</span>
                 </div>
               </CardTitle>
             </CardHeader>
@@ -179,42 +79,17 @@ export default function BuyerRepliesToRequisitionsPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    <div className="p-4 border-l-4 border-green-500 bg-green-50">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                        <span className="font-semibold text-green-800">All Requisitions Completed</span>
-                      </div>
-                      <p className="text-sm text-green-700">
-                        All completion requisitions have been answered and approved. Your property purchase is ready for
-                        completion.
-                      </p>
-                      <div className="text-xs text-green-600 mt-2">
-                        Completed:{" "}
-                        {requisitionsData.completedAt ? formatDate(requisitionsData.completedAt) : "Just now"}
-                      </div>
+                  <div className="p-4 border-l-4 border-green-500 bg-green-50">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <span className="font-semibold text-green-800">Requisitions Complete</span>
                     </div>
-
-                    {/* Completion Summary */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Completed By</p>
-                        <p className="font-semibold">{requisitionsData.completedBy || "Your Conveyancer"}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Total Requisitions</p>
-                        <p className="font-semibold">{requisitionsData.totalRequisitions || 6} Items</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">All Replied</p>
-                        <p className="font-semibold">
-                          {requisitionsData.repliedRequisitions || 6} of {requisitionsData.totalRequisitions || 6}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Next Stage</p>
-                        <p className="font-semibold">{requisitionsData.nextStage || "Completion"}</p>
-                      </div>
+                    <p className="text-sm text-green-700">
+                      All completion requisitions have been answered and approved. Your property purchase is ready for
+                      completion.
+                    </p>
+                    <div className="text-xs text-green-600 mt-2">
+                      Completed: {formatDistanceToNow(new Date(requisitionsData.lastUpdated))} ago
                     </div>
                   </div>
                 )}
@@ -363,28 +238,17 @@ export default function BuyerRepliesToRequisitionsPage() {
 
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground mb-4">
-                    {isCompleted
-                      ? "All requisitions resolved - ready for completion"
-                      : "You will be notified immediately when all requisitions are complete and completion is confirmed"}
+                    You will be notified immediately when all requisitions are complete and completion is confirmed
                   </p>
                   <Badge variant="outline" className="px-4 py-2">
-                    {isCompleted ? (
-                      <>
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Ready for Completion
-                      </>
-                    ) : (
-                      <>
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Target Completion:{" "}
-                        {completionDate.toLocaleDateString("en-GB", {
-                          weekday: "long",
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </>
-                    )}
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Target Completion:{" "}
+                    {completionDate.toLocaleDateString("en-GB", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
                   </Badge>
                 </div>
               </div>

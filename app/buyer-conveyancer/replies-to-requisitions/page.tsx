@@ -309,50 +309,26 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
     })
   }
 
-  // Handle continue to completion - THIS IS THE KEY FUNCTION
+  // Handle continue to completion
   const handleContinueToCompletion = () => {
-    // Store completion status in localStorage for immediate cross-tab sync
-    const completionData = {
-      status: "completed",
-      completedBy: "Buyer Conveyancer",
-      completedAt: new Date().toISOString(),
-      totalRequisitions: 6,
-      repliedRequisitions: 6,
-      outstandingRequisitions: 0,
-      nextStage: "Completion",
-      completionDate: "2024-04-26T14:00:00Z",
-    }
-
-    localStorage.setItem("requisitions-completion-status", JSON.stringify(completionData))
-
-    // Send real-time update to notify other pages
+    // Send real-time update
     sendUpdate({
-      type: "requisitions_completed",
-      stage: "replies-to-requisitions",
+      type: "stage_progression",
+      stage: "completion",
       role: "buyer-conveyancer",
-      title: "All Requisitions Completed",
-      description: "All completion requisitions have been resolved and the transaction is ready for completion",
-      data: completionData,
+      title: "Proceeding to Completion",
+      description: "Buyer conveyancer is proceeding to the completion stage",
     })
 
-    // Also trigger a storage event for immediate cross-tab sync
-    window.dispatchEvent(
-      new StorageEvent("storage", {
-        key: "requisitions-completion-status",
-        newValue: JSON.stringify(completionData),
-        storageArea: localStorage,
-      }),
-    )
-
     toast({
-      title: "Requisitions Completed",
-      description: "All requisitions resolved. Proceeding to completion stage.",
+      title: "Proceeding to Completion",
+      description: "Moving to the completion stage of the transaction",
     })
 
     // Navigate to completion page after a brief delay
     setTimeout(() => {
       window.location.href = "/buyer-conveyancer/completion"
-    }, 1500)
+    }, 1000)
   }
 
   // ---------------------------------------------------------------------------
