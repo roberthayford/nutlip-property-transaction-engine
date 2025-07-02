@@ -1,0 +1,20 @@
+// app/estate-agent/search-survey/page.tsx
+"use client"
+
+// app/estate-agent/enquiries/page.tsx
+"use client"
+
+// app/buyer/enquiries/page.tsx
+"use client"
+
+// app/buyer/search-survey/page.tsx
+"use client"
+
+// app/buyer/replies-to-requisitions/page.tsx
+"use client"
+
+// app/seller-conveyancer/nutlip-transaction-fee/page.tsx
+"use client"
+
+// app/buyer-conveyancer/nutlip-transaction-fee/page.tsx
+"use client"
