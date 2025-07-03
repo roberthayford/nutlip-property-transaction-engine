@@ -18,9 +18,23 @@ export default function EstateAgentEnquiriesPage() {
     if (latest) {
       setEnquiriesStatus("completed")
       setCompletionData(latest.data)
-      markAsRead(latest.id) // mark it read so we don’t trigger again
+      markAsRead(latest.id) // mark it read so we don't trigger again
     }
   }, [updates, markAsRead])
+
+  // Listen for real-time updates specifically for enquiries completion from buyer-conveyancer
+  useEffect(() => {
+    const handleRealTimeUpdate = (event: CustomEvent) => {
+      const update = event.detail
+      if (update.type === "stage_completed" && update.stage === "enquiries" && update.role === "buyer-conveyancer") {
+        setEnquiriesStatus("completed")
+        setCompletionData(update.data)
+      }
+    }
+
+    window.addEventListener("realtime-update", handleRealTimeUpdate as EventListener)
+    return () => window.removeEventListener("realtime-update", handleRealTimeUpdate as EventListener)
+  }, [])
 
   return (
     <TransactionLayout currentStage="enquiries" userRole="estate-agent">

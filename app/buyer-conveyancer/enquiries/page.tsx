@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import TransactionLayout from "@/components/transaction-layout"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -25,6 +26,9 @@ import {
   Plus,
   Eye,
   Reply,
+  ArrowRight,
+  Home,
+  AlertCircle,
 } from "lucide-react"
 
 interface Message {
@@ -75,6 +79,7 @@ const ENQUIRY_TEMPLATES = [
 export default function BuyerConveyancerEnquiriesPage() {
   const { toast } = useToast()
   const { sendUpdate } = useRealTime()
+  const router = useRouter()
 
   // State management
   const [enquiries, setEnquiries] = useState<Enquiry[]>([])
@@ -98,16 +103,7 @@ export default function BuyerConveyancerEnquiriesPage() {
   })
   const [followUpMessage, setFollowUpMessage] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  // Function to use template
-  const useTemplate = (template: (typeof ENQUIRY_TEMPLATES)[0]) => {
-    setNewEnquiry({
-      ...newEnquiry,
-      subject: template.subject,
-      category: template.category,
-      content: template.content,
-    })
-  }
+  const [isNavigating, setIsNavigating] = useState(false)
 
   // Load enquiries from localStorage
   useEffect(() => {
@@ -368,6 +364,64 @@ export default function BuyerConveyancerEnquiriesPage() {
     saveEnquiries(updatedEnquiries)
   }
 
+  // Handle continue to mortgage offer
+  const handleContinueToMortgageOffer = async () => {
+    setIsNavigating(true)
+
+    try {
+      // Calculate statistics for the update
+      const totalEnquiries = enquiries.length
+      const answeredEnquiries = enquiries.filter((e) => e.status === "answered").length
+      const completionDate = new Date()
+
+      // Send real-time update with detailed information for the buyer's notification
+      sendUpdate({
+        type: "stage_completed",
+        stage: "enquiries",
+        role: "buyer-conveyancer",
+        title: "Enquiries Stage Completed",
+        description: "Moving to Mortgage Offer stage",
+        data: {
+          completedStage: "enquiries",
+          nextStage: "mortgage-offer",
+          totalEnquiries: totalEnquiries,
+          answeredEnquiries: answeredEnquiries,
+          completedAt: completionDate.toISOString(),
+          stage: "enquiries",
+          status: "completed",
+        },
+      })
+
+      // Show success toast
+      toast({
+        title: "Enquiries Stage Completed",
+        description: "Proceeding to Mortgage Offer stage...",
+      })
+
+      // Navigate to mortgage offer page after a brief delay
+      setTimeout(() => {
+        router.push("/buyer-conveyancer/mortgage-offer")
+      }, 1500)
+    } catch (error) {
+      console.error("Error proceeding to mortgage offer:", error)
+      toast({
+        title: "Navigation Error",
+        description: "Failed to proceed to Mortgage Offer. Please try again.",
+        variant: "destructive",
+      })
+      setIsNavigating(false)
+    }
+  }
+
+  // Check if we can proceed to mortgage offer
+  const canProceedToMortgageOffer = () => {
+    const criticalEnquiries = enquiries.filter((e) => e.priority === "urgent" || e.priority === "high")
+    const answeredCriticalEnquiries = criticalEnquiries.filter((e) => e.status === "answered")
+
+    // Allow proceeding if no critical enquiries or all critical enquiries are answered
+    return criticalEnquiries.length === 0 || criticalEnquiries.length === answeredCriticalEnquiries.length
+  }
+
   // Filter enquiries
   const filteredEnquiries = enquiries.filter((enquiry) => {
     // Tab filtering
@@ -424,6 +478,25 @@ export default function BuyerConveyancerEnquiriesPage() {
   }
 
   const stats = getEnquiryStats()
+  const canProceed = canProceedToMortgageOffer()
+
+  const useTemplate = (template: (typeof ENQUIRY_TEMPLATES)[0]) => {
+    setNewEnquiry({
+      ...newEnquiry,
+      subject: template.subject,
+      category: template.category,
+      content: template.content,
+    })
+  }
+
+  const handleTemplateClick = (template: (typeof ENQUIRY_TEMPLATES)[0]) => {
+    setNewEnquiry({
+      ...newEnquiry,
+      subject: template.subject,
+      category: template.category,
+      content: template.content,
+    })
+  }
 
   return (
     <TransactionLayout currentStage="enquiries" userRole="buyer-conveyancer">
@@ -648,6 +721,38 @@ export default function BuyerConveyancerEnquiriesPage() {
           )}
         </div>
 
+        {/* Continue to Mortgage Offer Button */}
+        <div className="flex justify-between items-center pt-6 border-t">
+          <div className="flex-1">
+            {!canProceed && (
+              <div className="flex items-center gap-2 text-amber-600">
+                <AlertCircle className="h-4 w-4" />
+                <span className="text-sm">Please resolve all urgent and high priority enquiries before proceeding</span>
+              </div>
+            )}
+          </div>
+
+          <Button
+            onClick={handleContinueToMortgageOffer}
+            disabled={!canProceed || isNavigating}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+            size="lg"
+          >
+            {isNavigating ? (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <Home className="h-4 w-4" />
+                Continue to Mortgage Offer
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </div>
+
         {/* Compose Modal */}
         {showComposeModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -741,7 +846,7 @@ export default function BuyerConveyancerEnquiriesPage() {
                         <Card
                           key={index}
                           className="cursor-pointer hover:bg-gray-50"
-                          onClick={() => useTemplate(template)}
+                          onClick={() => handleTemplateClick(template)}
                         >
                           <CardContent className="p-3">
                             <div className="flex items-center gap-2 mb-2">

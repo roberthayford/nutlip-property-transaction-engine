@@ -1,51 +1,33 @@
 "use client"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import TransactionLayout from "@/components/transaction-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { MessageSquare, Bell, Info, Clock, CheckCircle, CreditCard } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { MessageSquare, Bell, Info, CheckCircle, Clock, Home, ArrowRight } from "lucide-react"
 import { useRealTime } from "@/contexts/real-time-context"
-import { useEffect, useState } from "react"
 
 export default function BuyerEnquiriesPage() {
-  const { transactionState, updates } = useRealTime()
-  const [enquiriesCompleted, setEnquiriesCompleted] = useState(false)
+  const { updates, markAsRead } = useRealTime()
+  const router = useRouter()
+  const [enquiriesStatus, setEnquiriesStatus] = useState<"awaiting" | "completed">("awaiting")
   const [completionData, setCompletionData] = useState<any>(null)
-  const [mortgageOfferCompleted, setMortgageOfferCompleted] = useState(false)
-  const [mortgageOfferData, setMortgageOfferData] = useState<any>(null)
 
+  // Listen once for an unread "enquiries" completion update
   useEffect(() => {
-    const unreadUpdates = updates.filter((update) => !update.read)
+    const latest = updates.find((u) => !u.read && u.type === "stage_completed" && u.stage === "enquiries")
 
-    // Check for enquiries completion
-    const enquiriesUpdate = unreadUpdates.find(
-      (update) =>
-        update.type === "stage_completed" && update.data?.stage === "enquiries" && update.data?.status === "completed",
-    )
-
-    if (enquiriesUpdate && !enquiriesCompleted) {
-      setEnquiriesCompleted(true)
-      setCompletionData(enquiriesUpdate.data)
-
-      // Mark as read
-      const updatedUpdates = updates.map((u) => (u.id === enquiriesUpdate.id ? { ...u, read: true } : u))
-      localStorage.setItem("realtime_updates", JSON.stringify(updatedUpdates))
+    if (latest) {
+      setEnquiriesStatus("completed")
+      setCompletionData(latest.data)
+      markAsRead(latest.id) // mark it read so we don't trigger again
     }
+  }, [updates, markAsRead])
 
-    // Check for mortgage offer completion
-    const mortgageUpdate = unreadUpdates.find(
-      (update) =>
-        update.type === "stage_completed" && update.stage === "mortgage-offer" && update.role === "buyer-conveyancer",
-    )
-
-    if (mortgageUpdate && !mortgageOfferCompleted) {
-      setMortgageOfferCompleted(true)
-      setMortgageOfferData(mortgageUpdate.data)
-
-      // Mark as read
-      const updatedUpdates = updates.map((u) => (u.id === mortgageUpdate.id ? { ...u, read: true } : u))
-      localStorage.setItem("realtime_updates", JSON.stringify(updatedUpdates))
-    }
-  }, [updates, enquiriesCompleted, mortgageOfferCompleted])
+  const handleContinueToMortgageOffer = () => {
+    router.push("/buyer/mortgage-offer")
+  }
 
   return (
     <TransactionLayout currentStage="enquiries" userRole="buyer">
@@ -53,188 +35,171 @@ export default function BuyerEnquiriesPage() {
         <div className="flex items-center space-x-3">
           <MessageSquare className="h-8 w-8 text-primary" />
           <div>
-            <h1 className="text-3xl font-bold">Enquiries - Buyer Monitoring</h1>
+            <h1 className="text-3xl font-bold">Enquiries - Buyer View</h1>
             <p className="text-muted-foreground">Monitor legal enquiry progress handled by your conveyancer.</p>
           </div>
         </div>
 
-        {/* Role Information Card */}
+        {/* Buyer Monitoring Role */}
         <Card className="border-blue-200 bg-blue-50">
           <CardContent className="pt-6">
             <div className="flex items-start space-x-3">
               <Info className="h-5 w-5 text-blue-600 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-blue-900 mb-2">Conveyancer-Handled Stage</h3>
+                <h3 className="font-semibold text-blue-900 mb-2">Buyer Monitoring Role</h3>
                 <p className="text-blue-800 text-sm mb-3">
-                  This stage is handled by your conveyancer and the seller's conveyancer. Legal enquiries are sent,
-                  reviewed, and responded to by the legal teams to protect your purchase.
+                  The enquiries stage is handled by your conveyancer who will send legal enquiries to the seller's
+                  conveyancer on your behalf. These enquiries help protect your investment by clarifying important
+                  property details.
                 </p>
                 <div className="flex items-center space-x-2 text-blue-700 text-sm">
                   <Bell className="h-4 w-4" />
-                  <span>
-                    You will be automatically notified when this stage is completed or if any issues require your
-                    attention.
-                  </span>
+                  <span>You will be automatically notified when this stage is completed or if any issues arise.</span>
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Automatic Notifications Card */}
+        {/* Notification Status */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Bell className="h-5 w-5" />
-              <span>Automatic Notifications</span>
+              <span>Notification Status</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Awaiting Completion Notification */}
-            <div className="p-4 border rounded-lg">
-              {!enquiriesCompleted ? (
-                <div className="flex items-start space-x-3">
-                  <Clock className="h-5 w-5 text-amber-600 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-amber-800">Awaiting Completion Notification</h4>
-                      <Badge className="bg-amber-100 text-amber-800">Monitoring</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Your conveyancer is currently handling all legal enquiries. You will be automatically notified
-                      when this stage is completed and the transaction can proceed to the mortgage offer stage.
-                    </p>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Current Status:</span>
-                        <span className="font-medium text-amber-700">Enquiries in Progress</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Expected Timeline:</span>
-                        <span className="font-medium">7-10 business days</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Next Stage:</span>
-                        <span className="font-medium">Mortgage Offer</span>
+          <CardContent>
+            <div className="space-y-4">
+              {enquiriesStatus === "awaiting" ? (
+                <>
+                  <div className="flex items-center justify-between p-4 border rounded-lg bg-amber-50 border-amber-200">
+                    <div className="flex items-center space-x-3">
+                      <Clock className="h-5 w-5 text-amber-600" />
+                      <div>
+                        <h4 className="font-semibold text-amber-900">Awaiting Completion Notification</h4>
+                        <p className="text-sm text-amber-800">
+                          Your conveyancer is handling all legal enquiries. You will be notified when completed.
+                        </p>
                       </div>
                     </div>
+                    <Badge className="bg-amber-100 text-amber-800">Monitoring</Badge>
                   </div>
-                </div>
+                </>
               ) : (
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-green-800">Enquiries Stage Completed</h4>
-                      <Badge className="bg-green-100 text-green-800">Completed</Badge>
+                <>
+                  <div className="flex items-center justify-between p-4 border rounded-lg bg-green-50 border-green-200">
+                    <div className="flex items-center space-x-3">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <div>
+                        <h4 className="font-semibold text-green-900">Enquiries Stage Completed</h4>
+                        <p className="text-sm text-green-800">
+                          All pre-contract enquiries have been resolved by your conveyancer.
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      All legal enquiries have been successfully resolved by your conveyancer. The transaction is now
-                      ready to proceed to the mortgage offer stage.
-                    </p>
-                    {completionData && (
-                      <div className="space-y-2 text-sm">
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Completion Date:</span>
-                          <span className="font-medium text-green-700">
+                    <Badge className="bg-green-100 text-green-800">Completed</Badge>
+                  </div>
+
+                  {completionData && (
+                    <div className="p-4 border rounded-lg bg-blue-50 border-blue-200">
+                      <h4 className="font-semibold text-blue-900 mb-2">Completion Summary</h4>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-blue-700">Total Enquiries:</span>
+                          <span className="font-medium ml-2">{completionData.totalEnquiries}</span>
+                        </div>
+                        <div>
+                          <span className="text-blue-700">Answered:</span>
+                          <span className="font-medium ml-2">{completionData.answeredEnquiries}</span>
+                        </div>
+                        <div>
+                          <span className="text-blue-700">Completed:</span>
+                          <span className="font-medium ml-2">
                             {new Date(completionData.completedAt).toLocaleDateString()}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Total Enquiries:</span>
-                          <span className="font-medium">{completionData.totalEnquiries || 12}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">All Answered:</span>
-                          <span className="font-medium text-green-700">✓ Yes</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Next Stage:</span>
-                          <span className="font-medium">{completionData.nextStage || "Mortgage Offer"}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Mortgage Offer Progress Notification */}
-            {mortgageOfferCompleted && (
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-start space-x-3">
-                  <CreditCard className="h-5 w-5 text-green-600 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-green-800">Mortgage Offer Stage Completed</h4>
-                      <Badge className="bg-green-100 text-green-800">Completed</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Your mortgage offer has been successfully processed and submitted by your conveyancer. The
-                      transaction is progressing to the completion date stage.
-                    </p>
-                    {mortgageOfferData && mortgageOfferData.mortgageOffer && (
-                      <div className="space-y-2 text-sm">
-                        {mortgageOfferData.mortgageOffer.status === "completed" ? (
-                          <>
-                            <div className="flex items-center justify-between">
-                              <span className="text-muted-foreground">Lender:</span>
-                              <span className="font-medium text-green-700">
-                                {mortgageOfferData.mortgageOffer.lenderName}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-muted-foreground">Loan Amount:</span>
-                              <span className="font-medium">£{mortgageOfferData.mortgageOffer.loanAmount}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-muted-foreground">Interest Rate:</span>
-                              <span className="font-medium">{mortgageOfferData.mortgageOffer.interestRate}%</span>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Purchase Type:</span>
-                            <span className="font-medium text-blue-700">Cash Purchase</span>
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Submitted:</span>
-                          <span className="font-medium text-green-700">
-                            {new Date(mortgageOfferData.mortgageOffer.submittedAt).toLocaleDateString()}
+                        <div>
+                          <span className="text-blue-700">Next Stage:</span>
+                          <span className="font-medium ml-2 capitalize">
+                            {completionData.nextStage?.replace("-", " ")}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Next Stage:</span>
-                          <span className="font-medium">Completion Date</span>
-                        </div>
                       </div>
-                    )}
-                  </div>
+                      <div className="mt-4">
+                        <Button
+                          onClick={handleContinueToMortgageOffer}
+                          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          <Home className="h-4 w-4" />
+                          Continue to Mortgage Offer
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold mb-2 text-green-800">Stage Completion</h4>
+                <p className="text-sm text-muted-foreground mb-2">
+                  You will be notified immediately when all enquiries are resolved and this stage is completed.
+                </p>
+                <div className="text-xs text-green-600">✓ Email and in-app notification enabled</div>
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Next Steps:</strong>{" "}
+                  {enquiriesStatus === "completed"
+                    ? "The transaction has automatically progressed to the mortgage offer stage."
+                    : "Once all enquiries are resolved by your conveyancer, you will be notified and the transaction will automatically progress to the mortgage offer stage."}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Your Role Summary */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Role During Enquiries</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
+                <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-blue-900 mb-1">Monitoring Only</h4>
+                  <p className="text-sm text-blue-800">
+                    Your role during this stage is purely observational. Your conveyancer handles all legal enquiries
+                    and communications on your behalf.
+                  </p>
                 </div>
               </div>
-            )}
 
-            {/* Stage Completion */}
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-semibold mb-2 text-green-800">Stage Completion</h4>
-              <p className="text-sm text-muted-foreground mb-2">
-                You will be notified immediately when all enquiries are resolved and your purchase protection is
-                complete.
-              </p>
-              <div className="text-xs text-green-600">✓ Email and in-app notification enabled</div>
-            </div>
+              <div className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-green-900 mb-1">Automatic Updates</h4>
+                  <p className="text-sm text-green-800">
+                    You will receive automatic notifications about stage completion and any issues that require your
+                    attention.
+                  </p>
+                </div>
+              </div>
 
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-semibold text-blue-800 mb-2">What Are Enquiries?</h4>
-              <p className="text-sm text-blue-700 mb-2">
-                Pre-contract enquiries are legal questions your conveyancer sends to the seller's conveyancer to uncover
-                any issues that could affect your purchase decision or the property's value.
-              </p>
-              <p className="text-sm text-blue-700">
-                <strong>Next Steps:</strong> Once all enquiries are satisfactorily answered, you will be notified and
-                the transaction will progress to the mortgage offer stage.
-              </p>
+              <div className="flex items-start space-x-3 p-3 bg-amber-50 rounded-lg">
+                <Bell className="h-5 w-5 text-amber-600 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-amber-900 mb-1">Issue Escalation</h4>
+                  <p className="text-sm text-amber-800">
+                    If significant delays or issues arise that could affect the transaction timeline, you will be
+                    immediately notified to take appropriate action.
+                  </p>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
