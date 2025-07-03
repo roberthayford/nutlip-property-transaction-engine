@@ -1,512 +1,573 @@
 "use client"
 
-import type React from "react"
-
-/**
- * Buyer-Conveyancer ▸ Mortgage Offer
- * -------------------------------------------------
- * 1.  Uses TransactionLayout (keeps navigation / real-time widgets consistent)
- * 2.  Sends a single real-time "status_changed" update on successful submit
- * 3.  All icons come from lucide-react (already installed by default)
- * 4.  No dynamic import / no heavy third-party libs → avoids chunk-loading issues
- */
-
-import { useState } from "react"
-import Link from "next/link"
-import { CreditCard, FileText, AlertTriangle, CheckCircle, Clock, Send, X } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import TransactionLayout from "@/components/transaction-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-
-import TransactionLayout from "@/components/transaction-layout"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { useToast } from "@/hooks/use-toast"
 import { useRealTime } from "@/contexts/real-time-context"
-import { toast } from "@/hooks/use-toast"
-
-interface MortgageForm {
-  lenderName: string
-  lenderReference: string
-  loanAmount: string
-  interestRate: string
-  rateType: string
-  ratePeriod: string
-  offerValidUntil: string
-  monthlyPayment: string
-  propertyValuation: string
-  ltvRatio: string
-  specialConditions: string
-  buildingInsuranceRequired: boolean
-  lifeInsuranceRequired: boolean
-  additionalNotes: string
-}
+import {
+  CheckCircle,
+  Clock,
+  Home,
+  FileText,
+  Info,
+  ArrowRight,
+  Calendar,
+  Building2,
+  PoundSterling,
+  Percent,
+} from "lucide-react"
 
 export default function BuyerConveyancerMortgageOfferPage() {
+  const router = useRouter()
+  const { toast } = useToast()
   const { sendUpdate } = useRealTime()
 
-  const [form, setForm] = useState<MortgageForm>({
-    lenderName: "",
-    lenderReference: "",
-    loanAmount: "",
-    interestRate: "",
-    rateType: "",
-    ratePeriod: "",
-    offerValidUntil: "",
-    monthlyPayment: "",
-    propertyValuation: "",
-    ltvRatio: "",
-    specialConditions: "",
-    buildingInsuranceRequired: false,
-    lifeInsuranceRequired: false,
-    additionalNotes: "",
-  })
-
-  const [submitting, setSubmitting] = useState(false)
+  // Form states
   const [submitted, setSubmitted] = useState(false)
   const [mortgageNotApplicable, setMortgageNotApplicable] = useState(false)
-  const [processingNotApplicable, setProcessingNotApplicable] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  /* ------------------------------ helpers ----------------------------- */
-  const change = (field: keyof MortgageForm, value: string | boolean) =>
-    setForm((prev) => ({ ...prev, [field]: value }))
+  // Mortgage form data
+  const [formData, setFormData] = useState({
+    lenderName: "",
+    loanAmount: "",
+    interestRate: "",
+    rateType: "fixed",
+    termYears: "",
+    monthlyPayment: "",
+    depositAmount: "",
+    mortgageType: "repayment",
+    specialConditions: "",
+    offerValidUntil: "",
+    notes: "",
+  })
 
-  const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault()
-    setSubmitting(true)
+  // Load saved state on component mount
+  useEffect(() => {
+    const savedSubmitted = localStorage.getItem("buyer-conveyancer-mortgage-submitted")
+    const savedNotApplicable = localStorage.getItem("buyer-conveyancer-mortgage-not-applicable")
+    const savedFormData = localStorage.getItem("buyer-conveyancer-mortgage-form")
 
-    try {
-      // Simulate server round-trip
-      await new Promise((r) => setTimeout(r, 1500))
-
-      // Send real-time update to estate agent and other parties
-      sendUpdate({
-        type: "stage_completed",
-        stage: "mortgage-offer",
-        role: "buyer-conveyancer",
-        title: "Mortgage Offer Process Completed",
-        description: `Mortgage offer from ${form.lenderName} for £${form.loanAmount} has been processed and submitted to seller conveyancer.`,
-        data: {
-          mortgageOffer: {
-            ...form,
-            submittedAt: new Date().toISOString(),
-            status: "completed",
-          },
-        },
-      })
-
+    if (savedSubmitted === "true") {
       setSubmitted(true)
-      toast({
-        title: "Success",
-        description: "Mortgage offer details sent to the seller-conveyancer and estate agent notified.",
-      })
-    } catch {
-      toast({
-        title: "Error",
-        description: "Unable to submit mortgage offer. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setSubmitting(false)
     }
-  }
-
-  const handleMortgageNotApplicable = async () => {
-    setProcessingNotApplicable(true)
-
-    try {
-      // Simulate server round-trip
-      await new Promise((r) => setTimeout(r, 1000))
-
-      // Send real-time update to estate agent and other parties
-      sendUpdate({
-        type: "stage_completed",
-        stage: "mortgage-offer",
-        role: "buyer-conveyancer",
-        title: "Mortgage Not Required",
-        description: "Buyer is proceeding without a mortgage (cash purchase). No mortgage offer required.",
-        data: {
-          mortgageOffer: {
-            status: "not_applicable",
-            reason: "cash_purchase",
-            submittedAt: new Date().toISOString(),
-          },
-        },
-      })
-
+    if (savedNotApplicable === "true") {
       setMortgageNotApplicable(true)
-      toast({
-        title: "Confirmed",
-        description: "All parties have been notified that no mortgage is required for this transaction.",
-      })
-    } catch {
-      toast({
-        title: "Error",
-        description: "Unable to process request. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setProcessingNotApplicable(false)
     }
+    if (savedFormData) {
+      setFormData(JSON.parse(savedFormData))
+    }
+  }, [])
+
+  // Listen for platform reset events
+  useEffect(() => {
+    const handlePlatformReset = () => {
+      console.log("Platform reset detected, clearing buyer conveyancer mortgage offer data")
+
+      // Reset all state
+      setSubmitted(false)
+      setMortgageNotApplicable(false)
+      setIsSubmitting(false)
+      setFormData({
+        lenderName: "",
+        loanAmount: "",
+        interestRate: "",
+        rateType: "fixed",
+        termYears: "",
+        monthlyPayment: "",
+        depositAmount: "",
+        mortgageType: "repayment",
+        specialConditions: "",
+        offerValidUntil: "",
+        notes: "",
+      })
+
+      // Clear localStorage
+      localStorage.removeItem("buyer-conveyancer-mortgage-submitted")
+      localStorage.removeItem("buyer-conveyancer-mortgage-not-applicable")
+      localStorage.removeItem("buyer-conveyancer-mortgage-form")
+
+      toast({
+        title: "Mortgage Offer Reset",
+        description: "All mortgage data has been cleared and reset to default state.",
+      })
+    }
+
+    window.addEventListener("platform-reset", handlePlatformReset)
+    return () => window.removeEventListener("platform-reset", handlePlatformReset)
+  }, [toast])
+
+  const handleInputChange = (field: string, value: string) => {
+    const updatedFormData = { ...formData, [field]: value }
+    setFormData(updatedFormData)
+    localStorage.setItem("buyer-conveyancer-mortgage-form", JSON.stringify(updatedFormData))
   }
 
-  /* ----------------------------- fallback for submitted ----------------------------- */
-  if (submitted) {
-    return (
-      <TransactionLayout
-        currentStage="mortgage-offer"
-        userRole="buyer-conveyancer"
-        title="Mortgage Offer Submitted"
-        description="Details have been shared with the seller conveyancer."
-      >
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-green-700">
-              <CheckCircle className="h-5 w-5" />
-              Submission confirmed
-            </CardTitle>
-            <CardDescription>You can proceed once the seller conveyancer acknowledges the offer.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Info label="Lender" value={form.lenderName} />
-            <Info label="Loan Amount" value={`£${form.loanAmount}`} />
-            <Info label="Interest Rate" value={`${form.interestRate}% (${form.rateType})`} />
-            <Info label="Offer valid until" value={form.offerValidUntil} />
-            <Info label="Monthly Payment" value={`£${form.monthlyPayment}`} />
-          </CardContent>
-        </Card>
+  const handleSubmitMortgageOffer = async () => {
+    // Validate required fields
+    if (!formData.lenderName || !formData.loanAmount || !formData.interestRate) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required mortgage details.",
+        variant: "destructive",
+      })
+      return
+    }
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <Button asChild>
-            <Link href="/buyer-conveyancer/completion-date">Continue to Completion Date</Link>
-          </Button>
-          <Button variant="outline" onClick={() => setSubmitted(false)}>
-            Edit details
-          </Button>
-        </div>
-      </TransactionLayout>
+    setIsSubmitting(true)
+
+    // Simulate processing
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+
+    setSubmitted(true)
+    localStorage.setItem("buyer-conveyancer-mortgage-submitted", "true")
+
+    // Send real-time update
+    sendUpdate({
+      type: "stage_completed",
+      stage: "mortgage-offer",
+      role: "buyer-conveyancer",
+      title: "Mortgage Offer Submitted",
+      description: `Mortgage offer from ${formData.lenderName} for £${formData.loanAmount} submitted to seller conveyancer`,
+      data: {
+        mortgageOffer: {
+          ...formData,
+          status: "completed",
+          submittedAt: new Date().toISOString(),
+        },
+      },
+    })
+
+    setIsSubmitting(false)
+
+    toast({
+      title: "Mortgage Offer Submitted! 🎉",
+      description: `Mortgage offer from ${formData.lenderName} has been successfully submitted to the seller conveyancer.`,
+    })
+  }
+
+  const handleMarkNotApplicable = async () => {
+    setIsSubmitting(true)
+
+    // Simulate processing
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    setMortgageNotApplicable(true)
+    localStorage.setItem("buyer-conveyancer-mortgage-not-applicable", "true")
+
+    // Send real-time update
+    sendUpdate({
+      type: "stage_completed",
+      stage: "mortgage-offer",
+      role: "buyer-conveyancer",
+      title: "Cash Purchase Confirmed",
+      description: "This is a cash purchase - no mortgage offer required",
+      data: {
+        mortgageOffer: {
+          status: "not_applicable",
+          reason: "Cash purchase",
+          submittedAt: new Date().toISOString(),
+        },
+      },
+    })
+
+    setIsSubmitting(false)
+
+    toast({
+      title: "Cash Purchase Confirmed",
+      description: "Transaction marked as cash purchase - no mortgage offer required.",
+    })
+  }
+
+  const handleContinueToCompletionDate = () => {
+    router.push("/buyer-conveyancer/completion-date")
+  }
+
+  const getStatusBadge = () => {
+    if (submitted) {
+      return (
+        <Badge className="bg-green-100 text-green-800">
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Mortgage Offer Submitted
+        </Badge>
+      )
+    }
+    if (mortgageNotApplicable) {
+      return (
+        <Badge className="bg-blue-100 text-blue-800">
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Cash Purchase
+        </Badge>
+      )
+    }
+    return (
+      <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+        <Clock className="h-3 w-3 mr-1" />
+        Awaiting Submission
+      </Badge>
     )
   }
 
-  /* ----------------------------- fallback for not applicable ----------------------------- */
-  if (mortgageNotApplicable) {
-    return (
-      <TransactionLayout
-        currentStage="mortgage-offer"
-        userRole="buyer-conveyancer"
-        title="Mortgage Not Required"
-        description="All parties have been notified that no mortgage is needed."
-      >
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-700">
-              <CheckCircle className="h-5 w-5" />
-              Cash Purchase Confirmed
-            </CardTitle>
-            <CardDescription>
-              The buyer is proceeding without a mortgage. All parties have been notified.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-5 w-5 text-blue-600" />
-                <div>
-                  <div className="font-medium">No Mortgage Required</div>
-                  <div className="text-sm text-gray-600">
-                    This is a cash purchase. The estate agent and seller conveyancer have been notified.
+  return (
+    <TransactionLayout currentStage="mortgage-offer" userRole="buyer-conveyancer">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Mortgage Offer</h1>
+            <p className="text-muted-foreground">Submit the buyer's mortgage offer details</p>
+          </div>
+          {getStatusBadge()}
+        </div>
+
+        {/* Completion Status */}
+        {(submitted || mortgageNotApplicable) && (
+          <Card className="border-green-200 bg-green-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-green-800">
+                <CheckCircle className="h-5 w-5" />
+                {mortgageNotApplicable ? "Cash Purchase Confirmed" : "Mortgage Offer Submitted Successfully"}
+              </CardTitle>
+              <CardDescription>
+                {mortgageNotApplicable
+                  ? "This transaction has been confirmed as a cash purchase"
+                  : "The mortgage offer has been submitted to the seller conveyancer"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {submitted && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-white rounded-lg border border-green-200">
+                  <div>
+                    <div className="text-sm font-medium text-green-800">Lender</div>
+                    <div className="font-semibold">{formData.lenderName}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-green-800">Loan Amount</div>
+                    <div className="font-semibold">£{formData.loanAmount}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-green-800">Interest Rate</div>
+                    <div className="font-semibold">
+                      {formData.interestRate}% ({formData.rateType})
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-green-800">Term</div>
+                    <div className="font-semibold">{formData.termYears} years</div>
                   </div>
                 </div>
+              )}
+
+              {mortgageNotApplicable && (
+                <div className="p-4 bg-white rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-3">
+                    <Building2 className="h-6 w-6 text-blue-600" />
+                    <div>
+                      <h4 className="font-semibold text-blue-900">Cash Purchase Transaction</h4>
+                      <p className="text-sm text-blue-700">
+                        No mortgage offer is required for this transaction as it is a cash purchase.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Mortgage Offer Form */}
+        {!submitted && !mortgageNotApplicable && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Home className="h-5 w-5" />
+                Mortgage Offer Details
+              </CardTitle>
+              <CardDescription>Enter the buyer's mortgage offer information</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Lender Information */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-lg">Lender Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="lenderName">Lender Name *</Label>
+                    <Input
+                      id="lenderName"
+                      placeholder="e.g., Halifax, Nationwide, HSBC"
+                      value={formData.lenderName}
+                      onChange={(e) => handleInputChange("lenderName", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="loanAmount">Loan Amount *</Label>
+                    <div className="relative">
+                      <PoundSterling className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="loanAmount"
+                        placeholder="e.g., 360000"
+                        value={formData.loanAmount}
+                        onChange={(e) => handleInputChange("loanAmount", e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Interest Rate & Terms */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-lg">Interest Rate & Terms</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="interestRate">Interest Rate *</Label>
+                    <div className="relative">
+                      <Input
+                        id="interestRate"
+                        placeholder="e.g., 4.5"
+                        value={formData.interestRate}
+                        onChange={(e) => handleInputChange("interestRate", e.target.value)}
+                        className="pr-8"
+                      />
+                      <Percent className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Rate Type</Label>
+                    <RadioGroup
+                      value={formData.rateType}
+                      onValueChange={(value) => handleInputChange("rateType", value)}
+                      className="flex gap-4 mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="fixed" id="fixed" />
+                        <Label htmlFor="fixed">Fixed</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="variable" id="variable" />
+                        <Label htmlFor="variable">Variable</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  <div>
+                    <Label htmlFor="termYears">Term (Years)</Label>
+                    <Input
+                      id="termYears"
+                      placeholder="e.g., 25"
+                      value={formData.termYears}
+                      onChange={(e) => handleInputChange("termYears", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Details */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-lg">Payment Details</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="monthlyPayment">Monthly Payment</Label>
+                    <div className="relative">
+                      <PoundSterling className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="monthlyPayment"
+                        placeholder="e.g., 1850"
+                        value={formData.monthlyPayment}
+                        onChange={(e) => handleInputChange("monthlyPayment", e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="depositAmount">Deposit Amount</Label>
+                    <div className="relative">
+                      <PoundSterling className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="depositAmount"
+                        placeholder="e.g., 90000"
+                        value={formData.depositAmount}
+                        onChange={(e) => handleInputChange("depositAmount", e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Mortgage Type</Label>
+                    <RadioGroup
+                      value={formData.mortgageType}
+                      onValueChange={(value) => handleInputChange("mortgageType", value)}
+                      className="flex gap-4 mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="repayment" id="repayment" />
+                        <Label htmlFor="repayment">Repayment</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="interest-only" id="interest-only" />
+                        <Label htmlFor="interest-only">Interest Only</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Information */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-lg">Additional Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="offerValidUntil">Offer Valid Until</Label>
+                    <Input
+                      id="offerValidUntil"
+                      type="date"
+                      value={formData.offerValidUntil}
+                      onChange={(e) => handleInputChange("offerValidUntil", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="specialConditions">Special Conditions</Label>
+                    <Input
+                      id="specialConditions"
+                      placeholder="e.g., Subject to valuation"
+                      value={formData.specialConditions}
+                      onChange={(e) => handleInputChange("specialConditions", e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="notes">Additional Notes</Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="Any additional information about the mortgage offer..."
+                    value={formData.notes}
+                    onChange={(e) => handleInputChange("notes", e.target.value)}
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t">
+                <Button
+                  onClick={handleSubmitMortgageOffer}
+                  disabled={isSubmitting}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Clock className="h-4 w-4 mr-2 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Submit Mortgage Offer
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  onClick={handleMarkNotApplicable}
+                  disabled={isSubmitting}
+                  variant="outline"
+                  className="flex-1 bg-transparent"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Clock className="h-4 w-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Building2 className="h-4 w-4 mr-2" />
+                      Mark as Cash Purchase
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Important Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5 text-blue-600" />
+              Important Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 text-sm">
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="font-medium text-blue-800">Mortgage Offer Submission</p>
+                <p className="text-blue-700">
+                  Submit the buyer's formal mortgage offer details to the seller conveyancer for review and approval.
+                </p>
+              </div>
+
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="font-medium text-amber-800">Cash Purchase Option</p>
+                <p className="text-amber-700">
+                  If this is a cash purchase, mark it as "Not Applicable" to skip the mortgage offer requirement.
+                </p>
+              </div>
+
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="font-medium text-green-800">Next Steps</p>
+                <p className="text-green-700">
+                  {submitted || mortgageNotApplicable
+                    ? "The mortgage stage is complete. You can now proceed to coordinate the completion date."
+                    : "Complete the mortgage offer submission to proceed with the transaction."}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <Button asChild>
-            <Link href="/buyer-conveyancer/completion-date">Continue to Completion Date</Link>
-          </Button>
-          <Button variant="outline" onClick={() => setMortgageNotApplicable(false)}>
-            Go back
-          </Button>
-        </div>
-      </TransactionLayout>
-    )
-  }
+        {/* Continue to Completion Date Button */}
+        <Card className="border-2 border-dashed border-blue-300 bg-gradient-to-r from-blue-50 to-cyan-50">
+          <CardContent className="p-6 text-center">
+            <div className="space-y-4">
+              <div className="flex items-center justify-center">
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <Calendar className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
 
-  /* ------------------------------  form  ------------------------------ */
-  return (
-    <TransactionLayout
-      currentStage="mortgage-offer"
-      userRole="buyer-conveyancer"
-      title="Submit Mortgage Offer"
-      description="Provide the formal mortgage offer so the seller conveyancer can proceed."
-    >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* ------ basic offer details ------ */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Mortgage details
-            </CardTitle>
-            <CardDescription>Information from the lender's offer letter</CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Field id="lenderName" label="Lender name *">
-              <Input
-                required
-                placeholder="e.g. Halifax"
-                value={form.lenderName}
-                onChange={(e) => change("lenderName", e.target.value)}
-              />
-            </Field>
+              <div>
+                <h3 className="text-lg font-semibold text-blue-900 mb-2">Ready to Set Completion Date</h3>
+                <p className="text-sm text-blue-700 mb-4">
+                  You can coordinate the completion date with the seller conveyancer while working on the mortgage offer
+                  in parallel. This helps streamline the transaction process.
+                </p>
+              </div>
 
-            <Field id="lenderReference" label="Lender reference">
-              <Input
-                placeholder="HX789456"
-                value={form.lenderReference}
-                onChange={(e) => change("lenderReference", e.target.value)}
-              />
-            </Field>
+              <div className="group">
+                <Button
+                  onClick={handleContinueToCompletionDate}
+                  size="lg"
+                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                >
+                  <Calendar className="h-5 w-5 mr-2 group-hover:translate-x-1 transition-transform" />
+                  Continue to Completion Date
+                  <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </div>
 
-            <Field id="loanAmount" label="Loan amount (£) *">
-              <Input
-                type="number"
-                required
-                placeholder="320000"
-                value={form.loanAmount}
-                onChange={(e) => change("loanAmount", e.target.value)}
-              />
-            </Field>
-
-            <Field id="propertyValuation" label="Property valuation (£) *">
-              <Input
-                type="number"
-                required
-                placeholder="400000"
-                value={form.propertyValuation}
-                onChange={(e) => change("propertyValuation", e.target.value)}
-              />
-            </Field>
-
-            <Field id="interestRate" label="Interest rate (%) *">
-              <Input
-                type="number"
-                step="0.01"
-                required
-                placeholder="4.25"
-                value={form.interestRate}
-                onChange={(e) => change("interestRate", e.target.value)}
-              />
-            </Field>
-
-            <Field id="rateType" label="Rate type *">
-              <Select value={form.rateType} onValueChange={(val) => change("rateType", val)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose…" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="fixed">Fixed</SelectItem>
-                  <SelectItem value="variable">Variable</SelectItem>
-                  <SelectItem value="tracker">Tracker</SelectItem>
-                  <SelectItem value="discount">Discount</SelectItem>
-                </SelectContent>
-              </Select>
-            </Field>
-
-            <Field id="ratePeriod" label="Rate period">
-              <Input
-                placeholder="5 years"
-                value={form.ratePeriod}
-                onChange={(e) => change("ratePeriod", e.target.value)}
-              />
-            </Field>
-
-            <Field id="monthlyPayment" label="Monthly payment (£) *">
-              <Input
-                type="number"
-                required
-                placeholder="1756"
-                value={form.monthlyPayment}
-                onChange={(e) => change("monthlyPayment", e.target.value)}
-              />
-            </Field>
-
-            <Field id="ltvRatio" label="Loan-to-value ratio (%)">
-              <Input
-                type="number"
-                placeholder="80"
-                value={form.ltvRatio}
-                onChange={(e) => change("ltvRatio", e.target.value)}
-              />
-            </Field>
-
-            <Field id="offerValidUntil" label="Offer valid until *">
-              <Input
-                type="date"
-                required
-                value={form.offerValidUntil}
-                onChange={(e) => change("offerValidUntil", e.target.value)}
-              />
-            </Field>
-          </CardContent>
-        </Card>
-
-        {/* ------ special conditions ------ */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-600" />
-              Special conditions
-            </CardTitle>
-            <CardDescription>Tick any conditions included in the offer</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <CheckboxRow
-                id="buildingInsurance"
-                checked={form.buildingInsuranceRequired}
-                onChange={(val) => change("buildingInsuranceRequired", val)}
-                label="Building insurance required from completion"
-              />
-
-              <CheckboxRow
-                id="lifeInsurance"
-                checked={form.lifeInsuranceRequired}
-                onChange={(val) => change("lifeInsuranceRequired", val)}
-                label="Life insurance policy required"
-              />
+              <p className="text-xs text-blue-600">Coordinate completion timing with all parties involved</p>
             </div>
-
-            <Field id="specialConditions" label="Additional special conditions">
-              <Textarea
-                rows={3}
-                placeholder="e.g. Retention of £5,000 until snagging complete…"
-                value={form.specialConditions}
-                onChange={(e) => change("specialConditions", e.target.value)}
-              />
-            </Field>
           </CardContent>
         </Card>
-
-        {/* ------ extra notes ------ */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Additional notes
-            </CardTitle>
-            <CardDescription>Anything else the seller conveyancer should know</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Field id="additionalNotes" label="Notes">
-              <Textarea
-                rows={4}
-                placeholder="Optional comments…"
-                value={form.additionalNotes}
-                onChange={(e) => change("additionalNotes", e.target.value)}
-              />
-            </Field>
-          </CardContent>
-        </Card>
-
-        {/* ------ submit buttons ------ */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
-          <Button type="submit" disabled={submitting || processingNotApplicable} className="sm:flex-1">
-            {submitting ? (
-              <>
-                <Clock className="h-4 w-4 mr-2 animate-spin" />
-                Submitting…
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4 mr-2" />
-                Submit mortgage offer
-              </>
-            )}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            disabled={submitting || processingNotApplicable}
-            onClick={handleMortgageNotApplicable}
-            className="sm:flex-1 bg-transparent"
-          >
-            {processingNotApplicable ? (
-              <>
-                <Clock className="h-4 w-4 mr-2 animate-spin" />
-                Processing…
-              </>
-            ) : (
-              <>
-                <X className="h-4 w-4 mr-2" />
-                Mortgage not applicable
-              </>
-            )}
-          </Button>
-        </div>
-
-        <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-          <p className="font-medium mb-1">When to use "Mortgage not applicable":</p>
-          <p>
-            Click this button if the buyer is purchasing with cash and does not require a mortgage. All parties will be
-            notified that no mortgage offer is needed for this transaction.
-          </p>
-        </div>
-      </form>
+      </div>
     </TransactionLayout>
-  )
-}
-
-/* --------------------------------------------------------------------- */
-/*                          Re-usable helpers                            */
-/* --------------------------------------------------------------------- */
-
-function Field({
-  id,
-  label,
-  children,
-}: {
-  id: string
-  label: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
-      {children}
-    </div>
-  )
-}
-
-function CheckboxRow({
-  id,
-  label,
-  checked,
-  onChange,
-}: {
-  id: string
-  label: string
-  checked: boolean
-  onChange: (v: boolean) => void
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <Checkbox id={id} checked={checked} onCheckedChange={(v) => onChange(v as boolean)} />
-      <Label htmlFor={id}>{label}</Label>
-    </div>
-  )
-}
-
-function Info({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="space-y-1">
-      <p className="text-sm font-medium text-muted-foreground">{label}</p>
-      <p className="font-semibold">{value}</p>
-    </div>
   )
 }
