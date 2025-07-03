@@ -6,11 +6,12 @@ import { Badge } from "@/components/ui/badge"
 import { Reply, Clock, CheckCircle, Users, FileText, AlertTriangle, Calendar, Home, Key } from "lucide-react"
 import { useRealTime } from "@/contexts/real-time-context"
 import { formatDistanceToNow } from "date-fns"
+import { useState, useEffect } from "react"
 
 export default function BuyerRepliesToRequisitionsPage() {
-  const { data, isConnected } = useRealTime()
-
-  const requisitionsData = data?.repliesToRequisitions || {
+  const { updates } = useRealTime()
+  const [requisitionsStatus, setRequisitionsStatus] = useState<"awaiting" | "completed">("awaiting")
+  const [requisitionsData, setRequisitionsData] = useState({
     status: "awaiting",
     requisitionsSent: 6,
     responsesReceived: 4,
@@ -18,10 +19,46 @@ export default function BuyerRepliesToRequisitionsPage() {
     completionApproved: false,
     completionDate: "2024-04-26T14:00:00Z",
     lastUpdated: new Date().toISOString(),
-  }
+    completedBy: "",
+    completedAt: "",
+    totalRequisitions: 6,
+    repliedRequisitions: 4,
+    nextStage: "Completion",
+  })
 
-  const isCompleted = requisitionsData.status === "completed"
+  useEffect(() => {
+    // Listen for replies to requisitions completion updates
+    const requisitionsUpdate = updates.find(
+      (update) => update.stage === "replies-to-requisitions" && update.type === "stage_completed",
+    )
+
+    if (requisitionsUpdate?.data?.repliesToRequisitions) {
+      const requisitionsInfo = requisitionsUpdate.data.repliesToRequisitions
+      setRequisitionsData((prev) => ({
+        ...prev,
+        ...requisitionsInfo,
+        lastUpdated: requisitionsUpdate.createdAt,
+      }))
+
+      if (requisitionsInfo.status === "completed") {
+        setRequisitionsStatus("completed")
+      }
+    }
+  }, [updates])
+
+  const isCompleted = requisitionsStatus === "completed"
   const completionDate = new Date(requisitionsData.completionDate)
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A"
+    return new Date(dateString).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
 
   return (
     <TransactionLayout currentStage="replies-to-requisitions" userRole="buyer">
@@ -55,8 +92,8 @@ export default function BuyerRepliesToRequisitionsPage() {
               <CardTitle className="flex items-center justify-between">
                 Requisitions Status
                 <div className="flex items-center space-x-2">
-                  <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`} />
-                  <span className="text-xs text-muted-foreground">{isConnected ? "Live" : "Offline"}</span>
+                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                  <span className="text-xs text-muted-foreground">Live</span>
                 </div>
               </CardTitle>
             </CardHeader>
@@ -79,17 +116,41 @@ export default function BuyerRepliesToRequisitionsPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="p-4 border-l-4 border-green-500 bg-green-50">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <span className="font-semibold text-green-800">Requisitions Complete</span>
+                  <div className="space-y-4">
+                    <div className="p-4 border-l-4 border-green-500 bg-green-50">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <span className="font-semibold text-green-800">Requisitions Complete</span>
+                      </div>
+                      <p className="text-sm text-green-700">
+                        All completion requisitions have been answered and approved. Your property purchase is ready for
+                        completion.
+                      </p>
+                      <div className="text-xs text-green-600 mt-2">
+                        Completed: {formatDistanceToNow(new Date(requisitionsData.lastUpdated))} ago
+                      </div>
                     </div>
-                    <p className="text-sm text-green-700">
-                      All completion requisitions have been answered and approved. Your property purchase is ready for
-                      completion.
-                    </p>
-                    <div className="text-xs text-green-600 mt-2">
-                      Completed: {formatDistanceToNow(new Date(requisitionsData.lastUpdated))} ago
+
+                    {/* Completion Summary */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Completed By</p>
+                        <p className="font-semibold">{requisitionsData.completedBy || "Your Conveyancer"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Total Requisitions</p>
+                        <p className="font-semibold">{requisitionsData.totalRequisitions} Items</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Completed</p>
+                        <p className="font-semibold">
+                          {requisitionsData.completedAt ? formatDate(requisitionsData.completedAt) : "Just now"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Next Stage</p>
+                        <p className="font-semibold">{requisitionsData.nextStage || "Completion"}</p>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -151,30 +212,47 @@ export default function BuyerRepliesToRequisitionsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3">
-                <div className="p-3 border-l-4 border-amber-500 bg-amber-50">
-                  <div className="flex items-start space-x-2">
-                    <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
-                    <div>
-                      <span className="font-medium text-amber-800">Potential Delays</span>
-                      <p className="text-sm text-amber-700 mt-1">
-                        Outstanding requisitions could delay completion. Your conveyancer will keep you informed of any
-                        issues.
-                      </p>
+                {!isCompleted ? (
+                  <>
+                    <div className="p-3 border-l-4 border-amber-500 bg-amber-50">
+                      <div className="flex items-start space-x-2">
+                        <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-amber-800">Potential Delays</span>
+                          <p className="text-sm text-amber-700 mt-1">
+                            Outstanding requisitions could delay completion. Your conveyancer will keep you informed of
+                            any issues.
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                <div className="p-3 border-l-4 border-blue-500 bg-blue-50">
-                  <div className="flex items-start space-x-2">
-                    <Calendar className="h-4 w-4 text-blue-600 mt-0.5" />
-                    <div>
-                      <span className="font-medium text-blue-800">Completion Date Changes</span>
-                      <p className="text-sm text-blue-700 mt-1">
-                        If requisitions take longer than expected, the completion date may need to be adjusted.
-                      </p>
+                    <div className="p-3 border-l-4 border-blue-500 bg-blue-50">
+                      <div className="flex items-start space-x-2">
+                        <Calendar className="h-4 w-4 text-blue-600 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-blue-800">Completion Date Changes</span>
+                          <p className="text-sm text-blue-700 mt-1">
+                            If requisitions take longer than expected, the completion date may need to be adjusted.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="p-3 border-l-4 border-green-500 bg-green-50">
+                    <div className="flex items-start space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                      <div>
+                        <span className="font-medium text-green-800">Ready for Completion</span>
+                        <p className="text-sm text-green-700 mt-1">
+                          All requisitions have been resolved. Your property purchase is now ready for completion on the
+                          scheduled date.
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 <div className="p-3 border-l-4 border-green-500 bg-green-50">
                   <div className="flex items-start space-x-2">
@@ -198,51 +276,90 @@ export default function BuyerRepliesToRequisitionsPage() {
             <CardContent>
               <div className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-semibold mb-2 flex items-center">
-                      <Clock className="h-4 w-4 mr-2" />
-                      If Requisitions Outstanding
-                    </h4>
-                    <ul className="text-sm space-y-1">
-                      <li>• Conveyancers continue working on responses</li>
-                      <li>• You'll be updated on any significant delays</li>
-                      <li>• Completion may be postponed if necessary</li>
-                      <li>• All parties will be notified of any changes</li>
-                    </ul>
-                  </div>
+                  {!isCompleted ? (
+                    <>
+                      <div className="p-4 border rounded-lg">
+                        <h4 className="font-semibold mb-2 flex items-center">
+                          <Clock className="h-4 w-4 mr-2" />
+                          If Requisitions Outstanding
+                        </h4>
+                        <ul className="text-sm space-y-1">
+                          <li>• Conveyancers continue working on responses</li>
+                          <li>• You'll be updated on any significant delays</li>
+                          <li>• Completion may be postponed if necessary</li>
+                          <li>• All parties will be notified of any changes</li>
+                        </ul>
+                      </div>
 
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-semibold mb-2 flex items-center">
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      When Requisitions Complete
-                    </h4>
-                    <ul className="text-sm space-y-1">
-                      <li>• Completion is confirmed for the agreed date</li>
-                      <li>• Final arrangements are made with all parties</li>
-                      <li>• You'll receive completion day instructions</li>
-                      <li>• Keys will be available for collection</li>
-                    </ul>
-                  </div>
+                      <div className="p-4 border rounded-lg">
+                        <h4 className="font-semibold mb-2 flex items-center">
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          When Requisitions Complete
+                        </h4>
+                        <ul className="text-sm space-y-1">
+                          <li>• Completion is confirmed for the agreed date</li>
+                          <li>• Final arrangements are made with all parties</li>
+                          <li>• You'll receive completion day instructions</li>
+                          <li>• Keys will be available for collection</li>
+                        </ul>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="p-4 border rounded-lg bg-green-50">
+                        <h4 className="font-semibold mb-2 flex items-center text-green-800">
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Completion Confirmed
+                        </h4>
+                        <ul className="text-sm space-y-1 text-green-700">
+                          <li>• All requisitions have been successfully resolved</li>
+                          <li>• Completion date is confirmed as scheduled</li>
+                          <li>• Final arrangements are being coordinated</li>
+                          <li>• You'll receive completion day instructions soon</li>
+                        </ul>
+                      </div>
+
+                      <div className="p-4 border rounded-lg bg-blue-50">
+                        <h4 className="font-semibold mb-2 flex items-center text-blue-800">
+                          <Key className="h-4 w-4 mr-2" />
+                          Completion Day Preparation
+                        </h4>
+                        <ul className="text-sm space-y-1 text-blue-700">
+                          <li>• Keys will be available for collection</li>
+                          <li>• Final property inspection can be arranged</li>
+                          <li>• Utility transfers will be activated</li>
+                          <li>• Building insurance should be in place</li>
+                        </ul>
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="font-semibold text-blue-800 mb-2">Your Next Steps</h4>
-                  <ul className="text-sm text-blue-700 space-y-1">
+                <div
+                  className={`p-4 border rounded-lg ${isCompleted ? "bg-green-50 border-green-200" : "bg-blue-50 border-blue-200"}`}
+                >
+                  <h4 className={`font-semibold mb-2 ${isCompleted ? "text-green-800" : "text-blue-800"}`}>
+                    Your Next Steps
+                  </h4>
+                  <ul className={`text-sm space-y-1 ${isCompleted ? "text-green-700" : "text-blue-700"}`}>
                     <li>• Finalize your building insurance arrangements</li>
                     <li>• Confirm your moving company booking</li>
                     <li>• Set up utility account transfers</li>
                     <li>• Prepare any final payment required</li>
                     <li>• Stay available for urgent communications</li>
+                    {isCompleted && <li>• Prepare for completion day - you're almost there!</li>}
                   </ul>
                 </div>
 
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground mb-4">
-                    You will be notified immediately when all requisitions are complete and completion is confirmed
+                    {isCompleted
+                      ? "All requisitions complete - completion confirmed for the scheduled date"
+                      : "You will be notified immediately when all requisitions are complete and completion is confirmed"}
                   </p>
-                  <Badge variant="outline" className="px-4 py-2">
+                  <Badge variant={isCompleted ? "default" : "outline"} className="px-4 py-2">
                     <Calendar className="h-4 w-4 mr-2" />
-                    Target Completion:{" "}
+                    {isCompleted ? "Completion Confirmed: " : "Target Completion: "}
                     {completionDate.toLocaleDateString("en-GB", {
                       weekday: "long",
                       year: "numeric",

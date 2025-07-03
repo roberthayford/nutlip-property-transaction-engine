@@ -1,23 +1,14 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import TransactionLayout from "@/components/transaction-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { MessageSquare, Clock, CheckCircle, Send, Eye, AlertCircle, FileText, ArrowRight } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { MessageSquare, Clock, CheckCircle, AlertTriangle, Send, RefreshCcw, ArrowRight } from "lucide-react"
 import { useRealTime } from "@/contexts/real-time-context"
 import { useToast } from "@/hooks/use-toast"
 
@@ -27,236 +18,136 @@ interface Enquiry {
   question: string
   category: "legal" | "technical" | "financial" | "environmental" | "planning"
   priority: "low" | "medium" | "high" | "critical"
-  status: "pending" | "answered" | "follow-up-required"
+  status: "pending" | "answered"
   dateSent: string
   dateAnswered?: string
   response?: string
-  daysOverdue: number
 }
 
 export default function BuyerConveyancerEnquiriesPage() {
-  const { sendUpdate, updates, markAsRead } = useRealTime()
+  const { updates, markAsRead, sendUpdate } = useRealTime()
   const { toast } = useToast()
 
-  const [enquiries, setEnquiries] = useState<Enquiry[]>([
-    {
-      id: "enq-001",
-      subject: "Boundary Disputes",
-      question: "Please confirm there have been no boundary disputes with neighboring properties in the last 10 years.",
-      category: "legal",
-      priority: "high",
-      status: "answered",
-      dateSent: "2024-03-20",
-      dateAnswered: "2024-03-25",
-      response: "No boundary disputes have occurred in the last 10 years.",
-      daysOverdue: 0,
-    },
-    {
-      id: "enq-002",
-      subject: "Building Warranties",
-      question: "Please provide details of any building warranties or guarantees that will transfer to the buyer.",
-      category: "technical",
-      priority: "medium",
-      status: "answered",
-      dateSent: "2024-03-19",
-      dateAnswered: "2024-03-24",
-      response: "10-year NHBC warranty valid until 2029. All documentation will be provided at completion.",
-      daysOverdue: 0,
-    },
-    {
-      id: "enq-003",
-      subject: "Service Charges",
-      question: "Please confirm the current service charge amounts and any planned increases.",
-      category: "financial",
-      priority: "medium",
-      status: "answered",
-      dateSent: "2024-03-18",
-      dateAnswered: "2024-03-23",
-      response: "Current service charge is £150/month. No increases planned for next 2 years.",
-      daysOverdue: 0,
-    },
-    {
-      id: "enq-004",
-      subject: "Planning Applications",
-      question: "Are there any current or pending planning applications affecting the property?",
-      category: "planning",
-      priority: "high",
-      status: "answered",
-      dateSent: "2024-03-15",
-      dateAnswered: "2024-03-21",
-      response: "No planning applications submitted or pending for the property.",
-      daysOverdue: 0,
-    },
-    {
-      id: "enq-005",
-      subject: "Utilities and Services",
-      question: "Please confirm all utilities are connected and in working order.",
-      category: "technical",
-      priority: "medium",
-      status: "answered",
-      dateSent: "2024-03-14",
-      dateAnswered: "2024-03-20",
-      response: "All utilities connected and in working order. No known issues.",
-      daysOverdue: 0,
-    },
-    {
-      id: "enq-006",
-      subject: "Environmental Issues",
-      question: "Are there any known environmental issues or contamination concerns?",
-      category: "environmental",
-      priority: "high",
-      status: "answered",
-      dateSent: "2024-03-13",
-      dateAnswered: "2024-03-19",
-      response: "No known environmental issues. Environmental search report attached.",
-      daysOverdue: 0,
-    },
-    {
-      id: "enq-007",
-      subject: "Alterations and Extensions",
-      question: "Please provide details of any alterations or extensions made to the property.",
-      category: "technical",
-      priority: "medium",
-      status: "answered",
-      dateSent: "2024-03-12",
-      dateAnswered: "2024-03-18",
-      response:
-        "Kitchen extension completed in 2019 with proper planning permission and building regulations approval.",
-      daysOverdue: 0,
-    },
-    {
-      id: "enq-008",
-      subject: "Parking Rights",
-      question: "Please confirm parking arrangements and any allocated parking spaces.",
-      category: "legal",
-      priority: "low",
-      status: "answered",
-      dateSent: "2024-03-11",
-      dateAnswered: "2024-03-17",
-      response: "Two allocated parking spaces included in the sale. Parking permits not required.",
-      daysOverdue: 0,
-    },
-    {
-      id: "enq-009",
-      subject: "Heating System",
-      question: "Please provide details of the heating system and any recent servicing.",
-      category: "technical",
-      priority: "medium",
-      status: "answered",
-      dateSent: "2024-03-10",
-      dateAnswered: "2024-03-16",
-      response: "Gas central heating system installed 2020. Annual service completed February 2024.",
-      daysOverdue: 0,
-    },
-    {
-      id: "enq-010",
-      subject: "Insurance Claims",
-      question: "Have there been any insurance claims made on the property in the last 5 years?",
-      category: "financial",
-      priority: "medium",
-      status: "answered",
-      dateSent: "2024-03-09",
-      dateAnswered: "2024-03-15",
-      response: "No insurance claims made in the last 5 years.",
-      daysOverdue: 0,
-    },
-    {
-      id: "enq-011",
-      subject: "Roof Condition",
-      question: "Please provide details of roof condition and any recent repairs or maintenance.",
-      category: "technical",
-      priority: "high",
-      status: "answered",
-      dateSent: "2024-03-08",
-      dateAnswered: "2024-03-14",
-      response: "Roof inspected and minor repairs completed in 2023. Full roof survey available.",
-      daysOverdue: 0,
-    },
-    {
-      id: "enq-012",
-      subject: "Neighbor Disputes",
-      question: "Have there been any disputes or issues with neighboring properties?",
-      category: "legal",
-      priority: "medium",
-      status: "answered",
-      dateSent: "2024-03-07",
-      dateAnswered: "2024-03-13",
-      response: "No disputes or issues with neighboring properties.",
-      daysOverdue: 0,
-    },
-  ])
+  const [enquiries, setEnquiries] = useState<Enquiry[]>([])
+  const processedIds = useRef<Set<string>>(new Set())
 
-  // Keep track of updates we've already handled so we don't process them twice
-  const processedUpdateIds = useRef<Set<string>>(new Set())
-
-  const [selectedSubject, setSelectedSubject] = useState("")
-  const [selectedPriority, setSelectedPriority] = useState<"low" | "medium" | "high" | "critical">("medium")
-  const [newEnquiry, setNewEnquiry] = useState("")
-
-  const handleSubjectChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => setSelectedSubject(e.target.value),
-    [],
-  )
-
-  const handlePriorityChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) =>
-      setSelectedPriority(e.target.value as "low" | "medium" | "high" | "critical"),
-    [],
-  )
-
-  const handleMessageChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => setNewEnquiry(e.target.value),
-    [],
-  )
-
+  const [subject, setSubject] = useState("")
+  const [question, setQuestion] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isContinuing, setIsContinuing] = useState(false)
 
-  // Calculate dynamic stats
-  const totalEnquiries = enquiries.length
-  const answeredEnquiries = enquiries.filter((e) => e.status === "answered").length
-  const pendingEnquiries = enquiries.filter((e) => e.status === "pending").length
-  const overdueEnquiries = enquiries.filter((e) => e.status === "pending" && e.daysOverdue > 5).length
-
-  const handleSendEnquiry = async () => {
-    if (!newEnquiry.trim() || !selectedSubject) return
-
-    setIsSubmitting(true)
-
-    // Simulate sending enquiry
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    const newEnquiryObj: Enquiry = {
-      id: `enq-${String(enquiries.length + 1).padStart(3, "0")}`,
-      subject: selectedSubject,
-      question: newEnquiry,
-      category: getSubjectCategory(selectedSubject),
-      priority: selectedPriority,
-      status: "pending",
-      dateSent: new Date().toISOString().split("T")[0],
-      daysOverdue: 0,
+  // Listen for platform reset events
+  useEffect(() => {
+    const handlePlatformReset = () => {
+      console.log("Buyer conveyancer enquiries: Platform reset detected, clearing enquiries")
+      setEnquiries([])
+      setSubject("")
+      setQuestion("")
+      processedIds.current.clear()
+      toast({
+        title: "Demo Reset! 🔄",
+        description: "All enquiries have been cleared",
+      })
     }
 
-    setEnquiries((prev) => [...prev, newEnquiryObj])
-    setNewEnquiry("")
-    setSelectedSubject("")
-    setSelectedPriority("medium")
-    setIsSubmitting(false)
+    window.addEventListener("platform-reset", handlePlatformReset)
+    return () => window.removeEventListener("platform-reset", handlePlatformReset)
+  }, [toast])
 
-    // Send real-time update
+  // Listen for real-time updates - especially enquiry responses
+  useEffect(() => {
+    if (!updates.length) return
+
+    const toMark: string[] = []
+
+    updates.forEach((update) => {
+      // Skip if already processed
+      if (processedIds.current.has(update.id) || update.stage !== "enquiries") {
+        return
+      }
+
+      processedIds.current.add(update.id)
+      toMark.push(update.id)
+
+      // Handle enquiry answered - THIS IS THE CRITICAL PART
+      if (update.type === "enquiry_answered" && update.role === "seller-conveyancer" && update.data?.enquiryId) {
+        const { enquiryId, response, dateAnswered, subject: responseSubject } = update.data as any
+
+        console.log("Buyer received response for enquiry:", enquiryId, "Response:", response) // Debug log
+
+        setEnquiries((prev) => {
+          const updated = prev.map((enq) =>
+            enq.id === enquiryId
+              ? {
+                  ...enq,
+                  status: "answered" as const,
+                  response,
+                  dateAnswered,
+                }
+              : enq,
+          )
+
+          console.log("Updated enquiries:", updated) // Debug log
+          return updated
+        })
+
+        toast({
+          title: "Enquiry Answered! ✅",
+          description: `Response received for "${responseSubject || "your enquiry"}"`,
+        })
+      }
+    })
+
+    // Mark updates as read after processing
+    if (toMark.length) {
+      setTimeout(() => {
+        toMark.forEach((id) => markAsRead(id))
+      }, 0)
+    }
+  }, [updates, toast, markAsRead])
+
+  // Send a new enquiry
+  const handleSendEnquiry = async () => {
+    if (!subject.trim() || !question.trim()) return
+    setIsSubmitting(true)
+
+    // Simulate sending
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    const newEnquiry: Enquiry = {
+      id: `enq-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Unique ID
+      subject,
+      question,
+      category: "legal",
+      priority: "medium",
+      status: "pending",
+      dateSent: new Date().toISOString().split("T")[0],
+    }
+
+    console.log("Buyer sending enquiry:", newEnquiry) // Debug log
+
+    // Update own state immediately
+    setEnquiries((prev) => [newEnquiry, ...prev])
+
+    // Broadcast to seller conveyancer
     sendUpdate({
       type: "enquiry_sent",
       stage: "enquiries",
       role: "buyer-conveyancer",
-      title: `${selectedPriority.charAt(0).toUpperCase() + selectedPriority.slice(1)} Priority Enquiry Sent`,
-      description: `New ${selectedPriority} priority enquiry about "${selectedSubject}" sent to seller's conveyancer`,
-      data: { enquiry: newEnquiryObj },
+      title: "New Enquiry Sent",
+      description: newEnquiry.subject,
+      data: { enquiry: newEnquiry },
     })
 
-    toast({
-      title: "Enquiry Sent! 📤",
-      description: `Your ${selectedPriority} priority enquiry about "${selectedSubject}" has been sent`,
-    })
+    console.log("Enquiry update sent to seller conveyancer") // Debug log
+
+    // Feedback
+    toast({ title: "Enquiry Sent 📨", description: subject })
+
+    // Reset form
+    setSubject("")
+    setQuestion("")
+    setIsSubmitting(false)
   }
 
   const handleContinueToMortgageOffer = async () => {
@@ -277,8 +168,8 @@ export default function BuyerConveyancerEnquiriesPage() {
         stage: "enquiries",
         status: "completed",
         completedAt: new Date().toISOString(),
-        totalEnquiries: totalEnquiries,
-        answeredEnquiries: answeredEnquiries,
+        totalEnquiries: enquiries.length,
+        answeredEnquiries: enquiries.filter((e) => e.status === "answered").length,
         nextStage: "mortgage-offer",
       },
     })
@@ -294,23 +185,9 @@ export default function BuyerConveyancerEnquiriesPage() {
     window.location.href = "/buyer-conveyancer/mortgage-offer"
   }
 
-  const handleFollowUp = (enquiryId: string) => {
-    setEnquiries((prev) => prev.map((e) => (e.id === enquiryId ? { ...e, status: "follow-up-required" as const } : e)))
-
-    sendUpdate({
-      type: "enquiry_follow_up",
-      stage: "enquiries",
-      role: "buyer-conveyancer",
-      title: "Follow-up Sent",
-      description: `Follow-up sent for enquiry`,
-      data: { enquiryId },
-    })
-
-    toast({
-      title: "Follow-up Sent! 📞",
-      description: "Follow-up reminder sent to seller's conveyancer",
-    })
-  }
+  const total = enquiries.length
+  const answered = enquiries.filter((e) => e.status === "answered").length
+  const pending = total - answered
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -325,457 +202,271 @@ export default function BuyerConveyancerEnquiriesPage() {
     }
   }
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case "legal":
-        return "⚖️"
-      case "technical":
-        return "🔧"
-      case "financial":
-        return "💰"
-      case "environmental":
-        return "🌱"
-      case "planning":
-        return "📋"
-      default:
-        return "📄"
-    }
-  }
-
-  const getSubjectCategory = (subject: string): "legal" | "technical" | "financial" | "environmental" | "planning" => {
-    const categoryMap: Record<string, "legal" | "technical" | "financial" | "environmental" | "planning"> = {
-      "Planning Applications": "planning",
-      "Building Regulations": "planning",
-      "Conservation Area": "planning",
-      "Listed Building": "planning",
-      "Tree Preservation": "planning",
-      "Utilities and Services": "technical",
-      "Heating System": "technical",
-      "Electrical Systems": "technical",
-      "Plumbing Systems": "technical",
-      "Security Systems": "technical",
-      "Alterations and Extensions": "technical",
-      "Roof Condition": "technical",
-      "Structural Issues": "technical",
-      "Fire Safety": "technical",
-      "Boundary Disputes": "legal",
-      "Neighbor Disputes": "legal",
-      "Rights of Way": "legal",
-      "Parking Rights": "legal",
-      "Leasehold Information": "legal",
-      "Management Company": "legal",
-      "Service Charges": "financial",
-      "Ground Rent": "financial",
-      "Insurance Claims": "financial",
-      "Maintenance History": "financial",
-      "Environmental Issues": "environmental",
-      "Flooding History": "environmental",
-      "Garden/Outdoor Space": "environmental",
-      "Building Warranties": "technical",
-      "Shared Facilities": "legal",
-      Other: "legal",
-    }
-    return categoryMap[subject] || "legal"
-  }
-
-  useEffect(() => {
-    if (!updates.length) return
-
-    updates.forEach((update) => {
-      // Skip if already handled or not relevant
-      if (
-        processedUpdateIds.current.has(update.id) ||
-        update.stage !== "enquiries" ||
-        !["enquiry_sent", "enquiry_follow_up", "enquiry_answered"].includes(update.type)
-      ) {
-        return
-      }
-
-      processedUpdateIds.current.add(update.id)
-
-      // Handle new enquiry sent
-      if (update.type === "enquiry_sent" && update.data?.enquiry) {
-        const newEnq = update.data.enquiry
-        setEnquiries((prev) => {
-          if (prev.some((e) => e.id === newEnq.id)) return prev
-          toast({ title: "New Enquiry Received! 📨", description: `New enquiry: ${newEnq.subject}` })
-          return [...prev, newEnq]
-        })
-      }
-
-      // Handle follow-up
-      if (update.type === "enquiry_follow_up") {
-        toast({ title: "Follow-up Received! 📞", description: "Buyer conveyancer sent a follow-up reminder" })
-      }
-
-      // Handle enquiry answered
-      if (update.type === "enquiry_answered" && update.data?.enquiryId) {
-        const { enquiryId, response, dateAnswered } = update.data
-        setEnquiries((prev) =>
-          prev.map((enq) =>
-            enq.id === enquiryId ? { ...enq, status: "answered", response, dateAnswered, daysOverdue: 0 } : enq,
-          ),
-        )
-        toast({ title: "Enquiry Answered! ✅", description: `Response received for enquiry ${enquiryId}` })
-      }
-
-      // Remove the update from the shared context so it doesn't trigger again
-      markAsRead(update.id)
-    })
-  }, [updates, toast, markAsRead])
-
   return (
     <TransactionLayout
       currentStage="enquiries"
       userRole="buyer-conveyancer"
       title="Pre-Contract Enquiries"
-      description="Raise and manage pre-contract enquiries with the seller's conveyancer"
+      description="Draft and track enquiries sent to the seller's conveyancer"
     >
       <div className="space-y-6">
-        {/* Interactive Enquiries Status */}
+        {/* Compose new enquiry */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
-              Enquiries Status
+              New Enquiry
             </CardTitle>
-            <CardDescription>Click on any status to view detailed enquiries</CardDescription>
+            <CardDescription>Send a new enquiry to the seller's conveyancer</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Total Enquiries - Interactive */}
-              <Dialog>
-                <DialogTrigger asChild>
-                  <div className="text-center p-4 border-2 rounded-lg cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all bg-blue-50">
-                    <div className="text-3xl font-bold text-blue-600">{totalEnquiries}</div>
-                    <div className="text-sm text-muted-foreground mb-2">Total Enquiries</div>
-                    <Button size="sm" variant="outline">
-                      <Eye className="h-3 w-3 mr-1" />
-                      View All
-                    </Button>
-                  </div>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>All Enquiries ({totalEnquiries})</DialogTitle>
-                    <DialogDescription>Complete list of all pre-contract enquiries</DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-3">
-                    {enquiries.map((enquiry) => (
-                      <div key={enquiry.id} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">{getCategoryIcon(enquiry.category)}</span>
-                            <h4 className="font-medium">{enquiry.subject}</h4>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge className={getPriorityColor(enquiry.priority)}>{enquiry.priority}</Badge>
-                            <Badge variant={enquiry.status === "answered" ? "default" : "secondary"}>
-                              {enquiry.status}
-                            </Badge>
-                          </div>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">{enquiry.question}</p>
-                        {enquiry.response && (
-                          <div className="bg-green-50 border border-green-200 rounded p-3 mt-2">
-                            <p className="text-sm text-green-800">{enquiry.response}</p>
-                            <p className="text-xs text-green-600 mt-1">Answered: {enquiry.dateAnswered}</p>
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between mt-3">
-                          <p className="text-xs text-muted-foreground">Sent: {enquiry.dateSent}</p>
-                          {enquiry.status === "pending" && (
-                            <Button size="sm" variant="outline" onClick={() => handleFollowUp(enquiry.id)}>
-                              Send Follow-up
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              {/* Answered Enquiries - Interactive */}
-              <Dialog>
-                <DialogTrigger asChild>
-                  <div className="text-center p-4 border-2 rounded-lg cursor-pointer hover:shadow-lg hover:border-green-300 transition-all bg-green-50">
-                    <div className="text-3xl font-bold text-green-600">{answeredEnquiries}</div>
-                    <div className="text-sm text-muted-foreground mb-2">Answered</div>
-                    <Button size="sm" variant="outline">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      View Answers
-                    </Button>
-                  </div>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Answered Enquiries ({answeredEnquiries})</DialogTitle>
-                    <DialogDescription>Enquiries that have received responses</DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-3">
-                    {enquiries
-                      .filter((e) => e.status === "answered")
-                      .map((enquiry) => (
-                        <div key={enquiry.id} className="border rounded-lg p-4 bg-green-50">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">{getCategoryIcon(enquiry.category)}</span>
-                              <h4 className="font-medium">{enquiry.subject}</h4>
-                            </div>
-                            <Badge className="bg-green-100 text-green-800">Answered</Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-2">{enquiry.question}</p>
-                          <div className="bg-white border border-green-200 rounded p-3">
-                            <p className="text-sm text-green-800 font-medium">Response:</p>
-                            <p className="text-sm text-green-700 mt-1">{enquiry.response}</p>
-                            <p className="text-xs text-green-600 mt-2">Answered: {enquiry.dateAnswered}</p>
-                          </div>
-                          <div className="flex items-center justify-between mt-3">
-                            <p className="text-xs text-muted-foreground">Sent: {enquiry.dateSent}</p>
-                            <Button size="sm" variant="outline">
-                              <FileText className="h-3 w-3 mr-1" />
-                              Export PDF
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              {/* Pending Enquiries - Interactive */}
-              <Dialog>
-                <DialogTrigger asChild>
-                  <div className="text-center p-4 border-2 rounded-lg cursor-pointer hover:shadow-lg hover:border-yellow-300 transition-all bg-yellow-50">
-                    <div className="text-3xl font-bold text-yellow-600">{pendingEnquiries}</div>
-                    <div className="text-sm text-muted-foreground mb-2">Pending</div>
-                    <Button size="sm" variant="outline">
-                      <Clock className="h-3 w-3 mr-1" />
-                      View Pending
-                    </Button>
-                    {overdueEnquiries > 0 && (
-                      <div className="text-xs text-red-600 mt-1">{overdueEnquiries} overdue</div>
-                    )}
-                  </div>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Pending Enquiries ({pendingEnquiries})</DialogTitle>
-                    <DialogDescription>Enquiries awaiting response from seller's conveyancer</DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-3">
-                    {enquiries
-                      .filter((e) => e.status === "pending")
-                      .map((enquiry) => (
-                        <div
-                          key={enquiry.id}
-                          className={`border rounded-lg p-4 ${enquiry.daysOverdue > 5 ? "bg-red-50 border-red-200" : "bg-yellow-50"}`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">{getCategoryIcon(enquiry.category)}</span>
-                              <h4 className="font-medium">{enquiry.subject}</h4>
-                              {enquiry.daysOverdue > 5 && <AlertCircle className="h-4 w-4 text-red-500" />}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge className={getPriorityColor(enquiry.priority)}>{enquiry.priority}</Badge>
-                              <Badge variant="secondary">Pending</Badge>
-                            </div>
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-2">{enquiry.question}</p>
-                          <div className="flex items-center justify-between mt-3">
-                            <div>
-                              <p className="text-xs text-muted-foreground">Sent: {enquiry.dateSent}</p>
-                              {enquiry.daysOverdue > 0 && (
-                                <p
-                                  className={`text-xs ${enquiry.daysOverdue > 5 ? "text-red-600" : "text-yellow-600"}`}
-                                >
-                                  {enquiry.daysOverdue} days overdue
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex gap-2">
-                              <Button size="sm" variant="outline" onClick={() => handleFollowUp(enquiry.id)}>
-                                Send Follow-up
-                              </Button>
-                              <Button size="sm" variant="outline">
-                                Escalate
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className="bg-green-600 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${(answeredEnquiries / totalEnquiries) * 100}%` }}
-              ></div>
-            </div>
-            <p className="text-sm text-center text-muted-foreground">
-              {Math.round((answeredEnquiries / totalEnquiries) * 100)}% of enquiries answered
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Recently Answered Enquiries */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              Recently Answered Enquiries
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {enquiries
-              .filter((e) => e.status === "answered")
-              .slice(0, 3)
-              .map((enquiry) => (
-                <div key={enquiry.id} className="border-l-4 border-green-400 pl-4 py-3">
-                  <h4 className="font-medium text-sm">{enquiry.subject}</h4>
-                  <p className="text-sm text-muted-foreground mb-2">{enquiry.response}</p>
-                  <p className="text-xs text-muted-foreground">Answered: {enquiry.dateAnswered}</p>
-                </div>
-              ))}
-          </CardContent>
-        </Card>
-
-        {/* Raise New Enquiry */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Raise New Enquiry</CardTitle>
-            <CardDescription>Submit additional enquiries to the seller's conveyancer</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Subject Dropdown */}
             <div>
-              <Label htmlFor="subject">Enquiry Subject</Label>
-              <select
-                id="subject"
-                value={selectedSubject}
-                onChange={handleSubjectChange}
-                className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Select enquiry subject...</option>
-                <option value="Planning Applications">Planning Applications</option>
-                <option value="Utilities and Services">Utilities and Services</option>
-                <option value="Boundary Disputes">Boundary Disputes</option>
-                <option value="Building Warranties">Building Warranties</option>
-                <option value="Service Charges">Service Charges</option>
-                <option value="Environmental Issues">Environmental Issues</option>
-                <option value="Alterations and Extensions">Alterations and Extensions</option>
-                <option value="Parking Rights">Parking Rights</option>
-                <option value="Heating System">Heating System</option>
-                <option value="Insurance Claims">Insurance Claims</option>
-                <option value="Roof Condition">Roof Condition</option>
-                <option value="Neighbor Disputes">Neighbor Disputes</option>
-                <option value="Ground Rent">Ground Rent</option>
-                <option value="Leasehold Information">Leasehold Information</option>
-                <option value="Management Company">Management Company</option>
-                <option value="Fire Safety">Fire Safety</option>
-                <option value="Building Regulations">Building Regulations</option>
-                <option value="Conservation Area">Conservation Area</option>
-                <option value="Listed Building">Listed Building</option>
-                <option value="Tree Preservation">Tree Preservation</option>
-                <option value="Rights of Way">Rights of Way</option>
-                <option value="Flooding History">Flooding History</option>
-                <option value="Structural Issues">Structural Issues</option>
-                <option value="Electrical Systems">Electrical Systems</option>
-                <option value="Plumbing Systems">Plumbing Systems</option>
-                <option value="Security Systems">Security Systems</option>
-                <option value="Garden/Outdoor Space">Garden/Outdoor Space</option>
-                <option value="Shared Facilities">Shared Facilities</option>
-                <option value="Maintenance History">Maintenance History</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            {/* Priority Selection */}
-            <div>
-              <Label htmlFor="priority">Priority Level</Label>
-              <select
-                id="priority"
-                value={selectedPriority}
-                onChange={handlePriorityChange}
-                className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="low">🟢 Low Priority - General information</option>
-                <option value="medium">🟡 Medium Priority - Important clarification</option>
-                <option value="high">🟠 High Priority - Urgent response needed</option>
-                <option value="critical">🔴 Critical Priority - Deal-breaking issue</option>
-              </select>
-            </div>
-
-            {/* Category Auto-Assignment Display */}
-            {selectedSubject && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{getCategoryIcon(getSubjectCategory(selectedSubject))}</span>
-                  <span className="text-sm font-medium text-blue-800">
-                    Category:{" "}
-                    {getSubjectCategory(selectedSubject).charAt(0).toUpperCase() +
-                      getSubjectCategory(selectedSubject).slice(1)}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Enquiry Details */}
-            <div>
-              <Label htmlFor="enquiry">Enquiry Details</Label>
+              <Label htmlFor="subject">Subject</Label>
               <Textarea
-                id="enquiry"
-                placeholder="Enter your detailed enquiry question..."
-                className="mt-2"
-                rows={4}
-                value={newEnquiry}
-                onChange={handleMessageChange}
+                id="subject"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                rows={1}
+                className="mt-1"
+                placeholder="Short summary of your enquiry"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Be specific and detailed to get the most accurate response
-              </p>
             </div>
-
-            {/* Character Counter */}
-            <div className="text-right">
-              <span className={`text-xs ${newEnquiry.length > 500 ? "text-red-500" : "text-muted-foreground"}`}>
-                {newEnquiry.length}/500 characters
-              </span>
+            <div>
+              <Label htmlFor="question">Question</Label>
+              <Textarea
+                id="question"
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                rows={4}
+                className="mt-1"
+                placeholder="Provide full details of your enquiry"
+              />
             </div>
-
-            <Button
-              className="w-full"
-              onClick={handleSendEnquiry}
-              disabled={!newEnquiry.trim() || !selectedSubject || isSubmitting || newEnquiry.length > 500}
-            >
+            <Button onClick={handleSendEnquiry} disabled={isSubmitting || !subject.trim() || !question.trim()}>
               {isSubmitting ? (
                 <>
-                  <Clock className="h-4 w-4 mr-2 animate-spin" />
-                  Sending Enquiry...
+                  <RefreshCcw className="h-4 w-4 mr-2 animate-spin" />
+                  Sending...
                 </>
               ) : (
                 <>
                   <Send className="h-4 w-4 mr-2" />
-                  Send {selectedPriority.charAt(0).toUpperCase() + selectedPriority.slice(1)} Priority Enquiry
+                  Send Enquiry
                 </>
               )}
             </Button>
           </CardContent>
         </Card>
 
+        {/* Enquiries Status */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              Enquiries Status
+            </CardTitle>
+            <CardDescription>
+              {total === 0 ? "No enquiries sent yet." : "Track the status of your enquiries"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+              <div className="p-4 border rounded bg-blue-50">
+                <div className="text-3xl font-bold text-blue-600">{total}</div>
+                <p className="text-sm text-blue-800">Total Sent</p>
+              </div>
+              <div className="p-4 border rounded bg-yellow-50">
+                <div className="text-3xl font-bold text-yellow-600">{pending}</div>
+                <p className="text-sm text-yellow-800">Pending Response</p>
+              </div>
+              <div className="p-4 border rounded bg-green-50">
+                <div className="text-3xl font-bold text-green-600">{answered}</div>
+                <p className="text-sm text-green-800">Answered</p>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            {total > 0 && (
+              <div className="mt-6">
+                <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                  <div
+                    className="bg-green-600 h-3 rounded-full transition-all duration-500"
+                    style={{ width: `${(answered / total) * 100}%` }}
+                  ></div>
+                </div>
+                <p className="text-sm text-center text-muted-foreground">
+                  {Math.round((answered / total) * 100)}% of enquiries answered
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recently Answered Enquiries */}
+        {answered > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                Recently Answered Enquiries
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {enquiries
+                .filter((e) => e.status === "answered")
+                .slice(0, 3)
+                .map((enquiry) => (
+                  <div key={enquiry.id} className="border-l-4 border-green-400 pl-4 py-3 bg-green-50 rounded">
+                    <h4 className="font-medium text-sm">{enquiry.subject}</h4>
+                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{enquiry.response}</p>
+                    <p className="text-xs text-muted-foreground">Answered: {enquiry.dateAnswered}</p>
+                  </div>
+                ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tabs list */}
+        <Tabs defaultValue="pending" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="pending">Pending ({pending})</TabsTrigger>
+            <TabsTrigger value="answered">Answered ({answered})</TabsTrigger>
+            <TabsTrigger value="all">All ({total})</TabsTrigger>
+          </TabsList>
+
+          {/* Pending tab */}
+          <TabsContent value="pending" className="space-y-4">
+            {pending === 0 ? (
+              <div className="text-center py-10">
+                <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No pending enquiries.</p>
+                <p className="text-sm text-gray-400 mt-2">
+                  All enquiries have been answered or none have been sent yet.
+                </p>
+              </div>
+            ) : (
+              enquiries
+                .filter((e) => e.status === "pending")
+                .map((e) => (
+                  <Card key={e.id} className="border-l-4 border-yellow-500">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base">{e.subject}</CardTitle>
+                        <Badge className={getPriorityColor(e.priority)}>{e.priority} priority</Badge>
+                      </div>
+                      <CardDescription>Sent: {new Date(e.dateSent).toLocaleDateString()}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm">{e.question}</p>
+                      <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                        <p className="text-sm text-yellow-800">⏳ Awaiting response from seller's conveyancer</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+            )}
+          </TabsContent>
+
+          {/* Answered tab */}
+          <TabsContent value="answered" className="space-y-4">
+            {answered === 0 ? (
+              <div className="text-center py-10">
+                <CheckCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No answered enquiries yet.</p>
+                <p className="text-sm text-gray-400 mt-2">
+                  Responses will appear here when the seller's conveyancer replies.
+                </p>
+              </div>
+            ) : (
+              enquiries
+                .filter((e) => e.status === "answered")
+                .map((e) => (
+                  <Card key={e.id} className="border-l-4 border-green-500">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base">{e.subject}</CardTitle>
+                        <Badge className="bg-green-100 text-green-800">Answered</Badge>
+                      </div>
+                      <CardDescription>
+                        Sent: {new Date(e.dateSent).toLocaleDateString()} | Answered:{" "}
+                        {e.dateAnswered && new Date(e.dateAnswered).toLocaleDateString()}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="p-3 bg-gray-50 rounded">
+                        <p className="text-sm font-medium mb-1">Your Question:</p>
+                        <p className="text-sm">{e.question}</p>
+                      </div>
+                      <div className="p-3 bg-green-50 border border-green-200 rounded">
+                        <p className="text-sm font-medium text-green-800 mb-1">Response:</p>
+                        <p className="text-sm text-green-700">{e.response}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+            )}
+          </TabsContent>
+
+          {/* All tab */}
+          <TabsContent value="all" className="space-y-4">
+            {total === 0 ? (
+              <div className="text-center py-10">
+                <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No enquiries yet.</p>
+                <p className="text-sm text-gray-400 mt-2">Use the form above to send your first enquiry.</p>
+              </div>
+            ) : (
+              enquiries.map((e) => (
+                <Card
+                  key={e.id}
+                  className={`border-l-4 ${e.status === "answered" ? "border-green-500" : "border-yellow-500"}`}
+                >
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base">{e.subject}</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Badge className={getPriorityColor(e.priority)}>{e.priority} priority</Badge>
+                        <Badge variant={e.status === "answered" ? "default" : "secondary"}>
+                          {e.status === "answered" ? (
+                            <>
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Answered
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="h-3 w-3 mr-1" />
+                              Pending
+                            </>
+                          )}
+                        </Badge>
+                      </div>
+                    </div>
+                    <CardDescription>
+                      Sent: {new Date(e.dateSent).toLocaleDateString()}
+                      {e.dateAnswered && ` | Answered: ${new Date(e.dateAnswered).toLocaleDateString()}`}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="p-3 bg-gray-50 rounded">
+                      <p className="text-sm font-medium mb-1">Your Question:</p>
+                      <p className="text-sm">{e.question}</p>
+                    </div>
+                    {e.response && (
+                      <div className="p-3 bg-green-50 border border-green-200 rounded">
+                        <p className="text-sm font-medium text-green-800 mb-1">Response:</p>
+                        <p className="text-sm text-green-700">{e.response}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </TabsContent>
+        </Tabs>
+
         {/* Action Buttons */}
         <div className="flex gap-4">
-          <Button
-            onClick={handleContinueToMortgageOffer}
-            disabled={pendingEnquiries > 0 || isContinuing}
-            className="flex-1"
-          >
+          <Button onClick={handleContinueToMortgageOffer} disabled={pending > 0 || isContinuing} className="flex-1">
             {isContinuing ? (
               <>
                 <Clock className="h-4 w-4 mr-2 animate-spin" />
@@ -788,19 +479,34 @@ export default function BuyerConveyancerEnquiriesPage() {
               </>
             )}
           </Button>
-          <Button variant="outline" disabled={pendingEnquiries === 0}>
-            Send Follow-up ({pendingEnquiries})
-          </Button>
         </div>
 
-        {pendingEnquiries > 0 && (
+        {pending > 0 && (
           <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
             <p className="text-sm text-amber-800">
-              <strong>Note:</strong> You have {pendingEnquiries} pending enquiries. All enquiries must be resolved
-              before proceeding to the mortgage offer stage.
+              <strong>Note:</strong> You have {pending} pending enquiries. All enquiries must be resolved before
+              proceeding to the mortgage offer stage.
             </p>
           </div>
         )}
+
+        {/* Guidelines */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-600" />
+              Guidelines
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="list-disc pl-6 text-sm space-y-2">
+              <li>Provide clear, concise questions to speed up the seller's reply.</li>
+              <li>Use follow-ups sparingly to avoid notification fatigue.</li>
+              <li>Responses typically arrive within 5 working days.</li>
+              <li>Check the browser console for debug logs if testing the real-time functionality.</li>
+            </ul>
+          </CardContent>
+        </Card>
       </div>
     </TransactionLayout>
   )

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import TransactionLayout from "@/components/transaction-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -85,6 +85,125 @@ export default function SellerConveyancerContractExchangePage() {
     },
   ])
 
+  const [preExchangeChecklist, setPreExchangeChecklist] = useState([
+    { item: "Contract approved by both parties", completed: true, critical: true },
+    { item: "All enquiries satisfactorily answered", completed: true, critical: true },
+    { item: "Mortgage offer in place and valid", completed: true, critical: true },
+    { item: "Property searches completed", completed: true, critical: true },
+    { item: "Deposit funds confirmed available", completed: true, critical: true },
+    { item: "Client authority to exchange obtained", completed: true, critical: false },
+    { item: "Insurance arrangements confirmed", completed: false, critical: false },
+    { item: "Final title checks completed", completed: false, critical: true },
+  ])
+
+  // Reset functionality
+  useEffect(() => {
+    const handlePlatformReset = () => {
+      // Reset all state to default values
+      setExchangeDate("")
+      setCompletionDate("2024-04-15")
+      setDepositAmount("30000")
+      setNotes("")
+      setExchangeCompleted(false)
+      setExchangeInProgress(false)
+      setExchangeCompletedDate("")
+      setExchangeCompletedTime("")
+      setStepInputs({})
+
+      // Reset exchange steps to default
+      setExchangeSteps([
+        {
+          id: "pre-check",
+          title: "Pre-Exchange Verification",
+          description: "Verify all conditions are met",
+          completed: true,
+          active: false,
+          actionLabel: "Verify",
+          completedAt: "Today 09:30",
+          requiresConfirmation: false,
+        },
+        {
+          id: "contact-buyer",
+          title: "Contact Buyer's Conveyancer",
+          description: "Coordinate exchange details and timing",
+          completed: false,
+          active: true,
+          actionLabel: "Call Now",
+          details:
+            "Contact the buyer's conveyancer to agree on exchange timing, completion date, and deposit arrangements.",
+          requiresConfirmation: false,
+          requiresInput: true,
+          inputPlaceholder: "Enter buyer's conveyancer contact details or notes...",
+        },
+        {
+          id: "agree-terms",
+          title: "Agree Exchange Terms",
+          description: "Confirm completion date and deposit amount",
+          completed: false,
+          active: false,
+          actionLabel: "Confirm Terms",
+          requiresConfirmation: true,
+        },
+        {
+          id: "telephone-exchange",
+          title: "Telephone Exchange",
+          description: "Execute formal exchange using Law Society Formula",
+          completed: false,
+          active: false,
+          actionLabel: "Execute Exchange",
+          details:
+            "Perform the formal telephone exchange using the Law Society Formula. Both parties must be on the line.",
+          requiresConfirmation: true,
+          warning: true,
+        },
+        {
+          id: "confirm-exchange",
+          title: "Confirm Exchange",
+          description: "Record exchange details and send confirmations",
+          completed: false,
+          active: false,
+          actionLabel: "Confirm",
+          requiresConfirmation: true,
+        },
+        {
+          id: "post-exchange",
+          title: "Post-Exchange Actions",
+          description: "Send contracts and arrange deposit transfer",
+          completed: false,
+          active: false,
+          actionLabel: "Complete",
+          details: "Send signed contract to buyer's conveyancer and arrange for deposit transfer within 24 hours.",
+        },
+      ])
+
+      // Reset pre-exchange checklist to default
+      setPreExchangeChecklist([
+        { item: "Contract approved by both parties", completed: true, critical: true },
+        { item: "All enquiries satisfactorily answered", completed: true, critical: true },
+        { item: "Mortgage offer in place and valid", completed: true, critical: true },
+        { item: "Property searches completed", completed: true, critical: true },
+        { item: "Deposit funds confirmed available", completed: true, critical: true },
+        { item: "Client authority to exchange obtained", completed: true, critical: false },
+        { item: "Insurance arrangements confirmed", completed: false, critical: false },
+        { item: "Final title checks completed", completed: false, critical: true },
+      ])
+
+      // Clear localStorage
+      localStorage.removeItem("contractExchangeCompleted")
+      localStorage.removeItem("contractExchangeDate")
+      localStorage.removeItem("contractExchangeTime")
+      localStorage.removeItem("exchangeSteps")
+      localStorage.removeItem("seller-conveyancer-exchange-data")
+    }
+
+    // Listen for platform reset event
+    window.addEventListener("platform-reset", handlePlatformReset)
+
+    return () => {
+      window.removeEventListener("platform-reset", handlePlatformReset)
+    }
+  }, [])
+
   const canStartExchange = exchangeSteps[0].completed && !exchangeInProgress
   const activeStep = exchangeSteps.find((step) => step.active && !step.completed)
 
@@ -168,6 +287,10 @@ export default function SellerConveyancerContractExchangePage() {
   const handleContactBuyerConveyancer = () => {
     // Simulate opening communication
     alert("Opening communication with buyer's conveyancer...")
+  }
+
+  const handleCompleteChecklistItem = (index: number) => {
+    setPreExchangeChecklist((prev) => prev.map((item, i) => (i === index ? { ...item, completed: true } : item)))
   }
 
   return (
@@ -442,16 +565,7 @@ export default function SellerConveyancerContractExchangePage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {[
-                { item: "Contract approved by both parties", completed: true, critical: true },
-                { item: "All enquiries satisfactorily answered", completed: true, critical: true },
-                { item: "Mortgage offer in place and valid", completed: true, critical: true },
-                { item: "Property searches completed", completed: true, critical: true },
-                { item: "Deposit funds confirmed available", completed: true, critical: true },
-                { item: "Client authority to exchange obtained", completed: true, critical: false },
-                { item: "Insurance arrangements confirmed", completed: false, critical: false },
-                { item: "Final title checks completed", completed: false, critical: true },
-              ].map((req, index) => (
+              {preExchangeChecklist.map((req, index) => (
                 <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center gap-3">
                     {req.completed ? (
@@ -467,7 +581,7 @@ export default function SellerConveyancerContractExchangePage() {
                     )}
                   </div>
                   {!req.completed && (
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => handleCompleteChecklistItem(index)}>
                       Complete
                     </Button>
                   )}

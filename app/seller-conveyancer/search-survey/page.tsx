@@ -26,6 +26,14 @@ interface SearchStatus {
 }
 
 export default function SellerConveyancerSearchSurveyPage() {
+  // ──────────────────────────────────────────────────────────────────────────────
+  // Utility ─ Safely format a timestamp into a locale time string
+  // Returns "--" if the value is missing or not a valid date.
+  const formatTime = (ts: unknown): string => {
+    if (!ts) return "--"
+    const date = ts instanceof Date ? ts : new Date(ts as string | number)
+    return isNaN(date.getTime()) ? "--" : date.toLocaleTimeString()
+  }
   const { updates, sendUpdate } = useRealTime()
 
   // Start with standard searches - additional ones will be added dynamically
@@ -354,7 +362,7 @@ export default function SellerConveyancerSearchSurveyPage() {
                 </div>
                 {completedSearches > 0 && (
                   <div className="mt-2 flex justify-center gap-1">
-                    <Button size="sm" variant="outline" className="text-xs h-6 px-2">
+                    <Button size="sm" variant="outline" className="text-xs h-6 px-2 bg-transparent">
                       <Eye className="h-3 w-3 mr-1" />
                       View
                     </Button>
@@ -383,7 +391,7 @@ export default function SellerConveyancerSearchSurveyPage() {
                 </div>
                 {orderedSearches > 0 && (
                   <div className="mt-2 flex justify-center gap-1">
-                    <Button size="sm" variant="outline" className="text-xs h-6 px-2">
+                    <Button size="sm" variant="outline" className="text-xs h-6 px-2 bg-transparent">
                       <Eye className="h-3 w-3 mr-1" />
                       View
                     </Button>
@@ -414,7 +422,7 @@ export default function SellerConveyancerSearchSurveyPage() {
                 <div className="text-xs text-purple-600 mt-1">Beyond standard searches</div>
                 {additionalSearches > 0 && (
                   <div className="mt-2 flex justify-center gap-1">
-                    <Button size="sm" variant="outline" className="text-xs h-6 px-2">
+                    <Button size="sm" variant="outline" className="text-xs h-6 px-2 bg-transparent">
                       <Plus className="h-3 w-3 mr-1" />
                       View
                     </Button>
@@ -657,7 +665,7 @@ export default function SellerConveyancerSearchSurveyPage() {
                       <div className="font-medium">{update.title}</div>
                       <div className="text-muted-foreground">{update.description}</div>
                     </div>
-                    <div className="text-muted-foreground">{update.timestamp.toLocaleTimeString()}</div>
+                    <div className="text-muted-foreground">{formatTime(update.timestamp)}</div>
                   </div>
                 ))}
             </div>

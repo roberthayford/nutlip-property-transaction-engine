@@ -12,13 +12,8 @@ import { useRealTime } from "@/contexts/real-time-context"
 import { toast } from "@/hooks/use-toast"
 
 export default function BuyerConveyancerContractExchangePage() {
-  // Add these state variables and functions inside the component
-  const [exchangeStatus, setExchangeStatus] = useState<"preparing" | "ready" | "in-progress" | "completed">("preparing")
-  const [exchangeReference, setExchangeReference] = useState<string>("")
-  const [exchangeCompletedAt, setExchangeCompletedAt] = useState<Date | null>(null)
-  const [proposedExchangeTime, setProposedExchangeTime] = useState("")
-  const [depositAmount, setDepositAmount] = useState("")
-  const [exchangeSteps, setExchangeSteps] = useState([
+  // Default states
+  const defaultExchangeSteps = [
     {
       id: "pre-exchange-check",
       title: "Pre-Exchange Requirements Check",
@@ -67,10 +62,9 @@ export default function BuyerConveyancerContractExchangePage() {
       critical: false,
       completedAt: null as Date | null,
     },
-  ])
+  ]
 
-  // Checklist state
-  const [checklistItems, setChecklistItems] = useState([
+  const defaultChecklistItems = [
     {
       id: "buyer-contract-signed",
       title: "Contracts signed by buyer",
@@ -155,8 +149,16 @@ export default function BuyerConveyancerContractExchangePage() {
       completedAt: null,
       notes: "",
     },
-  ])
+  ]
 
+  // State variables
+  const [exchangeStatus, setExchangeStatus] = useState<"preparing" | "ready" | "in-progress" | "completed">("preparing")
+  const [exchangeReference, setExchangeReference] = useState<string>("")
+  const [exchangeCompletedAt, setExchangeCompletedAt] = useState<Date | null>(null)
+  const [proposedExchangeTime, setProposedExchangeTime] = useState("")
+  const [depositAmount, setDepositAmount] = useState("")
+  const [exchangeSteps, setExchangeSteps] = useState(defaultExchangeSteps)
+  const [checklistItems, setChecklistItems] = useState(defaultChecklistItems)
   const [checklistFilter, setChecklistFilter] = useState<"all" | "pending" | "completed" | "critical">("all")
   const [editingItem, setEditingItem] = useState<string | null>(null)
   const [editingNote, setEditingNote] = useState("")
@@ -171,6 +173,41 @@ export default function BuyerConveyancerContractExchangePage() {
 
   const totalSteps = exchangeSteps.length
   const completedSteps = exchangeSteps.filter((step) => step.status === "completed").length
+
+  // Reset function
+  const resetToDefaults = () => {
+    setExchangeStatus("preparing")
+    setExchangeReference("")
+    setExchangeCompletedAt(null)
+    setProposedExchangeTime("")
+    setDepositAmount("")
+    setExchangeSteps([...defaultExchangeSteps])
+    setChecklistItems([...defaultChecklistItems])
+    setChecklistFilter("all")
+    setEditingItem(null)
+    setEditingNote("")
+    setShowAddItem(false)
+    setNewItemTitle("")
+    setNewItemDescription("")
+    setNewItemCategory("Legal")
+    setNewItemDueDate("")
+    setNewItemCritical(false)
+
+    // Clear localStorage
+    localStorage.removeItem("buyer-conveyancer-exchange-state")
+    localStorage.removeItem("buyer-conveyancer-checklist")
+    localStorage.removeItem("contract-exchange-data")
+  }
+
+  // Listen for platform reset
+  useEffect(() => {
+    const handlePlatformReset = () => {
+      resetToDefaults()
+    }
+
+    window.addEventListener("platform-reset", handlePlatformReset)
+    return () => window.removeEventListener("platform-reset", handlePlatformReset)
+  }, [])
 
   // Load saved state
   useEffect(() => {
@@ -567,6 +604,47 @@ export default function BuyerConveyancerContractExchangePage() {
     }
   }
 
+  const handleContinueToTransactionFee = () => {
+    // Mark exchange as completed
+    setExchangeStatus("completed")
+    setExchangeCompletedAt(new Date())
+    setExchangeReference(`EX${Date.now().toString().slice(-6)}`)
+
+    // Send comprehensive completion update
+    sendUpdate({
+      type: "contract_exchanged",
+      stage: "contract-exchange",
+      role: "buyer-conveyancer",
+      title: "Contracts Exchanged Successfully",
+      description: "Contract exchange has been completed - both parties are now legally committed to the transaction",
+      data: {
+        exchangeDate: new Date().toISOString(),
+        completionDate: "2024-05-28",
+        contractPrice: "£400,000",
+        deposit: "£40,000 (10%)",
+        exchangedBy: "buyer-conveyancer",
+        exchangedAt: new Date().toISOString(),
+        nextStage: "Transaction Fee",
+        status: "completed",
+        contractExchange: {
+          exchangedBy: "buyer-conveyancer",
+          exchangedAt: new Date().toISOString(),
+          exchangeDate: new Date().toISOString(),
+          completionDate: "2024-05-28",
+          contractPrice: "£400,000",
+          deposit: "£40,000 (10%)",
+          status: "completed",
+          nextStage: "Transaction Fee",
+        },
+      },
+    })
+
+    toast({
+      title: "Exchange Completed",
+      description: "Contract exchange completed successfully. All parties have been notified.",
+    })
+  }
+
   return (
     <TransactionLayout
       currentStage="contract-exchange"
@@ -806,26 +884,7 @@ export default function BuyerConveyancerContractExchangePage() {
                 </>
               )}
               {exchangeStatus === "completed" && (
-                <Button
-                  asChild
-                  onClick={() => {
-                    sendUpdate({
-                      type: "contract_exchanged",
-                      stage: "contract-exchange",
-                      role: "buyer-conveyancer",
-                      title: "Contracts Exchanged Successfully",
-                      description: "Contract exchange has been completed - both parties are now legally committed",
-                      data: {
-                        exchangeDate: new Date().toISOString(),
-                        completionDate: "2024-05-28",
-                        contractPrice: "£400,000",
-                        deposit: "£40,000 (10%)",
-                        exchangedBy: "buyer-conveyancer",
-                        nextStage: "Transaction Fee",
-                      },
-                    })
-                  }}
-                >
+                <Button asChild onClick={handleContinueToTransactionFee}>
                   <Link href="/buyer-conveyancer/nutlip-transaction-fee">Continue to Transaction Fee</Link>
                 </Button>
               )}
@@ -1202,26 +1261,7 @@ export default function BuyerConveyancerContractExchangePage() {
 
         {/* Action Buttons */}
         <div className="flex gap-4">
-          <Button
-            asChild
-            onClick={() => {
-              sendUpdate({
-                type: "contract_exchanged",
-                stage: "contract-exchange",
-                role: "buyer-conveyancer",
-                title: "Contracts Exchanged Successfully",
-                description: "Contract exchange has been completed - both parties are now legally committed",
-                data: {
-                  exchangeDate: new Date().toISOString(),
-                  completionDate: "2024-05-28",
-                  contractPrice: "£400,000",
-                  deposit: "£40,000 (10%)",
-                  exchangedBy: "buyer-conveyancer",
-                  nextStage: "Transaction Fee",
-                },
-              })
-            }}
-          >
+          <Button asChild onClick={handleContinueToTransactionFee}>
             <Link href="/buyer-conveyancer/nutlip-transaction-fee">Continue to Transaction Fee</Link>
           </Button>
           <Button variant="outline">Schedule Exchange Call</Button>

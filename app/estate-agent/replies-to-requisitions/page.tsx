@@ -22,7 +22,14 @@ interface RepliesToRequisitionsData {
 export default function EstateAgentRepliesToRequisitionsPage() {
   const { updates } = useRealTime()
   const [requisitionsStatus, setRequisitionsStatus] = useState<"awaiting" | "completed">("awaiting")
-  const [requisitionsData, setRequisitionsData] = useState<RepliesToRequisitionsData>({})
+  const [requisitionsData, setRequisitionsData] = useState<RepliesToRequisitionsData>({
+    totalRequisitions: 6,
+    repliedRequisitions: 4,
+    outstandingRequisitions: 2,
+    status: "awaiting",
+    nextStage: "Completion",
+    completionDate: "2024-04-26T14:00:00Z",
+  })
 
   useEffect(() => {
     // Listen for replies to requisitions updates
@@ -32,7 +39,10 @@ export default function EstateAgentRepliesToRequisitionsPage() {
 
     if (requisitionsUpdate?.data?.repliesToRequisitions) {
       const requisitionsInfo = requisitionsUpdate.data.repliesToRequisitions
-      setRequisitionsData(requisitionsInfo)
+      setRequisitionsData((prev) => ({
+        ...prev,
+        ...requisitionsInfo,
+      }))
 
       if (requisitionsInfo.status === "completed") {
         setRequisitionsStatus("completed")
@@ -41,6 +51,7 @@ export default function EstateAgentRepliesToRequisitionsPage() {
   }, [updates])
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A"
     return new Date(dateString).toLocaleDateString("en-GB", {
       day: "numeric",
       month: "long",
@@ -133,7 +144,7 @@ export default function EstateAgentRepliesToRequisitionsPage() {
                   <div>
                     <p className="text-sm font-medium text-gray-600">Completed</p>
                     <p className="font-semibold">
-                      {requisitionsData.completedAt ? formatDate(requisitionsData.completedAt) : "N/A"}
+                      {requisitionsData.completedAt ? formatDate(requisitionsData.completedAt) : "Just now"}
                     </p>
                   </div>
                   <div>
@@ -182,39 +193,49 @@ export default function EstateAgentRepliesToRequisitionsPage() {
               </ul>
             </div>
 
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <h4 className="font-medium mb-2 text-yellow-800">Potential Issues to Watch For</h4>
-              <ul className="space-y-2 text-sm text-yellow-700">
-                <li className="flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <span>Delays in requisition responses that could affect completion date</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <span>Outstanding mortgage discharge issues</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <span>Final meter readings or utility transfer problems</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <span>Key collection or property access complications</span>
-                </li>
-              </ul>
-            </div>
+            {requisitionsStatus === "awaiting" && (
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <h4 className="font-medium mb-2 text-yellow-800">Potential Issues to Watch For</h4>
+                <ul className="space-y-2 text-sm text-yellow-700">
+                  <li className="flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <span>Delays in requisition responses that could affect completion date</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <span>Outstanding mortgage discharge issues</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <span>Final meter readings or utility transfer problems</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <span>Key collection or property access complications</span>
+                  </li>
+                </ul>
+              </div>
+            )}
 
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="font-medium mb-2 text-blue-800">What Happens Next</h4>
-              <p className="text-sm text-blue-700">
+            <div
+              className={`p-4 border rounded-lg ${requisitionsStatus === "completed" ? "bg-green-50 border-green-200" : "bg-blue-50 border-blue-200"}`}
+            >
+              <h4
+                className={`font-medium mb-2 ${requisitionsStatus === "completed" ? "text-green-800" : "text-blue-800"}`}
+              >
+                What Happens Next
+              </h4>
+              <p className={`text-sm ${requisitionsStatus === "completed" ? "text-green-700" : "text-blue-700"}`}>
                 {requisitionsStatus === "completed"
-                  ? "All requisitions have been resolved. The transaction will now proceed to completion. Ensure all practical arrangements are in place for completion day."
+                  ? "All requisitions have been resolved. The transaction will now proceed to completion. Ensure all practical arrangements are in place for completion day including key handover, final property inspection, and vacant possession."
                   : "The conveyancers will continue to exchange requisitions and responses until all completion matters are resolved. You'll be notified of key milestones and any issues that may affect the completion timeline."}
               </p>
             </div>
 
             {/* Completion Timeline */}
-            <div className="p-4 border rounded-lg bg-green-50">
+            <div
+              className={`p-4 border rounded-lg ${requisitionsStatus === "completed" ? "bg-green-50 border-green-200" : "bg-gray-50"}`}
+            >
               <h4 className="font-semibold mb-2 flex items-center">
                 <FileText className="h-4 w-4 mr-2" />
                 Completion Timeline
@@ -222,7 +243,11 @@ export default function EstateAgentRepliesToRequisitionsPage() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Target Completion Date:</span>
-                  <span className="font-semibold">{requisitionsData.completionDate || "April 26, 2024"}</span>
+                  <span className="font-semibold">
+                    {requisitionsData.completionDate
+                      ? new Date(requisitionsData.completionDate).toLocaleDateString("en-GB")
+                      : "April 26, 2024"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Completion Time:</span>
@@ -230,11 +255,19 @@ export default function EstateAgentRepliesToRequisitionsPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>Days Remaining:</span>
-                  <span className="font-semibold text-green-600">2 Days</span>
+                  <span
+                    className={`font-semibold ${requisitionsStatus === "completed" ? "text-green-600" : "text-blue-600"}`}
+                  >
+                    2 Days
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Requisitions Deadline:</span>
-                  <span className="font-semibold">April 25, 2024</span>
+                  <span>Requisitions Status:</span>
+                  <span
+                    className={`font-semibold ${requisitionsStatus === "completed" ? "text-green-600" : "text-amber-600"}`}
+                  >
+                    {requisitionsStatus === "completed" ? "✓ Complete" : "In Progress"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -245,7 +278,7 @@ export default function EstateAgentRepliesToRequisitionsPage() {
                   ? "All requisitions resolved - ready for completion"
                   : "You will be automatically notified when all requisitions are resolved"}
               </p>
-              <Badge variant="outline" className="px-4 py-2">
+              <Badge variant={requisitionsStatus === "completed" ? "default" : "outline"} className="px-4 py-2">
                 {requisitionsStatus === "completed" ? (
                   <>
                     <CheckCircle className="h-4 w-4 mr-2" />

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useRealTime } from "@/contexts/real-time-context"
+import { useToast } from "@/hooks/use-toast"
 import {
   FileText,
   AlertTriangle,
@@ -22,14 +23,15 @@ import {
   AlertCircle,
   RefreshCw,
 } from "lucide-react"
-import { toast } from "@/hooks/use-toast"
 
 export default function BuyerConveyancerDraftContractPage() {
+  const { toast } = useToast()
   const [amendments, setAmendments] = useState("")
   const [downloadingDocuments, setDownloadingDocuments] = useState<Set<string>>(new Set())
   const [downloadedDocuments, setDownloadedDocuments] = useState<Set<string>>(new Set())
   const [reviewStatus, setReviewStatus] = useState<"not-started" | "in-progress" | "completed">("not-started")
   const [continuingToNext, setContinuingToNext] = useState(false)
+  const [receivedDocuments, setReceivedDocuments] = useState([])
 
   // NEW – keeps track of docs we've already shown a notification for
   const notifiedDocs = useRef<Set<string>>(new Set())
@@ -45,21 +47,95 @@ export default function BuyerConveyancerDraftContractPage() {
   })
   const [sendingRequest, setSendingRequest] = useState(false)
 
-  const { getDocumentsForRole, downloadDocument, markDocumentAsReviewed, sendUpdate } = useRealTime()
+  const { sendUpdate, markAsRead } = useRealTime()
 
-  // Get documents sent to buyer conveyancer for draft-contract stage
-  const receivedDocuments = getDocumentsForRole("buyer-conveyancer", "draft-contract")
-
-  // Check if there are new documents
+  // Load documents from localStorage and listen for updates
   useEffect(() => {
-    // Only check when received documents change
+    const loadDocuments = () => {
+      try {
+        const storedDocs = localStorage.getItem("draft-contract-documents")
+        if (storedDocs) {
+          const docs = JSON.parse(storedDocs)
+          // Filter documents that are delivered to buyer-conveyancer
+          const buyerDocs = docs.filter(
+            (doc) => doc.deliveredTo === "buyer-conveyancer" && doc.stage === "draft-contract",
+          )
+          setReceivedDocuments(buyerDocs)
+        }
+      } catch (error) {
+        console.error("Error loading documents:", error)
+      }
+    }
+
+    // Load initially
+    loadDocuments()
+
+    // Listen for storage changes (when seller sends new documents)
+    const handleStorageChange = (e) => {
+      if (e.key === "draft-contract-documents") {
+        loadDocuments()
+      }
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+
+    // Also check periodically for updates
+    const interval = setInterval(loadDocuments, 2000)
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange)
+      clearInterval(interval)
+    }
+  }, [])
+
+  // Listen for platform reset events
+  useEffect(() => {
+    const handlePlatformReset = () => {
+      console.log("Platform reset detected, clearing draft contract data")
+
+      // Reset all state
+      setReceivedDocuments([])
+      setDownloadedDocuments(new Set())
+      setDownloadingDocuments(new Set())
+      setReviewStatus("not-started")
+      setAmendments("")
+      setAmendmentRequest({
+        type: "",
+        priority: "medium",
+        description: "",
+        proposedChange: "",
+        deadline: "",
+        affectedClauses: [],
+      })
+      setShowAmendmentModal(false)
+      setContinuingToNext(false)
+      notifiedDocs.current.clear()
+
+      toast({
+        title: "Draft Contract Reset",
+        description: "All draft contract data has been cleared and reset to default state.",
+      })
+    }
+
+    window.addEventListener("platform-reset", handlePlatformReset)
+    return () => window.removeEventListener("platform-reset", handlePlatformReset)
+  }, [toast])
+
+  // Check if there are new documents and show notifications
+  useEffect(() => {
     const newDelivered = receivedDocuments.filter(
       (doc) => doc.status === "delivered" && !notifiedDocs.current.has(doc.id),
     )
 
     if (newDelivered.length) {
       newDelivered.forEach((doc) => {
-        // Send toast / activity entry once
+        // Send toast notification
+        toast({
+          title: "New Contract Received",
+          description: `${doc.name} is ready for review`,
+        })
+
+        // Send real-time update
         sendUpdate({
           type: "document_uploaded",
           stage: "draft-contract",
@@ -68,38 +144,72 @@ export default function BuyerConveyancerDraftContractPage() {
           description: `${doc.name} is ready for review`,
           data: { documentId: doc.id },
         })
+
         notifiedDocs.current.add(doc.id)
       })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [receivedDocuments]) // ✅ removed downloadedDocuments & sendUpdate
+  }, [receivedDocuments, sendUpdate, toast])
 
   const handleDownloadDocument = async (documentId: string, documentName: string) => {
     setDownloadingDocuments((prev) => new Set([...prev, documentId]))
 
     try {
-      const blob = await downloadDocument(documentId, "buyer-conveyancer")
-      if (blob) {
-        // Create download link
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement("a")
-        a.href = url
-        a.download = documentName
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
+      // Simulate download process
+      await new Promise((resolve) => setTimeout(resolve, 1500))
 
-        // Mark as downloaded
-        setDownloadedDocuments((prev) => new Set([...prev, documentId]))
+      // Create a dummy blob for download
+      const blob = new Blob([`Dummy content for ${documentName}`], {
+        type: "application/pdf",
+      })
 
-        // Update review status if this is the first download
-        if (reviewStatus === "not-started") {
-          setReviewStatus("in-progress")
+      // Create download link
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = documentName
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      // Mark as downloaded
+      setDownloadedDocuments((prev) => new Set([...prev, documentId]))
+
+      // Update document status in localStorage
+      try {
+        const storedDocs = localStorage.getItem("draft-contract-documents")
+        if (storedDocs) {
+          const docs = JSON.parse(storedDocs)
+          const updatedDocs = docs.map((doc) =>
+            doc.id === documentId ? { ...doc, status: "downloaded", downloadCount: (doc.downloadCount || 0) + 1 } : doc,
+          )
+          localStorage.setItem("draft-contract-documents", JSON.stringify(updatedDocs))
+
+          // Update local state
+          setReceivedDocuments(
+            updatedDocs.filter((doc) => doc.deliveredTo === "buyer-conveyancer" && doc.stage === "draft-contract"),
+          )
         }
+      } catch (error) {
+        console.error("Error updating document status:", error)
       }
+
+      // Update review status if this is the first download
+      if (reviewStatus === "not-started") {
+        setReviewStatus("in-progress")
+      }
+
+      toast({
+        title: "Document Downloaded",
+        description: `${documentName} has been downloaded successfully`,
+      })
     } catch (error) {
       console.error("Download failed:", error)
+      toast({
+        title: "Download Failed",
+        description: "Please try again later",
+        variant: "destructive",
+      })
     } finally {
       setDownloadingDocuments((prev) => {
         const newSet = new Set(prev)
@@ -110,7 +220,23 @@ export default function BuyerConveyancerDraftContractPage() {
   }
 
   const handleMarkAsReviewed = (documentId: string) => {
-    markDocumentAsReviewed(documentId)
+    try {
+      // Update document status in localStorage
+      const storedDocs = localStorage.getItem("draft-contract-documents")
+      if (storedDocs) {
+        const docs = JSON.parse(storedDocs)
+        const updatedDocs = docs.map((doc) => (doc.id === documentId ? { ...doc, status: "reviewed" } : doc))
+        localStorage.setItem("draft-contract-documents", JSON.stringify(updatedDocs))
+
+        // Update local state
+        setReceivedDocuments(
+          updatedDocs.filter((doc) => doc.deliveredTo === "buyer-conveyancer" && doc.stage === "draft-contract"),
+        )
+      }
+    } catch (error) {
+      console.error("Error updating document status:", error)
+    }
+
     setReviewStatus("completed")
 
     sendUpdate({
@@ -119,6 +245,11 @@ export default function BuyerConveyancerDraftContractPage() {
       role: "buyer-conveyancer",
       title: "Contract Review Completed",
       description: "Draft contract review has been completed",
+    })
+
+    toast({
+      title: "Review Completed",
+      description: "Document has been marked as reviewed",
     })
   }
 
@@ -261,7 +392,7 @@ export default function BuyerConveyancerDraftContractPage() {
                           </div>
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
-                            <span>Received: {document.uploadedAt.toLocaleDateString()}</span>
+                            <span>Received: {new Date(document.uploadedAt).toLocaleDateString()}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <FileCheck className="h-4 w-4" />
@@ -452,7 +583,7 @@ export default function BuyerConveyancerDraftContractPage() {
           </CardContent>
         </Card>
 
-        {/* Contract Amendments */}
+        {/* Proposed Amendments */}
         <Card>
           <CardHeader>
             <CardTitle>Proposed Amendments</CardTitle>

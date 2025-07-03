@@ -311,13 +311,25 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
 
   // Handle continue to completion
   const handleContinueToCompletion = () => {
-    // Send real-time update
+    // Send real-time update to mark stage as completed
     sendUpdate({
-      type: "stage_progression",
-      stage: "completion",
+      type: "stage_completed",
+      stage: "replies-to-requisitions",
       role: "buyer-conveyancer",
-      title: "Proceeding to Completion",
-      description: "Buyer conveyancer is proceeding to the completion stage",
+      title: "Replies to Requisitions Completed",
+      description: "All requisitions have been resolved and the transaction is proceeding to completion",
+      data: {
+        repliesToRequisitions: {
+          status: "completed",
+          completedBy: "Buyer Conveyancer",
+          completedAt: new Date().toISOString(),
+          totalRequisitions: stats.total,
+          repliedRequisitions: stats.replied,
+          outstandingRequisitions: 0,
+          nextStage: "Completion",
+          completionDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
+        },
+      },
     })
 
     toast({

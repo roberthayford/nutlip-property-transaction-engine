@@ -36,13 +36,13 @@ export default function BuyerContractExchangePage() {
         // Handle contract exchanged updates
         const updateData = {
           exchangedBy: exchangeUpdate.data?.exchangedBy || exchangeUpdate.role,
-          exchangedAt: exchangeUpdate.timestamp,
+          exchangedAt: exchangeUpdate.data?.exchangedAt || exchangeUpdate.createdAt,
           exchangeDate: exchangeUpdate.data?.exchangeDate || new Date().toISOString(),
           completionDate: exchangeUpdate.data?.completionDate,
           contractPrice: exchangeUpdate.data?.contractPrice || "£450,000",
           deposit: exchangeUpdate.data?.deposit || "£45,000 (10%)",
           status: "completed",
-          nextStage: "Completion",
+          nextStage: "Transaction Fee",
         }
         setExchangeData(updateData)
         setExchangeStatus("completed")
@@ -92,10 +92,10 @@ export default function BuyerContractExchangePage() {
           <div className="flex items-start space-x-3">
             <Users className="h-5 w-5 text-blue-600 mt-0.5" />
             <div>
-              <h3 className="font-semibold text-blue-800">Legal Exchange Process</h3>
+              <h3 className="font-semibold text-blue-800">Your Conveyancer is Handling This</h3>
               <p className="text-sm text-blue-700">
-                Your conveyancer is working with the seller's conveyancer to formally exchange contracts. This will
-                legally commit both parties to the transaction. You will be notified when the exchange is completed.
+                Your conveyancer is conducting the formal contract exchange with the seller's conveyancer. This is a
+                legal process that commits both parties to the transaction. You will be notified when it's completed.
               </p>
             </div>
           </div>
@@ -108,7 +108,7 @@ export default function BuyerContractExchangePage() {
               <Bell className="h-5 w-5" />
               Exchange Notification Status
             </CardTitle>
-            <CardDescription>Current status of the contract exchange process</CardDescription>
+            <CardDescription>Current status of your contract exchange</CardDescription>
           </CardHeader>
           <CardContent>
             {exchangeStatus === "awaiting" && (
@@ -117,8 +117,8 @@ export default function BuyerContractExchangePage() {
                 <div className="flex-1">
                   <div className="font-medium">Awaiting Contract Exchange</div>
                   <div className="text-sm text-gray-600">
-                    Your conveyancer is conducting the formal exchange process with the seller's conveyancer. You will
-                    be notified automatically when contracts are exchanged.
+                    Your conveyancer is working with the seller's conveyancer to exchange contracts. You will be
+                    notified automatically when this is completed.
                   </div>
                 </div>
                 <Badge variant="secondary" className="bg-amber-100 text-amber-800">
@@ -132,10 +132,10 @@ export default function BuyerContractExchangePage() {
                 <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div className="flex-1">
-                    <div className="font-medium">Contracts Exchanged Successfully</div>
+                    <div className="font-medium">Contracts Exchanged Successfully!</div>
                     <div className="text-sm text-gray-600">
-                      The contracts have been formally exchanged. You are now legally committed to purchase the property
-                      and the seller is legally committed to sell it to you.
+                      Congratulations! The contracts have been exchanged. You are now legally committed to purchase the
+                      property and the seller is committed to sell it to you.
                     </div>
                   </div>
                   <Badge variant="secondary" className="bg-green-100 text-green-800">
@@ -164,7 +164,7 @@ export default function BuyerContractExchangePage() {
                     <p className="font-semibold">{exchangeData.contractPrice || "£450,000"}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Your Deposit</p>
+                    <p className="text-sm font-medium text-gray-600">Deposit Paid</p>
                     <p className="font-semibold">{exchangeData.deposit || "£45,000 (10%)"}</p>
                   </div>
                   <div>
@@ -184,69 +184,94 @@ export default function BuyerContractExchangePage() {
         </Card>
 
         <div className="grid gap-6 md:grid-cols-1">
-          {/* Buyer Monitoring Role */}
+          {/* What This Means for You */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Eye className="h-5 w-5" />
-                Your Role During Contract Exchange
+                What This Means for You
               </CardTitle>
-              <CardDescription>What you need to know about the contract exchange process</CardDescription>
+              <CardDescription>Understanding the contract exchange process</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-medium mb-2">What's Happening Now</h4>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
-                    <span>Your conveyancer is coordinating with the seller's conveyancer</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
-                    <span>Final pre-exchange checks are being completed</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
-                    <span>Your deposit is being prepared for transfer</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
-                    <span>The formal exchange call will take place between conveyancers</span>
-                  </li>
-                </ul>
-              </div>
+              {exchangeStatus === "awaiting" && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="font-medium mb-2 text-blue-800">While You Wait</h4>
+                  <ul className="space-y-2 text-sm text-blue-700">
+                    <li className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+                      <span>Your conveyancer is handling all legal aspects of the exchange</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+                      <span>Ensure your mortgage funds are ready for completion</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+                      <span>Start planning your move and arrange removals</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+                      <span>Arrange buildings insurance to start from exchange</span>
+                    </li>
+                  </ul>
+                </div>
+              )}
+
+              {exchangeStatus === "completed" && (
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <h4 className="font-medium mb-2 text-green-800">Now That Contracts Are Exchanged</h4>
+                  <ul className="space-y-2 text-sm text-green-700">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>You are legally committed to purchase the property</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>The seller is legally committed to sell to you</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Your deposit is now held by the seller's conveyancer</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Completion must happen on the agreed date</span>
+                    </li>
+                  </ul>
+                </div>
+              )}
 
               <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <h4 className="font-medium mb-2 text-yellow-800">Important Reminders</h4>
+                <h4 className="font-medium mb-2 text-yellow-800">Important to Remember</h4>
                 <ul className="space-y-2 text-sm text-yellow-700">
                   <li className="flex items-start gap-2">
                     <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    <span>Ensure your mortgage offer remains valid and funds are available</span>
+                    <span>
+                      {exchangeStatus === "completed"
+                        ? "You could lose your deposit if you fail to complete without valid reason"
+                        : "Once exchanged, you will be legally bound to complete the purchase"}
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    <span>Your deposit will become non-refundable after exchange</span>
+                    <span>
+                      {exchangeStatus === "completed"
+                        ? "Completion must happen on the agreed date or penalty interest applies"
+                        : "Your deposit will be at risk once contracts are exchanged"}
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    <span>You will be legally bound to complete the purchase</span>
+                    <span>Buildings insurance should be in place from exchange date</span>
                   </li>
                 </ul>
-              </div>
-
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h4 className="font-medium mb-2 text-blue-800">What Happens Next</h4>
-                <p className="text-sm text-blue-700">
-                  {exchangeStatus === "completed"
-                    ? "Congratulations! Contracts have been exchanged successfully. You are now legally committed to purchase the property. Your conveyancer will begin final completion preparations and coordinate with your mortgage lender for the final drawdown."
-                    : "Your conveyancer will complete the formal exchange process with the seller's conveyancer. You'll be notified immediately when contracts are exchanged and can then prepare for completion day."}
-                </p>
               </div>
 
               <div className="text-center">
                 <p className="text-sm text-muted-foreground mb-4">
                   {exchangeStatus === "completed"
-                    ? "Contract exchange completed successfully - you're buying the property!"
+                    ? "Contracts exchanged successfully - completion preparations can now begin"
                     : "You will be automatically notified when contracts are exchanged"}
                 </p>
                 <Badge variant="outline" className="px-4 py-2">
@@ -258,7 +283,7 @@ export default function BuyerContractExchangePage() {
                   ) : (
                     <>
                       <Clock className="h-4 w-4 mr-2" />
-                      Awaiting Exchange Completion
+                      Awaiting Exchange
                     </>
                   )}
                 </Badge>
@@ -277,82 +302,41 @@ export default function BuyerContractExchangePage() {
                 <div className="p-4 border rounded-lg">
                   <h4 className="font-semibold mb-2 flex items-center">
                     <FileText className="h-4 w-4 mr-2" />
-                    Legal Commitment
+                    What Happens at Exchange
                   </h4>
                   <ul className="text-sm space-y-1">
-                    <li>• You are legally bound to purchase the property</li>
-                    <li>• The seller is legally bound to sell to you</li>
-                    <li>• Completion date becomes fixed and binding</li>
-                    <li>• Your deposit becomes non-refundable</li>
-                    <li>• Contract terms cannot be changed</li>
+                    <li>• Conveyancers exchange identical contracts</li>
+                    <li>• Both parties become legally bound</li>
+                    <li>• Completion date is fixed</li>
+                    <li>• Deposit is transferred to seller's conveyancer</li>
                   </ul>
                 </div>
 
                 <div className="p-4 border rounded-lg">
                   <h4 className="font-semibold mb-2 flex items-center">
                     <Calendar className="h-4 w-4 mr-2" />
-                    Next Steps
+                    After Exchange
                   </h4>
                   <ul className="text-sm space-y-1">
-                    <li>• Final mortgage drawdown will be arranged</li>
-                    <li>• Completion statements will be prepared</li>
-                    <li>• Final property preparations will begin</li>
-                    <li>• Key handover arrangements will be made</li>
-                    <li>• Moving arrangements can be finalized</li>
+                    <li>• Final mortgage arrangements</li>
+                    <li>• Completion statement preparation</li>
+                    <li>• Moving arrangements</li>
+                    <li>• Key collection on completion day</li>
                   </ul>
                 </div>
               </div>
 
               <div
                 className={`p-4 border rounded-lg ${
-                  exchangeStatus === "completed" ? "bg-green-50 border-green-200" : "bg-blue-50 border-blue-200"
+                  exchangeStatus === "completed" ? "bg-green-50 border-green-200" : "bg-gray-50"
                 }`}
               >
-                <h4
-                  className={`font-semibold mb-2 ${
-                    exchangeStatus === "completed" ? "text-green-800" : "text-blue-800"
-                  }`}
-                >
-                  {exchangeStatus === "completed" ? "Congratulations!" : "Preparing for Exchange"}
-                </h4>
-                <ul
-                  className={`text-sm space-y-1 ${exchangeStatus === "completed" ? "text-green-700" : "text-blue-700"}`}
-                >
-                  <li>
-                    • {exchangeStatus === "completed" ? "You are now" : "You will soon be"} the legal owner-to-be of the
-                    property
-                  </li>
-                  <li>
-                    • {exchangeStatus === "completed" ? "Begin planning" : "Prepare to plan"} your move and completion
-                    day
-                  </li>
-                  <li>
-                    • {exchangeStatus === "completed" ? "Coordinate" : "Prepare to coordinate"} with your mortgage
-                    lender for final funds
-                  </li>
-                  <li>
-                    • {exchangeStatus === "completed" ? "Finalize" : "Prepare"} moving arrangements and utility
-                    transfers
-                  </li>
-                </ul>
-              </div>
-
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-4">
+                <h4 className="font-semibold mb-2">Current Status</h4>
+                <p className="text-sm">
                   {exchangeStatus === "completed"
-                    ? "The property purchase is now legally binding - congratulations on your new home!"
-                    : "You will be notified immediately when contracts are exchanged"}
+                    ? "✅ Contracts have been exchanged successfully. You are now legally committed to purchase the property and can begin final preparations for completion."
+                    : "⏳ Your conveyancer is handling the exchange process with the seller's conveyancer. You will be notified when contracts are exchanged."}
                 </p>
-                <Badge variant="outline" className="px-4 py-2">
-                  {exchangeStatus === "completed" ? (
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                  ) : (
-                    <Clock className="h-4 w-4 mr-2" />
-                  )}
-                  {exchangeStatus === "completed"
-                    ? "Exchange Complete - Property Secured!"
-                    : "Exchange Expected: Today 2:00 PM"}
-                </Badge>
               </div>
             </div>
           </CardContent>

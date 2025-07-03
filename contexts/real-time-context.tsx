@@ -31,6 +31,8 @@ export interface RealtimeUpdate {
   description: string
   createdAt: string
   data?: Record<string, unknown>
+  /** whether this update has been seen in the current tab */
+  read?: boolean
 }
 
 export interface RealtimeDocument {
@@ -131,6 +133,7 @@ interface RealTimeCtx {
   downloadDocument: (id: string, role: Role) => Promise<Blob | null>
   markDocumentAsReviewed: (id: string) => void
   resetToDefault: () => void
+  markAsRead: (id: string) => void
 }
 
 const RealTimeContext = createContext<RealTimeCtx | undefined>(undefined)
@@ -178,6 +181,7 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
         ...partial,
         id: crypto.randomUUID(),
         createdAt: new Date().toISOString(),
+        read: false,
       }
 
       // 1. updates
@@ -392,6 +396,10 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
     )
   }, [])
 
+  const markAsRead = useCallback<RealTimeCtx["markAsRead"]>((id) => {
+    setUpdates((prev) => prev.map((u) => (u.id === id ? { ...u, read: true } : u)))
+  }, [])
+
   /* ---------- context value --------------------------------------- */
   const ctx: RealTimeCtx = {
     updates,
@@ -402,6 +410,7 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
     downloadDocument,
     markDocumentAsReviewed,
     resetToDefault,
+    markAsRead,
   }
 
   return <RealTimeContext.Provider value={ctx}>{children}</RealTimeContext.Provider>

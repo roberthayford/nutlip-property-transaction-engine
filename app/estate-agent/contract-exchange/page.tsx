@@ -36,13 +36,13 @@ export default function EstateAgentContractExchangePage() {
         // Handle contract exchanged updates
         const updateData = {
           exchangedBy: exchangeUpdate.data?.exchangedBy || exchangeUpdate.role,
-          exchangedAt: exchangeUpdate.timestamp,
+          exchangedAt: exchangeUpdate.data?.exchangedAt || exchangeUpdate.createdAt,
           exchangeDate: exchangeUpdate.data?.exchangeDate || new Date().toISOString(),
           completionDate: exchangeUpdate.data?.completionDate,
           contractPrice: exchangeUpdate.data?.contractPrice || "£450,000",
           deposit: exchangeUpdate.data?.deposit || "£45,000 (10%)",
           status: "completed",
-          nextStage: "Completion",
+          nextStage: "Transaction Fee",
         }
         setExchangeData(updateData)
         setExchangeStatus("completed")
@@ -303,35 +303,15 @@ export default function EstateAgentContractExchangePage() {
 
               <div
                 className={`p-4 border rounded-lg ${
-                  exchangeStatus === "completed" ? "bg-green-50 border-green-200" : "bg-green-50 border-green-200"
+                  exchangeStatus === "completed" ? "bg-green-50 border-green-200" : "bg-gray-50"
                 }`}
               >
-                <h4 className="font-semibold text-green-800 mb-2">Estate Agent Role After Exchange</h4>
-                <ul className="text-sm text-green-700 space-y-1">
-                  <li>
-                    • {exchangeStatus === "completed" ? "Confirm" : "Prepare to confirm"} exchange completion with all
-                    parties
-                  </li>
-                  <li>• Prepare for completion day arrangements</li>
-                  <li>• Coordinate final property preparations</li>
-                  <li>• Arrange key handover logistics</li>
-                </ul>
-              </div>
-
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-4">
+                <h4 className="font-semibold mb-2">Current Status</h4>
+                <p className="text-sm">
                   {exchangeStatus === "completed"
-                    ? "Contracts have been exchanged - transaction is now legally binding"
-                    : "You will be notified immediately when contracts are exchanged"}
+                    ? "✅ Contracts have been exchanged successfully. Both parties are now legally committed to complete the transaction on the agreed date."
+                    : "⏳ The conveyancers are handling the formal exchange process. You will be notified when contracts are exchanged."}
                 </p>
-                <Badge variant="outline" className="px-4 py-2">
-                  {exchangeStatus === "completed" ? (
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                  ) : (
-                    <Clock className="h-4 w-4 mr-2" />
-                  )}
-                  {exchangeStatus === "completed" ? "Exchange Complete" : "Exchange Expected: Today 2:00 PM"}
-                </Badge>
               </div>
             </div>
           </CardContent>
