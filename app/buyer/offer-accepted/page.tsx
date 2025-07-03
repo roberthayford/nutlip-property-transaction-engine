@@ -2,7 +2,7 @@ import TransactionLayout from "@/components/transaction-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { HandHeart, Calendar, DollarSign, Home } from "lucide-react"
+import { HandHeart, Calendar, PoundSterling, Home } from "lucide-react"
 import Link from "next/link"
 
 export default function BuyerOfferAcceptedPage() {
@@ -41,7 +41,7 @@ export default function BuyerOfferAcceptedPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <DollarSign className="h-5 w-5" />
+                <PoundSterling className="h-5 w-5" />
                 <span>Offer Details</span>
               </CardTitle>
             </CardHeader>
