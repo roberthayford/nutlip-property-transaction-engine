@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import TransactionLayout from "@/components/transaction-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -18,18 +18,14 @@ import {
   AlertTriangle,
   Clock,
   FileText,
-  Users,
-  Upload,
   Send,
   X,
   Calendar,
   AlertCircle,
-  Eye,
-  Download,
-  ThumbsUp,
-  ArrowRight,
   RefreshCw,
   CheckCircle2,
+  MessageSquare,
+  Reply,
 } from "lucide-react"
 
 // Enhanced status types for better tracking
@@ -57,8 +53,24 @@ export default function SellerConveyancerDraftContractPage() {
   const [sentTimestamp, setSentTimestamp] = useState<Date | null>(null)
   const [deliveredTimestamp, setDeliveredTimestamp] = useState<Date | null>(null)
 
-  // Real-time context - NOW WITH addDocument METHOD
-  const { sendUpdate, addDocument } = useRealTime()
+  // Amendment request handling
+  const [showReplyModal, setShowReplyModal] = useState(false)
+  const [selectedAmendment, setSelectedAmendment] = useState<string | null>(null)
+  const [replyData, setReplyData] = useState({
+    decision: "accepted" as "accepted" | "rejected" | "counter-proposal",
+    message: "",
+    counterProposal: "",
+  })
+  const [sendingReply, setSendingReply] = useState(false)
+
+  // keeps track of amendments we've already shown a notification for
+  const notifiedAmendments = useRef<Set<string>>(new Set())
+
+  // Real-time context
+  const { sendUpdate, addDocument, getAmendmentRequestsForRole, replyToAmendmentRequest } = useRealTime()
+
+  // Get amendment requests sent to seller conveyancer for draft-contract stage
+  const receivedAmendmentRequests = getAmendmentRequestsForRole("seller-conveyancer", "draft-contract")
 
   // Connection helpers (simple online/offline indicator)
   const [isConnected, setIsConnected] = useState<boolean>(typeof navigator !== "undefined" ? navigator.onLine : true)
@@ -75,6 +87,24 @@ export default function SellerConveyancerDraftContractPage() {
       window.removeEventListener("offline", handleOffline)
     }
   }, [])
+
+  // Check for new amendment requests and show notifications
+  useEffect(() => {
+    const newRequests = receivedAmendmentRequests.filter(
+      (req) => req.status === "pending" && !notifiedAmendments.current.has(req.id),
+    )
+
+    if (newRequests.length) {
+      newRequests.forEach((req) => {
+        toast({
+          title: "New Amendment Request",
+          description: `${req.type} amendment requested by buyer's conveyancer`,
+        })
+
+        notifiedAmendments.current.add(req.id)
+      })
+    }
+  }, [receivedAmendmentRequests, toast])
 
   // Simulate buyer review progress
   useEffect(() => {
@@ -136,6 +166,15 @@ export default function SellerConveyancerDraftContractPage() {
       setSendStatus("idle")
       setSentTimestamp(null)
       setDeliveredTimestamp(null)
+      setShowReplyModal(false)
+      setSelectedAmendment(null)
+      setReplyData({
+        decision: "accepted",
+        message: "",
+        counterProposal: "",
+      })
+      setSendingReply(false)
+      notifiedAmendments.current.clear()
 
       toast({
         title: "Draft Contract Reset",
@@ -157,6 +196,15 @@ export default function SellerConveyancerDraftContractPage() {
       ]
       return validTypes.includes(file.type) && file.size <= 10 * 1024 * 1024 // 10MB limit
     })
+
+    if (validFiles.length !== files.length) {
+      toast({
+        title: "Invalid Files",
+        description: "Only PDF and Word documents under 10MB are allowed",
+        variant: "destructive",
+      })
+    }
+
     setUploadedFiles((prev) => [...prev, ...validFiles])
   }
 
@@ -164,8 +212,22 @@ export default function SellerConveyancerDraftContractPage() {
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const handleSendContract = async () => {
-    if (uploadedFiles.length === 0 || !coverMessage.trim()) {
+  const handleSendToBuyer = async () => {
+    if (uploadedFiles.length === 0) {
+      toast({
+        title: "No Documents",
+        description: "Please upload at least one contract document",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!isConnected) {
+      toast({
+        title: "Connection Error",
+        description: "Please check your internet connection and try again",
+        variant: "destructive",
+      })
       return
     }
 
@@ -173,69 +235,122 @@ export default function SellerConveyancerDraftContractPage() {
     setSendStatus("sending")
 
     try {
-      // Simulate sending process with more realistic timing
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      // Simulate sending process
+      await new Promise((resolve) => setTimeout(resolve, 3000))
 
-      // Create document records using the new addDocument method
-      uploadedFiles.forEach((file) => {
+      // Add documents to the real-time system
+      for (const file of uploadedFiles) {
         addDocument({
           name: file.name,
           stage: "draft-contract",
           uploadedBy: "seller-conveyancer",
           deliveredTo: "buyer-conveyancer",
           size: file.size,
-          priority: priority,
-          coverMessage: coverMessage,
-          deadline: deadline,
+          priority,
+          coverMessage: coverMessage || undefined,
+          deadline: deadline || undefined,
         })
-      })
+      }
 
-      // Send real-time update notification
+      // Send activity update
       sendUpdate({
         type: "document_uploaded",
         stage: "draft-contract",
         role: "seller-conveyancer",
         title: "Draft Contract Sent",
-        description: `Draft contract sent to buyer's conveyancer for review (Priority: ${priority})`,
+        description: `${uploadedFiles.length} contract document${uploadedFiles.length > 1 ? "s" : ""} sent to buyer's conveyancer`,
         data: {
-          files: uploadedFiles.map((f) => f.name),
-          message: coverMessage,
-          priority,
-          deadline,
           documentCount: uploadedFiles.length,
+          priority,
+          hasDeadline: !!deadline,
         },
       })
 
-      // Update statuses
+      // Update status
       setBuyerReviewStatus("sent")
       setSentTimestamp(new Date())
-      setContractPreparedStatus("completed")
       setSendStatus("sent")
 
-      toast({
-        title: "Contract Sent Successfully",
-        description: `${uploadedFiles.length} document(s) sent to buyer's conveyancer`,
-      })
+      // Clear form
+      setUploadedFiles([])
+      setCoverMessage("")
+      setPriority("standard")
+      setDeadline("")
 
-      // Reset form after successful send
-      setTimeout(() => {
-        setUploadedFiles([])
-        setCoverMessage("")
-        setPriority("standard")
-        setDeadline("")
-        setSendStatus("idle")
-      }, 3000)
+      toast({
+        title: "Documents Sent Successfully",
+        description: "Draft contract documents have been sent to the buyer's conveyancer",
+      })
     } catch (error) {
-      console.error("Send contract failed:", error)
       setSendStatus("error")
-      setConnectionError("Failed to send contract. Please try again.")
       toast({
         title: "Send Failed",
-        description: "Failed to send contract. Please try again.",
+        description: "Failed to send documents. Please try again.",
         variant: "destructive",
       })
     } finally {
       setIsSending(false)
+    }
+  }
+
+  const handleReplyToAmendment = async () => {
+    if (!selectedAmendment || !replyData.message) {
+      toast({
+        title: "Incomplete Reply",
+        description: "Please provide a response message",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setSendingReply(true)
+
+    try {
+      // Simulate sending reply
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+
+      // Send reply using real-time context
+      replyToAmendmentRequest(selectedAmendment, {
+        message: replyData.message,
+        decision: replyData.decision,
+        counterProposal: replyData.decision === "counter-proposal" ? replyData.counterProposal : undefined,
+      })
+
+      // Send additional update to notify buyer conveyancer
+      sendUpdate({
+        type: "amendment_replied",
+        stage: "draft-contract",
+        role: "seller-conveyancer",
+        title: "Amendment Reply Sent",
+        description: `${replyData.decision.replace("-", " ")} amendment request from buyer's conveyancer`,
+        data: {
+          amendmentId: selectedAmendment,
+          decision: replyData.decision,
+          targetRole: "buyer-conveyancer",
+        },
+      })
+
+      // Reset form and close modal
+      setReplyData({
+        decision: "accepted",
+        message: "",
+        counterProposal: "",
+      })
+      setSelectedAmendment(null)
+      setShowReplyModal(false)
+
+      toast({
+        title: "Reply Sent Successfully",
+        description: `Your ${replyData.decision.replace("-", " ")} response has been sent to the buyer's conveyancer`,
+      })
+    } catch (error) {
+      toast({
+        title: "Failed to Send Reply",
+        description: "Please try again later",
+        variant: "destructive",
+      })
+    } finally {
+      setSendingReply(false)
     }
   }
 
@@ -253,399 +368,342 @@ export default function SellerConveyancerDraftContractPage() {
 
   const isFormValid = uploadedFiles.length > 0 && coverMessage.trim().length > 0
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+      case "approved":
+      case "sent":
+      case "delivered":
+        return "bg-green-100 text-green-800"
+      case "in-progress":
+      case "reviewing":
+      case "pending":
+        return "bg-blue-100 text-blue-800"
+      case "needs-revision":
+      case "rejected":
+      case "amendments-requested":
+        return "bg-red-100 text-red-800"
+      case "not-started":
+      case "not-sent":
+      case "not-required":
+        return "bg-gray-100 text-gray-600"
+      default:
+        return "bg-gray-100 text-gray-600"
+    }
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "completed":
+      case "approved":
+      case "sent":
+      case "delivered":
+        return <CheckCircle className="h-4 w-4" />
+      case "in-progress":
+      case "reviewing":
+      case "pending":
+        return <Clock className="h-4 w-4" />
+      case "needs-revision":
+      case "rejected":
+      case "amendments-requested":
+        return <AlertTriangle className="h-4 w-4" />
+      default:
+        return <Clock className="h-4 w-4" />
+    }
+  }
+
+  const getPriorityColor = (priority: "low" | "medium" | "high") => {
+    switch (priority) {
+      case "high":
+        return "bg-red-100 text-red-800 border-red-300"
+      case "medium":
+        return "bg-amber-100 text-amber-800 border-amber-300"
+      case "low":
+        return "bg-green-100 text-green-800 border-green-300"
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-300"
+    }
+  }
+
   return (
-    <TransactionLayout title="Draft Contract Review" stage="draft-contract" userRole="seller-conveyancer">
+    <TransactionLayout currentStage="draft-contract" userRole="seller-conveyancer">
       <div className="space-y-6">
-        {/* Connection Status Indicator */}
+        {/* Connection Status */}
         {!isConnected && (
-          <Card className="border-2 border-amber-200 bg-amber-50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-amber-600" />
-                <div>
-                  <p className="font-medium text-amber-800">Limited Connectivity</p>
-                  <p className="text-sm text-amber-700">
-                    {connectionError || "Real-time features may be limited. Your work will be saved locally."}
-                  </p>
-                </div>
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="text-sm font-medium">
+                  Connection Issue: {connectionError || "You appear to be offline"}
+                </span>
               </div>
             </CardContent>
           </Card>
         )}
 
+        {/* Amendment Requests Section */}
+        {receivedAmendmentRequests.length > 0 && (
+          <Card className="border-2 border-amber-200 bg-amber-50/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-amber-800">
+                <MessageSquare className="h-5 w-5" />
+                Amendment Requests
+                <Badge variant="secondary" className="ml-2">
+                  {receivedAmendmentRequests.length} request{receivedAmendmentRequests.length !== 1 ? "s" : ""}
+                </Badge>
+              </CardTitle>
+              <CardDescription>Amendment requests received from the buyer's conveyancer</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {receivedAmendmentRequests.map((request) => (
+                <div
+                  key={request.id}
+                  className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h4 className="font-semibold text-gray-900">{request.type}</h4>
+                        <Badge className={getPriorityColor(request.priority)}>{request.priority} priority</Badge>
+                        <Badge
+                          className={
+                            request.status === "replied"
+                              ? "bg-green-100 text-green-800"
+                              : request.status === "acknowledged"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-amber-100 text-amber-800"
+                          }
+                        >
+                          {request.status}
+                        </Badge>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          Received: {request.createdAt.toLocaleDateString()}
+                        </div>
+                        {request.deadline && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            Deadline: {new Date(request.deadline).toLocaleDateString()}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 mb-1">Description:</p>
+                          <p className="text-sm text-gray-700">{request.description}</p>
+                        </div>
+
+                        {request.proposedChange && (
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 mb-1">Proposed Solution:</p>
+                            <p className="text-sm text-gray-700">{request.proposedChange}</p>
+                          </div>
+                        )}
+
+                        {request.affectedClauses.length > 0 && (
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 mb-1">Affected Clauses:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {request.affectedClauses.map((clause, index) => (
+                                <Badge key={index} variant="outline" className="text-xs">
+                                  {clause}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {request.reply && (
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                            <div className="flex items-start gap-2">
+                              <Reply className="h-4 w-4 text-green-600 mt-0.5" />
+                              <div>
+                                <p className="text-sm font-medium text-green-900 mb-1">
+                                  Your Reply ({request.reply.decision}):
+                                </p>
+                                <p className="text-sm text-green-800">{request.reply.message}</p>
+                                {request.reply.counterProposal && (
+                                  <div className="mt-2">
+                                    <p className="text-sm font-medium text-green-900 mb-1">Counter-proposal:</p>
+                                    <p className="text-sm text-green-800">{request.reply.counterProposal}</p>
+                                  </div>
+                                )}
+                                <p className="text-xs text-green-600 mt-2">
+                                  Replied on {request.reply.repliedAt.toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {request.status === "pending" && (
+                      <Button
+                        onClick={() => {
+                          setSelectedAmendment(request.id)
+                          setShowReplyModal(true)
+                        }}
+                        size="sm"
+                        className="ml-4"
+                      >
+                        <Reply className="h-4 w-4 mr-2" />
+                        Reply
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Interactive Contract Progress Tracker */}
-        <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-blue-600" />
-              Contract Progress Tracker
-              {isConnected && (
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  Connected
-                </Badge>
-              )}
+              <FileText className="h-5 w-5" />
+              Draft Contract Status Overview
             </CardTitle>
-            <CardDescription>Track the progress of your draft contract through each stage</CardDescription>
+            <CardDescription>Track the progress of the draft contract preparation and review</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* 1. Contract Prepared */}
-              <div
-                className={`relative p-4 rounded-lg border-2 transition-all duration-300 ${
-                  contractPreparedStatus === "completed"
-                    ? "border-green-300 bg-green-50"
-                    : contractPreparedStatus === "in-progress"
-                      ? "border-blue-300 bg-blue-50"
-                      : "border-gray-300 bg-gray-50"
-                }`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    {contractPreparedStatus === "completed" ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    ) : contractPreparedStatus === "in-progress" ? (
-                      <RefreshCw className="h-5 w-5 text-blue-600 animate-spin" />
-                    ) : (
-                      <Clock className="h-5 w-5 text-gray-400" />
-                    )}
-                    <span className="font-semibold text-sm">Contract Prepared</span>
-                  </div>
-                  <Badge
-                    variant={contractPreparedStatus === "completed" ? "default" : "secondary"}
-                    className={
-                      contractPreparedStatus === "completed"
-                        ? "bg-green-100 text-green-800"
-                        : contractPreparedStatus === "in-progress"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-gray-100 text-gray-600"
-                    }
-                  >
-                    {contractPreparedStatus === "completed"
-                      ? "Complete"
-                      : contractPreparedStatus === "in-progress"
-                        ? "In Progress"
-                        : "Pending"}
+              {/* Contract Preparation */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-gray-900">Contract Preparation</h4>
+                  <Badge className={getStatusColor(contractPreparedStatus)}>
+                    <div className="flex items-center gap-1">
+                      {getStatusIcon(contractPreparedStatus)}
+                      {contractPreparedStatus.replace("-", " ")}
+                    </div>
                   </Badge>
                 </div>
-
-                <p className="text-xs text-gray-600 mb-3">
+                <div className="text-sm text-gray-600">
                   {contractPreparedStatus === "completed"
-                    ? "Contract is ready and has been prepared successfully"
-                    : "Preparing contract with all necessary details and clauses"}
-                </p>
-
-                <div className="space-y-2">
-                  {contractPreparedStatus === "in-progress" && (
-                    <Button size="sm" onClick={handleMarkContractComplete} className="w-full">
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      Mark as Complete
-                    </Button>
-                  )}
-
-                  {contractPreparedStatus === "completed" && (
-                    <div className="flex items-center gap-1 text-xs text-green-700">
-                      <CheckCircle className="h-3 w-3" />
-                      Ready for buyer review
-                    </div>
-                  )}
-                </div>
-
-                {/* Progress indicator */}
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200 rounded-b-lg">
-                  <div
-                    className={`h-full rounded-b-lg transition-all duration-500 ${
-                      contractPreparedStatus === "completed"
-                        ? "w-full bg-green-500"
-                        : contractPreparedStatus === "in-progress"
-                          ? "w-3/4 bg-blue-500"
-                          : "w-1/4 bg-gray-400"
-                    }`}
-                  />
+                    ? "Contract documents are ready for review"
+                    : contractPreparedStatus === "in-progress"
+                      ? "Preparing contract documents..."
+                      : "Contract preparation not started"}
                 </div>
               </div>
 
-              {/* 2. Buyer Review */}
-              <div
-                className={`relative p-4 rounded-lg border-2 transition-all duration-300 ${
-                  buyerReviewStatus === "completed"
-                    ? "border-green-300 bg-green-50"
-                    : buyerReviewStatus === "reviewing"
-                      ? "border-amber-300 bg-amber-50"
-                      : buyerReviewStatus === "delivered" || buyerReviewStatus === "sent"
-                        ? "border-blue-300 bg-blue-50"
-                        : "border-gray-300 bg-gray-50"
-                }`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    {buyerReviewStatus === "completed" ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    ) : buyerReviewStatus === "reviewing" ? (
-                      <Eye className="h-5 w-5 text-amber-600" />
-                    ) : buyerReviewStatus === "delivered" ? (
-                      <Download className="h-5 w-5 text-blue-600" />
-                    ) : buyerReviewStatus === "sent" ? (
-                      <Send className="h-5 w-5 text-blue-600" />
-                    ) : (
-                      <Clock className="h-5 w-5 text-gray-400" />
-                    )}
-                    <span className="font-semibold text-sm">Buyer Review</span>
-                  </div>
-                  <Badge
-                    variant="secondary"
-                    className={
-                      buyerReviewStatus === "completed"
-                        ? "bg-green-100 text-green-800"
-                        : buyerReviewStatus === "reviewing"
-                          ? "bg-amber-100 text-amber-800"
-                          : buyerReviewStatus === "delivered" || buyerReviewStatus === "sent"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-gray-100 text-gray-600"
-                    }
-                  >
-                    {buyerReviewStatus === "completed"
-                      ? "Complete"
-                      : buyerReviewStatus === "reviewing"
-                        ? "Reviewing"
-                        : buyerReviewStatus === "delivered"
-                          ? "Delivered"
-                          : buyerReviewStatus === "sent"
-                            ? "Sent"
-                            : "Not Sent"}
+              {/* Buyer Review */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-gray-900">Buyer Review</h4>
+                  <Badge className={getStatusColor(buyerReviewStatus)}>
+                    <div className="flex items-center gap-1">
+                      {getStatusIcon(buyerReviewStatus)}
+                      {buyerReviewStatus.replace("-", " ")}
+                    </div>
                   </Badge>
                 </div>
-
-                <p className="text-xs text-gray-600 mb-3">
+                <div className="text-sm text-gray-600">
                   {buyerReviewStatus === "completed"
-                    ? "Buyer's conveyancer has completed their review"
+                    ? "Buyer's conveyancer has completed review"
                     : buyerReviewStatus === "reviewing"
-                      ? "Buyer's conveyancer is currently reviewing the contract"
+                      ? "Under review by buyer's conveyancer"
                       : buyerReviewStatus === "delivered"
-                        ? "Contract delivered and awaiting buyer's conveyancer review"
+                        ? "Documents delivered, awaiting review"
                         : buyerReviewStatus === "sent"
-                          ? "Contract sent, awaiting delivery confirmation"
-                          : "Waiting for contract to be sent to buyer's conveyancer"}
-                </p>
-
-                <div className="space-y-2">
-                  {sentTimestamp && <div className="text-xs text-gray-500">Sent: {sentTimestamp.toLocaleString()}</div>}
-
-                  {deliveredTimestamp && (
-                    <div className="text-xs text-green-600">Delivered: {deliveredTimestamp.toLocaleString()}</div>
-                  )}
-
-                  {buyerReviewStatus === "reviewing" && (
-                    <div className="flex items-center gap-1 text-xs text-amber-700">
-                      <RefreshCw className="h-3 w-3 animate-spin" />
-                      Review in progress...
-                    </div>
-                  )}
+                          ? "Documents sent, confirming delivery..."
+                          : "Documents not yet sent"}
                 </div>
-
-                {/* Progress indicator */}
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200 rounded-b-lg">
-                  <div
-                    className={`h-full rounded-b-lg transition-all duration-500 ${
-                      buyerReviewStatus === "completed"
-                        ? "w-full bg-green-500"
-                        : buyerReviewStatus === "reviewing"
-                          ? "w-3/4 bg-amber-500"
-                          : buyerReviewStatus === "delivered"
-                            ? "w-2/3 bg-blue-500"
-                            : buyerReviewStatus === "sent"
-                              ? "w-1/3 bg-blue-400"
-                              : "w-0 bg-gray-400"
-                    }`}
-                  />
-                </div>
+                {sentTimestamp && <div className="text-xs text-gray-500">Sent: {sentTimestamp.toLocaleString()}</div>}
+                {deliveredTimestamp && (
+                  <div className="text-xs text-gray-500">Delivered: {deliveredTimestamp.toLocaleString()}</div>
+                )}
               </div>
 
-              {/* 3. Client Approval */}
-              <div
-                className={`relative p-4 rounded-lg border-2 transition-all duration-300 ${
-                  clientApprovalStatus === "approved"
-                    ? "border-green-300 bg-green-50"
-                    : clientApprovalStatus === "pending"
-                      ? "border-amber-300 bg-amber-50"
-                      : clientApprovalStatus === "rejected"
-                        ? "border-red-300 bg-red-50"
-                        : "border-gray-300 bg-gray-50"
-                }`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    {clientApprovalStatus === "approved" ? (
-                      <ThumbsUp className="h-5 w-5 text-green-600" />
-                    ) : clientApprovalStatus === "pending" ? (
-                      <Clock className="h-5 w-5 text-amber-600" />
-                    ) : clientApprovalStatus === "rejected" ? (
-                      <X className="h-5 w-5 text-red-600" />
-                    ) : (
-                      <Users className="h-5 w-5 text-gray-400" />
-                    )}
-                    <span className="font-semibold text-sm">Client Approval</span>
-                  </div>
-                  <Badge
-                    variant="secondary"
-                    className={
-                      clientApprovalStatus === "approved"
-                        ? "bg-green-100 text-green-800"
-                        : clientApprovalStatus === "pending"
-                          ? "bg-amber-100 text-amber-800"
-                          : clientApprovalStatus === "rejected"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-600"
-                    }
-                  >
-                    {clientApprovalStatus === "approved"
-                      ? "Approved"
-                      : clientApprovalStatus === "pending"
-                        ? "Pending"
-                        : clientApprovalStatus === "rejected"
-                          ? "Rejected"
-                          : "Not Required"}
+              {/* Client Approval */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-gray-900">Client Approval</h4>
+                  <Badge className={getStatusColor(clientApprovalStatus)}>
+                    <div className="flex items-center gap-1">
+                      {getStatusIcon(clientApprovalStatus)}
+                      {clientApprovalStatus.replace("-", " ")}
+                    </div>
                   </Badge>
                 </div>
-
-                <p className="text-xs text-gray-600 mb-3">
+                <div className="text-sm text-gray-600">
                   {clientApprovalStatus === "approved"
-                    ? "Your client has approved the contract terms"
+                    ? "Client has approved the contract terms"
                     : clientApprovalStatus === "pending"
-                      ? "Waiting for client approval of contract terms"
+                      ? "Awaiting client approval"
                       : clientApprovalStatus === "rejected"
-                        ? "Client has requested changes to the contract"
-                        : "Client approval obtained for contract preparation"}
-                </p>
-
-                <div className="space-y-2">
-                  {clientApprovalStatus === "not-required" && (
-                    <Button
-                      size="sm"
-                      onClick={handleRequestClientApproval}
-                      variant="outline"
-                      className="w-full bg-transparent"
-                    >
-                      <Users className="h-4 w-4 mr-1" />
-                      Request Approval
-                    </Button>
-                  )}
-
-                  {clientApprovalStatus === "pending" && (
-                    <div className="flex items-center gap-1 text-xs text-amber-700">
-                      <Clock className="h-3 w-3" />
-                      Awaiting client response...
-                    </div>
-                  )}
-
-                  {clientApprovalStatus === "approved" && (
-                    <div className="flex items-center gap-1 text-xs text-green-700">
-                      <CheckCircle className="h-3 w-3" />
-                      Ready to proceed
-                    </div>
-                  )}
+                        ? "Client has requested changes"
+                        : "Client approval not required at this stage"}
                 </div>
-
-                {/* Progress indicator */}
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200 rounded-b-lg">
-                  <div
-                    className={`h-full rounded-b-lg transition-all duration-500 ${
-                      clientApprovalStatus === "approved"
-                        ? "w-full bg-green-500"
-                        : clientApprovalStatus === "pending"
-                          ? "w-2/3 bg-amber-500"
-                          : clientApprovalStatus === "rejected"
-                            ? "w-1/3 bg-red-500"
-                            : "w-full bg-green-500"
-                    }`}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Overall Progress Flow */}
-            <div className="mt-6 flex items-center justify-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div
-                  className={`w-3 h-3 rounded-full ${
-                    contractPreparedStatus === "completed" ? "bg-green-500" : "bg-gray-300"
-                  }`}
-                />
-                <ArrowRight className="h-4 w-4 text-gray-400" />
-                <div
-                  className={`w-3 h-3 rounded-full ${buyerReviewStatus !== "not-sent" ? "bg-blue-500" : "bg-gray-300"}`}
-                />
-                <ArrowRight className="h-4 w-4 text-gray-400" />
-                <div
-                  className={`w-3 h-3 rounded-full ${
-                    clientApprovalStatus === "approved" ? "bg-green-500" : "bg-gray-300"
-                  }`}
-                />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Send Draft Contract Component - MANDATORY */}
+        {/* Send Documents to Buyer */}
         <Card className="border-2 border-blue-200 bg-blue-50/30">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-blue-800">
               <Send className="h-5 w-5" />
               Send Draft Contract to Buyer's Conveyancer
             </CardTitle>
-            <CardDescription>
-              Upload and send the draft contract document to the buyer's conveyancer for review
-            </CardDescription>
+            <CardDescription>Upload and send the draft contract documents for review</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* File Upload Section */}
-            <div className="space-y-3">
-              <Label htmlFor="contract-upload" className="text-sm font-medium">
-                Upload Draft Contract Document *
-              </Label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
-                <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                <p className="text-sm text-gray-600 mb-2">
-                  Drag and drop your contract document here, or click to browse
-                </p>
-                <p className="text-xs text-gray-500 mb-3">Supports PDF, DOC, DOCX files up to 10MB</p>
-                <Input
-                  id="contract-upload"
-                  type="file"
-                  multiple
-                  accept=".pdf,.doc,.docx"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-                <Button
-                  variant="outline"
-                  onClick={() => document.getElementById("contract-upload")?.click()}
-                  type="button"
-                >
-                  Choose Files
-                </Button>
+            {/* File Upload */}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="contract-upload" className="text-sm font-medium">
+                  Contract Documents *
+                </Label>
+                <div className="mt-2">
+                  <input
+                    id="contract-upload"
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleFileUpload}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">PDF or Word documents, max 10MB each</p>
+                </div>
               </div>
 
-              {/* Uploaded Files Display */}
+              {/* Uploaded Files List */}
               {uploadedFiles.length > 0 && (
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Uploaded Files:</Label>
-                  {uploadedFiles.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-white border rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm font-medium">{file.name}</span>
-                        <span className="text-xs text-gray-500">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFile(index)}
-                        className="text-red-600 hover:text-red-800"
+                  <Label className="text-sm font-medium">Uploaded Documents ({uploadedFiles.length})</Label>
+                  <div className="space-y-2">
+                    {uploadedFiles.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 bg-white border rounded-lg shadow-sm"
                       >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
+                        <div className="flex items-center gap-3">
+                          <FileText className="h-4 w-4 text-blue-600" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                            <p className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                          </div>
+                        </div>
+                        <Button
+                          onClick={() => removeFile(index)}
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -653,151 +711,104 @@ export default function SellerConveyancerDraftContractPage() {
             {/* Cover Message */}
             <div className="space-y-2">
               <Label htmlFor="cover-message" className="text-sm font-medium">
-                Cover Message to Buyer's Conveyancer *
+                Cover Message (Optional)
               </Label>
               <Textarea
                 id="cover-message"
-                placeholder="Please provide any specific instructions, notes, or requirements for the buyer's conveyancer regarding this draft contract..."
                 value={coverMessage}
                 onChange={(e) => setCoverMessage(e.target.value)}
-                rows={4}
-                className="resize-none"
+                placeholder="Add any specific instructions or notes for the buyer's conveyancer..."
+                rows={3}
+                className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
-              <p className="text-xs text-gray-500">{coverMessage.length}/500 characters</p>
             </div>
 
             {/* Priority and Deadline */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="priority" className="text-sm font-medium">
-                  Priority Level
-                </Label>
+                <Label className="text-sm font-medium">Priority Level</Label>
                 <Select
                   value={priority}
                   onValueChange={(value: "standard" | "urgent" | "critical") => setPriority(value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select priority" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="standard">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        Standard
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="urgent">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
-                        Urgent
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="critical">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                        Critical
-                      </div>
-                    </SelectItem>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                    <SelectItem value="critical">Critical</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="deadline" className="text-sm font-medium">
-                  Response Deadline
+                  Response Deadline (Optional)
                 </Label>
-                <div className="relative">
-                  <Input
-                    id="deadline"
-                    type="date"
-                    value={deadline}
-                    onChange={(e) => setDeadline(e.target.value)}
-                    min={new Date().toISOString().split("T")[0]}
-                  />
-                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                </div>
+                <Input
+                  id="deadline"
+                  type="date"
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
             </div>
 
             {/* Send Button */}
-            <div className="flex items-center justify-between pt-4 border-t">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                {!isFormValid && (
-                  <>
-                    <AlertCircle className="h-4 w-4 text-amber-500" />
-                    Please upload a document and add a cover message
-                  </>
-                )}
-              </div>
-
+            <div className="pt-4 border-t">
               <Button
-                onClick={handleSendContract}
-                disabled={!isFormValid || isSending || contractPreparedStatus !== "completed"}
-                className={`min-w-[200px] ${
-                  sendStatus === "sent"
-                    ? "bg-green-600 hover:bg-green-700"
-                    : sendStatus === "error"
-                      ? "bg-red-600 hover:bg-red-700"
-                      : ""
-                }`}
+                onClick={handleSendToBuyer}
+                disabled={isSending || uploadedFiles.length === 0 || !isConnected}
+                className="w-full h-12 text-base font-medium bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300"
+                size="lg"
               >
                 {isSending ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Sending Contract...
-                  </>
-                ) : sendStatus === "sent" ? (
-                  <>
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Contract Sent Successfully!
-                  </>
-                ) : sendStatus === "error" ? (
-                  <>
-                    <AlertTriangle className="h-4 w-4 mr-2" />
-                    Send Failed - Retry
+                    <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                    Sending Documents...
                   </>
                 ) : (
                   <>
-                    <Send className="h-4 w-4 mr-2" />
-                    Send Draft Contract
+                    <Send className="h-5 w-5 mr-2" />
+                    Send to Buyer's Conveyancer
                   </>
                 )}
               </Button>
-            </div>
 
-            {/* Status Messages */}
-            {sendStatus === "sent" && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-800 font-medium">
-                  ✅ Draft contract successfully sent to buyer's conveyancer
-                </p>
-                <p className="text-xs text-green-700 mt-1">
-                  They will be notified immediately and can begin their review process.
-                </p>
+              {/* Status Messages */}
+              <div className="mt-4 space-y-2">
+                {uploadedFiles.length === 0 && (
+                  <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 p-3 rounded-lg">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>Please upload at least one contract document to proceed.</span>
+                  </div>
+                )}
+
                 {!isConnected && (
-                  <p className="text-xs text-green-600 mt-1">
-                    📱 Document saved locally. Will sync when connection is restored.
-                  </p>
+                  <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 p-3 rounded-lg">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span>Connection required to send documents. Please check your internet connection.</span>
+                  </div>
+                )}
+
+                {sendStatus === "sent" && (
+                  <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 p-3 rounded-lg">
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Documents sent successfully to buyer's conveyancer.</span>
+                  </div>
+                )}
+
+                {sendStatus === "error" && (
+                  <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 p-3 rounded-lg">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span>Failed to send documents. Please try again.</span>
+                  </div>
                 )}
               </div>
-            )}
-
-            {sendStatus === "error" && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-800 font-medium">❌ Failed to send draft contract</p>
-                <p className="text-xs text-red-700 mt-1">
-                  {connectionError || "Please check your connection and try again."}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSendStatus("idle")}
-                  className="mt-2 text-red-700 border-red-300 hover:bg-red-50"
-                >
-                  Try Again
-                </Button>
-              </div>
-            )}
+            </div>
           </CardContent>
         </Card>
 
@@ -805,30 +816,33 @@ export default function SellerConveyancerDraftContractPage() {
         <Card>
           <CardHeader>
             <CardTitle>Contract Preparation Checklist</CardTitle>
-            <CardDescription>Essential items to include in the draft contract</CardDescription>
+            <CardDescription>Ensure all required elements are included in the draft contract</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {[
-                { item: "Property description and title details", completed: true },
-                { item: "Purchase price and deposit amount", completed: true },
-                { item: "Completion date (subject to agreement)", completed: true },
-                { item: "Special conditions and covenants", completed: true },
-                { item: "Fixtures and fittings schedule", completed: false },
-                { item: "Energy Performance Certificate", completed: true },
-                { item: "Property information forms", completed: false },
-                { item: "Management company details (if applicable)", completed: true },
+                { item: "Property details and legal description", completed: contractPreparedStatus === "completed" },
+                { item: "Purchase price and deposit terms", completed: contractPreparedStatus === "completed" },
+                { item: "Completion date and key milestones", completed: contractPreparedStatus === "completed" },
+                { item: "Special conditions and covenants", completed: contractPreparedStatus === "completed" },
+                { item: "Fixtures and fittings schedule", completed: contractPreparedStatus === "completed" },
+                { item: "Title documents and restrictions", completed: contractPreparedStatus === "completed" },
+                {
+                  item: "Planning and building regulation compliance",
+                  completed: contractPreparedStatus === "completed",
+                },
+                { item: "Environmental searches and reports", completed: contractPreparedStatus === "completed" },
               ].map((task, index) => (
                 <div key={index} className="flex items-center gap-3">
                   {task.completed ? (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
                   ) : (
                     <Clock className="h-4 w-4 text-yellow-600" />
                   )}
                   <span className={task.completed ? "text-gray-900" : "text-gray-600"}>{task.item}</span>
                   {!task.completed && (
                     <Badge variant="outline" className="ml-auto">
-                      Pending
+                      To Complete
                     </Badge>
                   )}
                 </div>
@@ -836,6 +850,116 @@ export default function SellerConveyancerDraftContractPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Amendment Reply Modal */}
+        {showReplyModal && selectedAmendment && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Reply className="h-5 w-5" />
+                      Reply to Amendment Request
+                    </CardTitle>
+                    <CardDescription>Provide your response to the buyer's amendment request</CardDescription>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setShowReplyModal(false)} className="h-8 w-8 p-0">
+                    ×
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Your Decision *</Label>
+                  <div className="flex gap-4">
+                    {(["accepted", "rejected", "counter-proposal"] as const).map((decision) => (
+                      <label key={decision} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="decision"
+                          value={decision}
+                          checked={replyData.decision === decision}
+                          onChange={(e) =>
+                            setReplyData({
+                              ...replyData,
+                              decision: e.target.value as "accepted" | "rejected" | "counter-proposal",
+                            })
+                          }
+                          className="text-blue-600"
+                        />
+                        <span
+                          className={`capitalize px-3 py-1 rounded-full text-sm font-medium ${
+                            decision === "accepted"
+                              ? "bg-green-100 text-green-800"
+                              : decision === "rejected"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-blue-100 text-blue-800"
+                          }`}
+                        >
+                          {decision.replace("-", " ")}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reply-message" className="text-sm font-medium">
+                    Response Message *
+                  </Label>
+                  <Textarea
+                    id="reply-message"
+                    value={replyData.message}
+                    onChange={(e) => setReplyData({ ...replyData, message: e.target.value })}
+                    placeholder="Provide your detailed response to the amendment request..."
+                    rows={4}
+                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                {replyData.decision === "counter-proposal" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="counter-proposal" className="text-sm font-medium">
+                      Counter-proposal Details
+                    </Label>
+                    <Textarea
+                      id="counter-proposal"
+                      value={replyData.counterProposal}
+                      onChange={(e) => setReplyData({ ...replyData, counterProposal: e.target.value })}
+                      placeholder="Describe your alternative proposal..."
+                      rows={3}
+                      className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-3 pt-6 border-t">
+                  <Button variant="outline" onClick={() => setShowReplyModal(false)} className="px-6">
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleReplyToAmendment}
+                    disabled={sendingReply || !replyData.message}
+                    className="px-6 bg-blue-600 hover:bg-blue-700"
+                  >
+                    {sendingReply ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Sending Reply...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Send Reply
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </TransactionLayout>
   )

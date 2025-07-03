@@ -25,6 +25,8 @@ export interface RealtimeUpdate {
     | "completion_date_rejected"
     | "completion_date_proposed"
     | "contract_exchanged"
+    | "amendment_requested"
+    | "amendment_replied"
   stage: string
   role: Role | "system"
   title: string
@@ -50,6 +52,28 @@ export interface RealtimeDocument {
   downloadCount: number
 }
 
+export interface AmendmentRequest {
+  id: string
+  stage: string
+  requestedBy: Role
+  requestedTo: Role
+  type: string
+  priority: "low" | "medium" | "high"
+  description: string
+  proposedChange: string
+  deadline?: string
+  affectedClauses: string[]
+  status: "pending" | "acknowledged" | "replied" | "resolved" | "rejected"
+  createdAt: Date
+  reply?: {
+    message: string
+    decision: "accepted" | "rejected" | "counter-proposal"
+    counterProposal?: string
+    repliedAt: Date
+    repliedBy: Role
+  }
+}
+
 type StageStatus = "pending" | "in-progress" | "completed" | "blocked"
 
 export interface TransactionState {
@@ -66,6 +90,7 @@ const STORAGE_KEY = "pte-realtime"
 interface PersistedState {
   updates: RealtimeUpdate[]
   documents: RealtimeDocument[]
+  amendmentRequests: AmendmentRequest[]
   transactionState: TransactionState
 }
 
@@ -89,6 +114,7 @@ function mergeWithDefaults(raw: Partial<PersistedState> | null): PersistedState 
   return {
     updates: raw?.updates ?? [],
     documents: raw?.documents ?? [],
+    amendmentRequests: raw?.amendmentRequests ?? [],
     transactionState: raw?.transactionState ?? {
       currentStage: "proof-of-funds",
       stageStatuses: { ...defaultStages },
@@ -105,11 +131,23 @@ function getInitial(): PersistedState {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
       const parsed = JSON.parse(stored) as Partial<PersistedState>
-      // Convert uploadedAt strings back to Date objects
+      // Convert date strings back to Date objects
       if (parsed.documents) {
         parsed.documents = parsed.documents.map((doc) => ({
           ...doc,
           uploadedAt: new Date(doc.uploadedAt),
+        }))
+      }
+      if (parsed.amendmentRequests) {
+        parsed.amendmentRequests = parsed.amendmentRequests.map((req) => ({
+          ...req,
+          createdAt: new Date(req.createdAt),
+          reply: req.reply
+            ? {
+                ...req.reply,
+                repliedAt: new Date(req.reply.repliedAt),
+              }
+            : undefined,
         }))
       }
       return mergeWithDefaults(parsed)
@@ -132,12 +170,16 @@ function savePersisted(state: PersistedState) {
 interface RealTimeCtx {
   updates: RealtimeUpdate[]
   documents: RealtimeDocument[]
+  amendmentRequests: AmendmentRequest[]
   transactionState: TransactionState
 
   /* helpers */
   sendUpdate: (u: Omit<RealtimeUpdate, "id" | "createdAt">) => void
   addDocument: (doc: Omit<RealtimeDocument, "id" | "uploadedAt" | "downloadCount" | "status">) => void
+  addAmendmentRequest: (req: Omit<AmendmentRequest, "id" | "createdAt" | "status">) => void
+  replyToAmendmentRequest: (id: string, reply: Omit<AmendmentRequest["reply"], "repliedAt" | "repliedBy">) => void
   getDocumentsForRole: (role: Role, stage: string) => RealtimeDocument[]
+  getAmendmentRequestsForRole: (role: Role, stage: string) => AmendmentRequest[]
   downloadDocument: (id: string, role: Role) => Promise<Blob | null>
   markDocumentAsReviewed: (id: string) => void
   resetToDefault: () => void
@@ -154,12 +196,13 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
   const initial = getInitial()
   const [updates, setUpdates] = useState<RealtimeUpdate[]>(initial.updates)
   const [documents, setDocuments] = useState<RealtimeDocument[]>(initial.documents)
+  const [amendmentRequests, setAmendmentRequests] = useState<AmendmentRequest[]>(initial.amendmentRequests)
   const [transactionState, setTransactionState] = useState<TransactionState>(initial.transactionState)
 
   /* ---------- persist whenever any slice changes ------------------ */
   useEffect(() => {
-    savePersisted({ updates, documents, transactionState })
-  }, [updates, documents, transactionState])
+    savePersisted({ updates, documents, amendmentRequests, transactionState })
+  }, [updates, documents, amendmentRequests, transactionState])
 
   /* ---------- cross-tab sync -------------------------------------- */
   useEffect(() => {
@@ -167,11 +210,23 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
       if (e.key !== STORAGE_KEY || !e.newValue) return
       const incoming: PersistedState = mergeWithDefaults(JSON.parse(e.newValue))
 
-      // Convert uploadedAt strings back to Date objects
+      // Convert date strings back to Date objects
       if (incoming.documents) {
         incoming.documents = incoming.documents.map((doc) => ({
           ...doc,
           uploadedAt: new Date(doc.uploadedAt),
+        }))
+      }
+      if (incoming.amendmentRequests) {
+        incoming.amendmentRequests = incoming.amendmentRequests.map((req) => ({
+          ...req,
+          createdAt: new Date(req.createdAt),
+          reply: req.reply
+            ? {
+                ...req.reply,
+                repliedAt: new Date(req.reply.repliedAt),
+              }
+            : undefined,
         }))
       }
 
@@ -180,6 +235,7 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
         startTransition(() => {
           setUpdates(incoming.updates)
           setDocuments(incoming.documents)
+          setAmendmentRequests(incoming.amendmentRequests)
           setTransactionState(incoming.transactionState)
         })
       }, 0)
@@ -229,24 +285,19 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
         }))
       }
 
-      // 3. persist (after state is scheduled)
-      setTimeout(() => savePersisted({ updates, documents, transactionState }), 0)
-
-      // 4. dispatch storage event for same-tab listeners
+      // 3. persist and trigger storage event
       setTimeout(() => {
+        const newState = { updates: [full, ...updates], documents, amendmentRequests, transactionState }
+        savePersisted(newState)
         window.dispatchEvent(
           new StorageEvent("storage", {
             key: STORAGE_KEY,
-            newValue: JSON.stringify({
-              updates: [full, ...updates],
-              documents,
-              transactionState,
-            }),
+            newValue: JSON.stringify(newState),
           }),
         )
       }, 0)
     },
-    [updates, documents, transactionState],
+    [updates, documents, amendmentRequests, transactionState],
   )
 
   const addDocument = useCallback<RealTimeCtx["addDocument"]>(
@@ -266,7 +317,7 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
 
       // Persist and trigger storage event
       setTimeout(() => {
-        const newState = { updates, documents: [fullDocument, ...documents], transactionState }
+        const newState = { updates, documents: [fullDocument, ...documents], amendmentRequests, transactionState }
         savePersisted(newState)
         window.dispatchEvent(
           new StorageEvent("storage", {
@@ -276,12 +327,117 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
         )
       }, 0)
     },
-    [updates, documents, transactionState],
+    [updates, documents, amendmentRequests, transactionState],
+  )
+
+  const addAmendmentRequest = useCallback<RealTimeCtx["addAmendmentRequest"]>(
+    (reqData) => {
+      const fullRequest: AmendmentRequest = {
+        ...reqData,
+        id: crypto.randomUUID(),
+        createdAt: new Date(),
+        status: "pending",
+      }
+
+      setAmendmentRequests((prev) => {
+        const next = [fullRequest, ...prev]
+        return next
+      })
+
+      // Send real-time update
+      sendUpdate({
+        type: "amendment_requested",
+        stage: reqData.stage,
+        role: reqData.requestedBy,
+        title: "Amendment Request Sent",
+        description: `${reqData.type} amendment requested`,
+        data: {
+          amendmentId: fullRequest.id,
+          amendmentType: reqData.type,
+          priority: reqData.priority,
+        },
+      })
+
+      // Persist and trigger storage event
+      setTimeout(() => {
+        const newState = {
+          updates,
+          documents,
+          amendmentRequests: [fullRequest, ...amendmentRequests],
+          transactionState,
+        }
+        savePersisted(newState)
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key: STORAGE_KEY,
+            newValue: JSON.stringify(newState),
+          }),
+        )
+      }, 0)
+    },
+    [updates, documents, amendmentRequests, transactionState, sendUpdate],
+  )
+
+  const replyToAmendmentRequest = useCallback<RealTimeCtx["replyToAmendmentRequest"]>(
+    (id, replyData) => {
+      setAmendmentRequests((prev) => {
+        const updatedRequests = prev.map((req) => {
+          if (req.id === id) {
+            const updatedReq = {
+              ...req,
+              status: "replied" as const,
+              reply: {
+                ...replyData,
+                repliedAt: new Date(),
+                repliedBy: req.requestedTo,
+              },
+            }
+
+            // Send real-time update
+            sendUpdate({
+              type: "amendment_replied",
+              stage: req.stage,
+              role: req.requestedTo,
+              title: "Amendment Reply Sent",
+              description: `Reply sent for ${req.type} amendment request`,
+              data: {
+                amendmentId: id,
+                decision: replyData.decision,
+                originalRequestBy: req.requestedBy,
+              },
+            })
+
+            return updatedReq
+          }
+          return req
+        })
+
+        // Persist and trigger storage event immediately
+        setTimeout(() => {
+          const newState = { updates, documents, amendmentRequests: updatedRequests, transactionState }
+          savePersisted(newState)
+          window.dispatchEvent(
+            new StorageEvent("storage", {
+              key: STORAGE_KEY,
+              newValue: JSON.stringify(newState),
+            }),
+          )
+        }, 0)
+
+        return updatedRequests
+      })
+    },
+    [updates, documents, transactionState, sendUpdate],
   )
 
   const getDocumentsForRole = useCallback<RealTimeCtx["getDocumentsForRole"]>(
     (role, stage) => documents.filter((d) => d.deliveredTo === role && d.stage === stage),
     [documents],
+  )
+
+  const getAmendmentRequestsForRole = useCallback<RealTimeCtx["getAmendmentRequestsForRole"]>(
+    (role, stage) => amendmentRequests.filter((req) => req.requestedTo === role && req.stage === stage),
+    [amendmentRequests],
   )
 
   const downloadDocument = useCallback<RealTimeCtx["downloadDocument"]>(
@@ -323,6 +479,7 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
 
     setUpdates(defaultState.updates)
     setDocuments(defaultState.documents)
+    setAmendmentRequests(defaultState.amendmentRequests)
     setTransactionState(defaultState.transactionState)
 
     // Clear all localStorage keys - comprehensive list
@@ -450,10 +607,14 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
   const ctx: RealTimeCtx = {
     updates,
     documents,
+    amendmentRequests,
     transactionState,
     sendUpdate,
     addDocument,
+    addAmendmentRequest,
+    replyToAmendmentRequest,
     getDocumentsForRole,
+    getAmendmentRequestsForRole,
     downloadDocument,
     markDocumentAsReviewed,
     resetToDefault,
