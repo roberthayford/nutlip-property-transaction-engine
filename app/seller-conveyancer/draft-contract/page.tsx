@@ -57,12 +57,10 @@ export default function SellerConveyancerDraftContractPage() {
   const [sentTimestamp, setSentTimestamp] = useState<Date | null>(null)
   const [deliveredTimestamp, setDeliveredTimestamp] = useState<Date | null>(null)
 
-  // --- Real-time context (must be called at top level) -----------------------
-  const { sendUpdate /*, shareDocument, downloadDocument, ...*/ } = useRealTime()
+  // Real-time context - NOW WITH addDocument METHOD
+  const { sendUpdate, addDocument } = useRealTime()
 
-  // --------------------------------------------------------------------------
-  //  Connection helpers (simple online/offline indicator)
-  // --------------------------------------------------------------------------
+  // Connection helpers (simple online/offline indicator)
   const [isConnected, setIsConnected] = useState<boolean>(typeof navigator !== "undefined" ? navigator.onLine : true)
   const [connectionError, setConnectionError] = useState<string | null>(null)
 
@@ -121,6 +119,34 @@ export default function SellerConveyancerDraftContractPage() {
     return () => clearInterval(interval)
   }, [])
 
+  // Listen for platform reset events
+  useEffect(() => {
+    const handlePlatformReset = () => {
+      console.log("Platform reset detected, clearing seller conveyancer draft contract data")
+
+      // Reset all state
+      setContractPreparedStatus("in-progress")
+      setBuyerReviewStatus("not-sent")
+      setClientApprovalStatus("approved")
+      setUploadedFiles([])
+      setCoverMessage("")
+      setPriority("standard")
+      setDeadline("")
+      setIsSending(false)
+      setSendStatus("idle")
+      setSentTimestamp(null)
+      setDeliveredTimestamp(null)
+
+      toast({
+        title: "Draft Contract Reset",
+        description: "All draft contract data has been cleared and reset to default state.",
+      })
+    }
+
+    window.addEventListener("platform-reset", handlePlatformReset)
+    return () => window.removeEventListener("platform-reset", handlePlatformReset)
+  }, [toast])
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
     const validFiles = files.filter((file) => {
@@ -150,60 +176,46 @@ export default function SellerConveyancerDraftContractPage() {
       // Simulate sending process with more realistic timing
       await new Promise((resolve) => setTimeout(resolve, 1500))
 
-      // Create document records for tracking (even without real-time)
-      const documentRecords = uploadedFiles.map((file) => ({
-        id: crypto.randomUUID(),
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        uploadedBy: "seller-conveyancer",
-        deliveredTo: "buyer-conveyancer",
+      // Create document records using the new addDocument method
+      uploadedFiles.forEach((file) => {
+        addDocument({
+          name: file.name,
+          stage: "draft-contract",
+          uploadedBy: "seller-conveyancer",
+          deliveredTo: "buyer-conveyancer",
+          size: file.size,
+          priority: priority,
+          coverMessage: coverMessage,
+          deadline: deadline,
+        })
+      })
+
+      // Send real-time update notification
+      sendUpdate({
+        type: "document_uploaded",
         stage: "draft-contract",
-        priority,
-        deadline,
-        coverMessage,
-        uploadedAt: new Date(),
-        status: "delivered" as const,
-        downloadCount: 0,
-      }))
-
-      // Store documents locally for persistence
-      try {
-        const existingDocs = JSON.parse(localStorage.getItem("draft-contract-documents") || "[]")
-        const updatedDocs = [...existingDocs, ...documentRecords]
-        localStorage.setItem("draft-contract-documents", JSON.stringify(updatedDocs))
-      } catch (storageError) {
-        console.warn("Could not save to localStorage:", storageError)
-      }
-
-      // Try to send real-time update if available
-      if (isConnected && sendUpdate) {
-        try {
-          sendUpdate({
-            type: "document_uploaded",
-            stage: "draft-contract",
-            role: "seller-conveyancer",
-            title: "Draft Contract Sent",
-            description: `Draft contract sent to buyer's conveyancer for review (Priority: ${priority})`,
-            data: {
-              files: uploadedFiles.map((f) => f.name),
-              message: coverMessage,
-              priority,
-              deadline,
-              documentIds: documentRecords.map((d) => d.id),
-            },
-          })
-        } catch (updateError) {
-          console.warn("Real-time update failed, but document was sent:", updateError)
-          // Don't fail the entire operation if real-time update fails
-        }
-      }
+        role: "seller-conveyancer",
+        title: "Draft Contract Sent",
+        description: `Draft contract sent to buyer's conveyancer for review (Priority: ${priority})`,
+        data: {
+          files: uploadedFiles.map((f) => f.name),
+          message: coverMessage,
+          priority,
+          deadline,
+          documentCount: uploadedFiles.length,
+        },
+      })
 
       // Update statuses
       setBuyerReviewStatus("sent")
       setSentTimestamp(new Date())
       setContractPreparedStatus("completed")
       setSendStatus("sent")
+
+      toast({
+        title: "Contract Sent Successfully",
+        description: `${uploadedFiles.length} document(s) sent to buyer's conveyancer`,
+      })
 
       // Reset form after successful send
       setTimeout(() => {
@@ -217,6 +229,11 @@ export default function SellerConveyancerDraftContractPage() {
       console.error("Send contract failed:", error)
       setSendStatus("error")
       setConnectionError("Failed to send contract. Please try again.")
+      toast({
+        title: "Send Failed",
+        description: "Failed to send contract. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsSending(false)
     }

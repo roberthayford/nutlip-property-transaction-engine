@@ -1,52 +1,208 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useState, useEffect } from "react"
 import TransactionLayout from "@/components/transaction-layout"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MessageSquare, Clock, CheckCircle, AlertTriangle, Send, RefreshCcw, ArrowRight } from "lucide-react"
+import { Input } from "@/components/ui/input"
 import { useRealTime } from "@/contexts/real-time-context"
 import { useToast } from "@/hooks/use-toast"
+import {
+  MessageSquare,
+  Send,
+  Search,
+  Star,
+  Archive,
+  Clock,
+  CheckCircle,
+  User,
+  Calendar,
+  RefreshCw,
+  X,
+  Plus,
+  Eye,
+  Reply,
+} from "lucide-react"
+
+interface Message {
+  id: string
+  sender: "buyer-conveyancer" | "seller-conveyancer"
+  content: string
+  timestamp: Date
+  type: "question" | "response" | "follow-up"
+}
 
 interface Enquiry {
   id: string
   subject: string
-  question: string
-  category: "legal" | "technical" | "financial" | "environmental" | "planning"
-  priority: "low" | "medium" | "high" | "critical"
-  status: "pending" | "answered"
-  dateSent: string
-  dateAnswered?: string
-  response?: string
+  category: "property" | "legal" | "financial" | "timeline" | "other"
+  priority: "low" | "medium" | "high" | "urgent"
+  status: "pending" | "answered" | "follow-up" | "closed"
+  messages: Message[]
+  createdAt: Date
+  updatedAt: Date
+  isStarred: boolean
+  isArchived: boolean
+  tags: string[]
 }
 
+const ENQUIRY_TEMPLATES = [
+  {
+    category: "property" as const,
+    subject: "Property Boundaries Clarification",
+    content: "Could you please clarify the exact boundaries of the property as shown in the title deeds?",
+  },
+  {
+    category: "legal" as const,
+    subject: "Title Guarantee Query",
+    content: "Please confirm the type of title guarantee being offered and any limitations.",
+  },
+  {
+    category: "financial" as const,
+    subject: "Deposit Payment Terms",
+    content: "Could you confirm the deposit amount and payment terms for exchange of contracts?",
+  },
+  {
+    category: "timeline" as const,
+    subject: "Completion Date Flexibility",
+    content: "Is there any flexibility with the proposed completion date? Our client may need additional time.",
+  },
+]
+
 export default function BuyerConveyancerEnquiriesPage() {
-  const { updates, markAsRead, sendUpdate } = useRealTime()
   const { toast } = useToast()
+  const { sendUpdate } = useRealTime()
 
+  // State management
   const [enquiries, setEnquiries] = useState<Enquiry[]>([])
-  const processedIds = useRef<Set<string>>(new Set())
+  const [activeTab, setActiveTab] = useState<"active" | "pending" | "answered" | "starred">("active")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterCategory, setFilterCategory] = useState<string>("all")
+  const [filterPriority, setFilterPriority] = useState<string>("all")
 
-  const [subject, setSubject] = useState("")
-  const [question, setQuestion] = useState("")
+  // Modal states
+  const [showComposeModal, setShowComposeModal] = useState(false)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null)
+
+  // Form states
+  const [newEnquiry, setNewEnquiry] = useState({
+    subject: "",
+    category: "property" as const,
+    priority: "medium" as const,
+    content: "",
+    tags: [] as string[],
+  })
+  const [followUpMessage, setFollowUpMessage] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isContinuing, setIsContinuing] = useState(false)
 
-  // Listen for platform reset events
+  // Function to use template
+  const useTemplate = (template: (typeof ENQUIRY_TEMPLATES)[0]) => {
+    setNewEnquiry({
+      ...newEnquiry,
+      subject: template.subject,
+      category: template.category,
+      content: template.content,
+    })
+  }
+
+  // Load enquiries from localStorage
+  useEffect(() => {
+    const loadEnquiries = () => {
+      try {
+        const stored = localStorage.getItem("conveyancer-enquiries")
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          const enquiriesWithDates = parsed.map((enquiry: any) => ({
+            ...enquiry,
+            createdAt: new Date(enquiry.createdAt),
+            updatedAt: new Date(enquiry.updatedAt),
+            messages: enquiry.messages.map((msg: any) => ({
+              ...msg,
+              timestamp: new Date(msg.timestamp),
+            })),
+          }))
+          setEnquiries(enquiriesWithDates)
+        }
+      } catch (error) {
+        console.error("Error loading enquiries:", error)
+      }
+    }
+
+    loadEnquiries()
+
+    // Listen for storage changes (responses from seller)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "conveyancer-enquiries") {
+        loadEnquiries()
+      }
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+    return () => window.removeEventListener("storage", handleStorageChange)
+  }, [])
+
+  // Listen for real-time updates
+  useEffect(() => {
+    const handleRealTimeUpdate = (event: CustomEvent) => {
+      const update = event.detail
+      if (update.type === "enquiry_answered" && update.role === "seller-conveyancer") {
+        // Reload enquiries when seller responds
+        const stored = localStorage.getItem("conveyancer-enquiries")
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          const enquiriesWithDates = parsed.map((enquiry: any) => ({
+            ...enquiry,
+            createdAt: new Date(enquiry.createdAt),
+            updatedAt: new Date(enquiry.updatedAt),
+            messages: enquiry.messages.map((msg: any) => ({
+              ...msg,
+              timestamp: new Date(msg.timestamp),
+            })),
+          }))
+          setEnquiries(enquiriesWithDates)
+
+          toast({
+            title: "New Response Received",
+            description: `Response received for: ${update.data?.subject || "enquiry"}`,
+          })
+        }
+      }
+    }
+
+    window.addEventListener("realtime-update", handleRealTimeUpdate as EventListener)
+    return () => window.removeEventListener("realtime-update", handleRealTimeUpdate as EventListener)
+  }, [toast])
+
+  // Reset functionality
   useEffect(() => {
     const handlePlatformReset = () => {
-      console.log("Buyer conveyancer enquiries: Platform reset detected, clearing enquiries")
       setEnquiries([])
-      setSubject("")
-      setQuestion("")
-      processedIds.current.clear()
+      setActiveTab("active")
+      setSearchTerm("")
+      setFilterCategory("all")
+      setFilterPriority("all")
+      setShowComposeModal(false)
+      setShowDetailModal(false)
+      setSelectedEnquiry(null)
+      setNewEnquiry({
+        subject: "",
+        category: "property",
+        priority: "medium",
+        content: "",
+        tags: [],
+      })
+      setFollowUpMessage("")
+
+      // Clear localStorage
+      localStorage.removeItem("conveyancer-enquiries")
+
       toast({
-        title: "Demo Reset! 🔄",
-        description: "All enquiries have been cleared",
+        title: "Enquiries Reset",
+        description: "All enquiry data has been cleared and reset to default state.",
       })
     }
 
@@ -54,459 +210,662 @@ export default function BuyerConveyancerEnquiriesPage() {
     return () => window.removeEventListener("platform-reset", handlePlatformReset)
   }, [toast])
 
-  // Listen for real-time updates - especially enquiry responses
-  useEffect(() => {
-    if (!updates.length) return
-
-    const toMark: string[] = []
-
-    updates.forEach((update) => {
-      // Skip if already processed
-      if (processedIds.current.has(update.id) || update.stage !== "enquiries") {
-        return
-      }
-
-      processedIds.current.add(update.id)
-      toMark.push(update.id)
-
-      // Handle enquiry answered - THIS IS THE CRITICAL PART
-      if (update.type === "enquiry_answered" && update.role === "seller-conveyancer" && update.data?.enquiryId) {
-        const { enquiryId, response, dateAnswered, subject: responseSubject } = update.data as any
-
-        console.log("Buyer received response for enquiry:", enquiryId, "Response:", response) // Debug log
-
-        setEnquiries((prev) => {
-          const updated = prev.map((enq) =>
-            enq.id === enquiryId
-              ? {
-                  ...enq,
-                  status: "answered" as const,
-                  response,
-                  dateAnswered,
-                }
-              : enq,
-          )
-
-          console.log("Updated enquiries:", updated) // Debug log
-          return updated
-        })
-
-        toast({
-          title: "Enquiry Answered! ✅",
-          description: `Response received for "${responseSubject || "your enquiry"}"`,
-        })
-      }
-    })
-
-    // Mark updates as read after processing
-    if (toMark.length) {
-      setTimeout(() => {
-        toMark.forEach((id) => markAsRead(id))
-      }, 0)
+  const saveEnquiries = (updatedEnquiries: Enquiry[]) => {
+    try {
+      localStorage.setItem("conveyancer-enquiries", JSON.stringify(updatedEnquiries))
+      setEnquiries(updatedEnquiries)
+    } catch (error) {
+      console.error("Error saving enquiries:", error)
     }
-  }, [updates, toast, markAsRead])
+  }
 
-  // Send a new enquiry
   const handleSendEnquiry = async () => {
-    if (!subject.trim() || !question.trim()) return
+    if (!newEnquiry.subject.trim() || !newEnquiry.content.trim()) {
+      toast({
+        title: "Incomplete Enquiry",
+        description: "Please fill in both subject and content",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSubmitting(true)
 
-    // Simulate sending
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const enquiry: Enquiry = {
+        id: `enq-${Date.now()}`,
+        subject: newEnquiry.subject,
+        category: newEnquiry.category,
+        priority: newEnquiry.priority,
+        status: "pending",
+        messages: [
+          {
+            id: `msg-${Date.now()}`,
+            sender: "buyer-conveyancer",
+            content: newEnquiry.content,
+            timestamp: new Date(),
+            type: "question",
+          },
+        ],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isStarred: false,
+        isArchived: false,
+        tags: newEnquiry.tags,
+      }
 
-    const newEnquiry: Enquiry = {
-      id: `enq-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Unique ID
-      subject,
-      question,
-      category: "legal",
-      priority: "medium",
-      status: "pending",
-      dateSent: new Date().toISOString().split("T")[0],
-    }
+      const updatedEnquiries = [...enquiries, enquiry]
+      saveEnquiries(updatedEnquiries)
 
-    console.log("Buyer sending enquiry:", newEnquiry) // Debug log
-
-    // Update own state immediately
-    setEnquiries((prev) => [newEnquiry, ...prev])
-
-    // Broadcast to seller conveyancer
-    sendUpdate({
-      type: "enquiry_sent",
-      stage: "enquiries",
-      role: "buyer-conveyancer",
-      title: "New Enquiry Sent",
-      description: newEnquiry.subject,
-      data: { enquiry: newEnquiry },
-    })
-
-    console.log("Enquiry update sent to seller conveyancer") // Debug log
-
-    // Feedback
-    toast({ title: "Enquiry Sent 📨", description: subject })
-
-    // Reset form
-    setSubject("")
-    setQuestion("")
-    setIsSubmitting(false)
-  }
-
-  const handleContinueToMortgageOffer = async () => {
-    setIsContinuing(true)
-
-    // Simulate processing
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    // Send real-time update to notify all parties that enquiries stage is completed
-    sendUpdate({
-      type: "stage_completed",
-      stage: "enquiries",
-      role: "buyer-conveyancer",
-      title: "Enquiries Stage Completed",
-      description:
-        "All pre-contract enquiries have been resolved and the transaction is progressing to mortgage offer stage",
-      data: {
+      // Send real-time update
+      sendUpdate({
+        type: "enquiry_sent",
         stage: "enquiries",
-        status: "completed",
-        completedAt: new Date().toISOString(),
-        totalEnquiries: enquiries.length,
-        answeredEnquiries: enquiries.filter((e) => e.status === "answered").length,
-        nextStage: "mortgage-offer",
-      },
-    })
+        role: "buyer-conveyancer",
+        title: "New Enquiry Sent",
+        description: `Enquiry sent: ${newEnquiry.subject}`,
+        data: {
+          enquiryId: enquiry.id,
+          subject: enquiry.subject,
+          category: enquiry.category,
+          priority: enquiry.priority,
+          content: newEnquiry.content,
+        },
+      })
 
-    toast({
-      title: "Enquiries Completed! ✅",
-      description: "All parties have been notified. Proceeding to mortgage offer stage.",
-    })
+      // Reset form
+      setNewEnquiry({
+        subject: "",
+        category: "property",
+        priority: "medium",
+        content: "",
+        tags: [],
+      })
+      setShowComposeModal(false)
 
-    setIsContinuing(false)
-
-    // Navigate to mortgage offer page
-    window.location.href = "/buyer-conveyancer/mortgage-offer"
+      toast({
+        title: "Enquiry Sent",
+        description: "Your enquiry has been sent to the seller's conveyancer",
+      })
+    } catch (error) {
+      toast({
+        title: "Failed to Send Enquiry",
+        description: "Please try again later",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  const total = enquiries.length
-  const answered = enquiries.filter((e) => e.status === "answered").length
-  const pending = total - answered
+  const handleSendFollowUp = async () => {
+    if (!followUpMessage.trim() || !selectedEnquiry) return
+
+    setIsSubmitting(true)
+
+    try {
+      const newMessage: Message = {
+        id: `msg-${Date.now()}`,
+        sender: "buyer-conveyancer",
+        content: followUpMessage,
+        timestamp: new Date(),
+        type: "follow-up",
+      }
+
+      const updatedEnquiry = {
+        ...selectedEnquiry,
+        messages: [...selectedEnquiry.messages, newMessage],
+        status: "follow-up" as const,
+        updatedAt: new Date(),
+      }
+
+      const updatedEnquiries = enquiries.map((enq) => (enq.id === selectedEnquiry.id ? updatedEnquiry : enq))
+      saveEnquiries(updatedEnquiries)
+
+      // Send real-time update
+      sendUpdate({
+        type: "enquiry_follow_up",
+        stage: "enquiries",
+        role: "buyer-conveyancer",
+        title: "Follow-up Sent",
+        description: `Follow-up sent for: ${selectedEnquiry.subject}`,
+        data: {
+          enquiryId: selectedEnquiry.id,
+          subject: selectedEnquiry.subject,
+          followUpContent: followUpMessage,
+        },
+      })
+
+      setFollowUpMessage("")
+      setSelectedEnquiry(updatedEnquiry)
+
+      toast({
+        title: "Follow-up Sent",
+        description: "Your follow-up message has been sent",
+      })
+    } catch (error) {
+      toast({
+        title: "Failed to Send Follow-up",
+        description: "Please try again later",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleToggleStar = (enquiryId: string) => {
+    const updatedEnquiries = enquiries.map((enq) =>
+      enq.id === enquiryId ? { ...enq, isStarred: !enq.isStarred } : enq,
+    )
+    saveEnquiries(updatedEnquiries)
+  }
+
+  const handleArchive = (enquiryId: string) => {
+    const updatedEnquiries = enquiries.map((enq) =>
+      enq.id === enquiryId ? { ...enq, isArchived: !enq.isArchived } : enq,
+    )
+    saveEnquiries(updatedEnquiries)
+  }
+
+  // Filter enquiries
+  const filteredEnquiries = enquiries.filter((enquiry) => {
+    // Tab filtering
+    if (activeTab === "pending" && enquiry.status !== "pending") return false
+    if (activeTab === "answered" && enquiry.status !== "answered") return false
+    if (activeTab === "starred" && !enquiry.isStarred) return false
+    if (activeTab === "active" && (enquiry.isArchived || enquiry.status === "closed")) return false
+
+    // Search filtering
+    if (searchTerm && !enquiry.subject.toLowerCase().includes(searchTerm.toLowerCase())) return false
+
+    // Category filtering
+    if (filterCategory !== "all" && enquiry.category !== filterCategory) return false
+
+    // Priority filtering
+    if (filterPriority !== "all" && enquiry.priority !== filterPriority) return false
+
+    return true
+  })
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "answered":
+        return "bg-green-100 text-green-800"
+      case "pending":
+        return "bg-yellow-100 text-yellow-800"
+      case "follow-up":
+        return "bg-blue-100 text-blue-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "critical":
-        return "text-red-600 bg-red-50 border-red-200"
+      case "urgent":
+        return "bg-red-100 text-red-800"
       case "high":
-        return "text-orange-600 bg-orange-50 border-orange-200"
+        return "bg-orange-100 text-orange-800"
       case "medium":
-        return "text-blue-600 bg-blue-50 border-blue-200"
+        return "bg-blue-100 text-blue-800"
       default:
-        return "text-gray-600 bg-gray-50 border-gray-200"
+        return "bg-gray-100 text-gray-800"
     }
   }
 
+  const getEnquiryStats = () => {
+    return {
+      total: enquiries.length,
+      pending: enquiries.filter((e) => e.status === "pending").length,
+      answered: enquiries.filter((e) => e.status === "answered").length,
+      starred: enquiries.filter((e) => e.isStarred).length,
+    }
+  }
+
+  const stats = getEnquiryStats()
+
   return (
-    <TransactionLayout
-      currentStage="enquiries"
-      userRole="buyer-conveyancer"
-      title="Pre-Contract Enquiries"
-      description="Draft and track enquiries sent to the seller's conveyancer"
-    >
+    <TransactionLayout currentStage="enquiries" userRole="buyer-conveyancer">
       <div className="space-y-6">
-        {/* Compose new enquiry */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              New Enquiry
-            </CardTitle>
-            <CardDescription>Send a new enquiry to the seller's conveyancer</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="subject">Subject</Label>
-              <Textarea
-                id="subject"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                rows={1}
-                className="mt-1"
-                placeholder="Short summary of your enquiry"
-              />
-            </div>
-            <div>
-              <Label htmlFor="question">Question</Label>
-              <Textarea
-                id="question"
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                rows={4}
-                className="mt-1"
-                placeholder="Provide full details of your enquiry"
-              />
-            </div>
-            <Button onClick={handleSendEnquiry} disabled={isSubmitting || !subject.trim() || !question.trim()}>
-              {isSubmitting ? (
-                <>
-                  <RefreshCcw className="h-4 w-4 mr-2 animate-spin" />
-                  Sending...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Send Enquiry
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Enquiries Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              Enquiries Status
-            </CardTitle>
-            <CardDescription>
-              {total === 0 ? "No enquiries sent yet." : "Track the status of your enquiries"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-              <div className="p-4 border rounded bg-blue-50">
-                <div className="text-3xl font-bold text-blue-600">{total}</div>
-                <p className="text-sm text-blue-800">Total Sent</p>
-              </div>
-              <div className="p-4 border rounded bg-yellow-50">
-                <div className="text-3xl font-bold text-yellow-600">{pending}</div>
-                <p className="text-sm text-yellow-800">Pending Response</p>
-              </div>
-              <div className="p-4 border rounded bg-green-50">
-                <div className="text-3xl font-bold text-green-600">{answered}</div>
-                <p className="text-sm text-green-800">Answered</p>
-              </div>
-            </div>
-
-            {/* Progress Bar */}
-            {total > 0 && (
-              <div className="mt-6">
-                <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
-                  <div
-                    className="bg-green-600 h-3 rounded-full transition-all duration-500"
-                    style={{ width: `${(answered / total) * 100}%` }}
-                  ></div>
-                </div>
-                <p className="text-sm text-center text-muted-foreground">
-                  {Math.round((answered / total) * 100)}% of enquiries answered
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Recently Answered Enquiries */}
-        {answered > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                Recently Answered Enquiries
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {enquiries
-                .filter((e) => e.status === "answered")
-                .slice(0, 3)
-                .map((enquiry) => (
-                  <div key={enquiry.id} className="border-l-4 border-green-400 pl-4 py-3 bg-green-50 rounded">
-                    <h4 className="font-medium text-sm">{enquiry.subject}</h4>
-                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{enquiry.response}</p>
-                    <p className="text-xs text-muted-foreground">Answered: {enquiry.dateAnswered}</p>
-                  </div>
-                ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Tabs list */}
-        <Tabs defaultValue="pending" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="pending">Pending ({pending})</TabsTrigger>
-            <TabsTrigger value="answered">Answered ({answered})</TabsTrigger>
-            <TabsTrigger value="all">All ({total})</TabsTrigger>
-          </TabsList>
-
-          {/* Pending tab */}
-          <TabsContent value="pending" className="space-y-4">
-            {pending === 0 ? (
-              <div className="text-center py-10">
-                <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No pending enquiries.</p>
-                <p className="text-sm text-gray-400 mt-2">
-                  All enquiries have been answered or none have been sent yet.
-                </p>
-              </div>
-            ) : (
-              enquiries
-                .filter((e) => e.status === "pending")
-                .map((e) => (
-                  <Card key={e.id} className="border-l-4 border-yellow-500">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-base">{e.subject}</CardTitle>
-                        <Badge className={getPriorityColor(e.priority)}>{e.priority} priority</Badge>
-                      </div>
-                      <CardDescription>Sent: {new Date(e.dateSent).toLocaleDateString()}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm">{e.question}</p>
-                      <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                        <p className="text-sm text-yellow-800">⏳ Awaiting response from seller's conveyancer</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-            )}
-          </TabsContent>
-
-          {/* Answered tab */}
-          <TabsContent value="answered" className="space-y-4">
-            {answered === 0 ? (
-              <div className="text-center py-10">
-                <CheckCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No answered enquiries yet.</p>
-                <p className="text-sm text-gray-400 mt-2">
-                  Responses will appear here when the seller's conveyancer replies.
-                </p>
-              </div>
-            ) : (
-              enquiries
-                .filter((e) => e.status === "answered")
-                .map((e) => (
-                  <Card key={e.id} className="border-l-4 border-green-500">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-base">{e.subject}</CardTitle>
-                        <Badge className="bg-green-100 text-green-800">Answered</Badge>
-                      </div>
-                      <CardDescription>
-                        Sent: {new Date(e.dateSent).toLocaleDateString()} | Answered:{" "}
-                        {e.dateAnswered && new Date(e.dateAnswered).toLocaleDateString()}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="p-3 bg-gray-50 rounded">
-                        <p className="text-sm font-medium mb-1">Your Question:</p>
-                        <p className="text-sm">{e.question}</p>
-                      </div>
-                      <div className="p-3 bg-green-50 border border-green-200 rounded">
-                        <p className="text-sm font-medium text-green-800 mb-1">Response:</p>
-                        <p className="text-sm text-green-700">{e.response}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-            )}
-          </TabsContent>
-
-          {/* All tab */}
-          <TabsContent value="all" className="space-y-4">
-            {total === 0 ? (
-              <div className="text-center py-10">
-                <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No enquiries yet.</p>
-                <p className="text-sm text-gray-400 mt-2">Use the form above to send your first enquiry.</p>
-              </div>
-            ) : (
-              enquiries.map((e) => (
-                <Card
-                  key={e.id}
-                  className={`border-l-4 ${e.status === "answered" ? "border-green-500" : "border-yellow-500"}`}
-                >
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base">{e.subject}</CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Badge className={getPriorityColor(e.priority)}>{e.priority} priority</Badge>
-                        <Badge variant={e.status === "answered" ? "default" : "secondary"}>
-                          {e.status === "answered" ? (
-                            <>
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Answered
-                            </>
-                          ) : (
-                            <>
-                              <Clock className="h-3 w-3 mr-1" />
-                              Pending
-                            </>
-                          )}
-                        </Badge>
-                      </div>
-                    </div>
-                    <CardDescription>
-                      Sent: {new Date(e.dateSent).toLocaleDateString()}
-                      {e.dateAnswered && ` | Answered: ${new Date(e.dateAnswered).toLocaleDateString()}`}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="p-3 bg-gray-50 rounded">
-                      <p className="text-sm font-medium mb-1">Your Question:</p>
-                      <p className="text-sm">{e.question}</p>
-                    </div>
-                    {e.response && (
-                      <div className="p-3 bg-green-50 border border-green-200 rounded">
-                        <p className="text-sm font-medium text-green-800 mb-1">Response:</p>
-                        <p className="text-sm text-green-700">{e.response}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
-        </Tabs>
-
-        {/* Action Buttons */}
-        <div className="flex gap-4">
-          <Button onClick={handleContinueToMortgageOffer} disabled={pending > 0 || isContinuing} className="flex-1">
-            {isContinuing ? (
-              <>
-                <Clock className="h-4 w-4 mr-2 animate-spin" />
-                Completing Stage...
-              </>
-            ) : (
-              <>
-                <ArrowRight className="h-4 w-4 mr-2" />
-                Continue to Mortgage Offer
-              </>
-            )}
+        {/* Header with Stats */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Property Enquiries</h1>
+            <p className="text-gray-600">Communicate with the seller's conveyancer</p>
+          </div>
+          <Button onClick={() => setShowComposeModal(true)} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            New Enquiry
           </Button>
         </div>
 
-        {pending > 0 && (
-          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-sm text-amber-800">
-              <strong>Note:</strong> You have {pending} pending enquiries. All enquiries must be resolved before
-              proceeding to the mortgage offer stage.
-            </p>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <MessageSquare className="h-8 w-8 text-blue-600" />
+                <div>
+                  <p className="text-2xl font-bold">{stats.total}</p>
+                  <p className="text-sm text-gray-600">Total Enquiries</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Clock className="h-8 w-8 text-yellow-600" />
+                <div>
+                  <p className="text-2xl font-bold">{stats.pending}</p>
+                  <p className="text-sm text-gray-600">Pending Response</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+                <div>
+                  <p className="text-2xl font-bold">{stats.answered}</p>
+                  <p className="text-sm text-gray-600">Answered</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Star className="h-8 w-8 text-amber-600" />
+                <div>
+                  <p className="text-2xl font-bold">{stats.starred}</p>
+                  <p className="text-sm text-gray-600">Starred</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Search and Filters */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search enquiries..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <select
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value="all">All Categories</option>
+                  <option value="property">Property</option>
+                  <option value="legal">Legal</option>
+                  <option value="financial">Financial</option>
+                  <option value="timeline">Timeline</option>
+                  <option value="other">Other</option>
+                </select>
+                <select
+                  value={filterPriority}
+                  onChange={(e) => setFilterPriority(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value="all">All Priorities</option>
+                  <option value="urgent">Urgent</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            {[
+              { key: "active", label: "Active", count: stats.total - enquiries.filter((e) => e.isArchived).length },
+              { key: "pending", label: "Pending", count: stats.pending },
+              { key: "answered", label: "Answered", count: stats.answered },
+              { key: "starred", label: "Starred", count: stats.starred },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key as any)}
+                className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                  activeTab === tab.key
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                {tab.label}
+                <Badge variant="secondary" className="text-xs">
+                  {tab.count}
+                </Badge>
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Enquiries List */}
+        <div className="space-y-4">
+          {filteredEnquiries.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Enquiries Found</h3>
+                <p className="text-gray-600 mb-4">
+                  {activeTab === "active" ? "You haven't sent any enquiries yet." : `No ${activeTab} enquiries found.`}
+                </p>
+                <Button onClick={() => setShowComposeModal(true)} className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Send Your First Enquiry
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            filteredEnquiries.map((enquiry) => (
+              <Card key={enquiry.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="font-semibold text-gray-900">{enquiry.subject}</h3>
+                        <Badge variant="outline" className={getStatusColor(enquiry.status)}>
+                          {enquiry.status.charAt(0).toUpperCase() + enquiry.status.slice(1)}
+                        </Badge>
+                        <Badge variant="outline" className={getPriorityColor(enquiry.priority)}>
+                          {enquiry.priority.toUpperCase()}
+                        </Badge>
+                        <Badge variant="outline" className="capitalize">
+                          {enquiry.category}
+                        </Badge>
+                      </div>
+
+                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                        {enquiry.messages[0]?.content || "No content"}
+                      </p>
+
+                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>Created: {enquiry.createdAt.toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MessageSquare className="h-3 w-3" />
+                          <span>
+                            {enquiry.messages.length} message{enquiry.messages.length !== 1 ? "s" : ""}
+                          </span>
+                        </div>
+                        {enquiry.updatedAt > enquiry.createdAt && (
+                          <div className="flex items-center gap-1">
+                            <RefreshCw className="h-3 w-3" />
+                            <span>Updated: {enquiry.updatedAt.toLocaleDateString()}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 ml-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleToggleStar(enquiry.id)}
+                        className={enquiry.isStarred ? "text-amber-600" : "text-gray-400"}
+                      >
+                        <Star className={`h-4 w-4 ${enquiry.isStarred ? "fill-current" : ""}`} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedEnquiry(enquiry)
+                          setShowDetailModal(true)
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleArchive(enquiry.id)}>
+                        <Archive className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+
+        {/* Compose Modal */}
+        {showComposeModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold">Compose New Enquiry</h2>
+                  <Button variant="ghost" size="sm" onClick={() => setShowComposeModal(false)} className="h-8 w-8 p-0">
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Form */}
+                  <div className="lg:col-span-2 space-y-4">
+                    <div>
+                      <Label htmlFor="subject">Subject *</Label>
+                      <Input
+                        id="subject"
+                        value={newEnquiry.subject}
+                        onChange={(e) => setNewEnquiry({ ...newEnquiry, subject: e.target.value })}
+                        placeholder="Enter enquiry subject..."
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="category">Category</Label>
+                        <select
+                          id="category"
+                          value={newEnquiry.category}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, category: e.target.value as any })}
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                        >
+                          <option value="property">Property</option>
+                          <option value="legal">Legal</option>
+                          <option value="financial">Financial</option>
+                          <option value="timeline">Timeline</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label htmlFor="priority">Priority</Label>
+                        <select
+                          id="priority"
+                          value={newEnquiry.priority}
+                          onChange={(e) => setNewEnquiry({ ...newEnquiry, priority: e.target.value as any })}
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                        >
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                          <option value="urgent">Urgent</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="content">Message *</Label>
+                      <Textarea
+                        id="content"
+                        value={newEnquiry.content}
+                        onChange={(e) => setNewEnquiry({ ...newEnquiry, content: e.target.value })}
+                        placeholder="Enter your enquiry details..."
+                        rows={8}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
+                      <Button
+                        onClick={handleSendEnquiry}
+                        disabled={isSubmitting || !newEnquiry.subject.trim() || !newEnquiry.content.trim()}
+                        className="flex items-center gap-2"
+                      >
+                        {isSubmitting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                        Send Enquiry
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowComposeModal(false)} disabled={isSubmitting}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Templates */}
+                  <div>
+                    <h3 className="font-medium mb-4">Quick Templates</h3>
+                    <div className="space-y-3">
+                      {ENQUIRY_TEMPLATES.map((template, index) => (
+                        <Card
+                          key={index}
+                          className="cursor-pointer hover:bg-gray-50"
+                          onClick={() => useTemplate(template)}
+                        >
+                          <CardContent className="p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline" className="text-xs capitalize">
+                                {template.category}
+                              </Badge>
+                            </div>
+                            <h4 className="font-medium text-sm mb-1">{template.subject}</h4>
+                            <p className="text-xs text-gray-600 line-clamp-2">{template.content}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Guidelines */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-600" />
-              Guidelines
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="list-disc pl-6 text-sm space-y-2">
-              <li>Provide clear, concise questions to speed up the seller's reply.</li>
-              <li>Use follow-ups sparingly to avoid notification fatigue.</li>
-              <li>Responses typically arrive within 5 working days.</li>
-              <li>Check the browser console for debug logs if testing the real-time functionality.</li>
-            </ul>
-          </CardContent>
-        </Card>
+        {/* Detail Modal */}
+        {showDetailModal && selectedEnquiry && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-xl font-semibold">{selectedEnquiry.subject}</h2>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge className={getStatusColor(selectedEnquiry.status)}>
+                        {selectedEnquiry.status.charAt(0).toUpperCase() + selectedEnquiry.status.slice(1)}
+                      </Badge>
+                      <Badge className={getPriorityColor(selectedEnquiry.priority)}>
+                        {selectedEnquiry.priority.toUpperCase()}
+                      </Badge>
+                      <Badge variant="outline" className="capitalize">
+                        {selectedEnquiry.category}
+                      </Badge>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setShowDetailModal(false)} className="h-8 w-8 p-0">
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* Message Thread */}
+                <div className="space-y-4 mb-6">
+                  <h3 className="font-medium">Conversation</h3>
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {selectedEnquiry.messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`flex ${message.sender === "buyer-conveyancer" ? "justify-end" : "justify-start"}`}
+                      >
+                        <div
+                          className={`max-w-[70%] rounded-lg p-3 ${
+                            message.sender === "buyer-conveyancer"
+                              ? "bg-blue-600 text-white"
+                              : "bg-gray-100 text-gray-900"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <User className="h-3 w-3" />
+                            <span className="text-xs font-medium">
+                              {message.sender === "buyer-conveyancer" ? "You" : "Seller's Conveyancer"}
+                            </span>
+                            <span className="text-xs opacity-75">{message.timestamp.toLocaleString()}</span>
+                          </div>
+                          <p className="text-sm">{message.content}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Follow-up Form */}
+                {selectedEnquiry.status === "answered" && (
+                  <div className="border-t pt-4">
+                    <h3 className="font-medium mb-3">Send Follow-up</h3>
+                    <div className="space-y-3">
+                      <Textarea
+                        value={followUpMessage}
+                        onChange={(e) => setFollowUpMessage(e.target.value)}
+                        placeholder="Type your follow-up message..."
+                        rows={3}
+                      />
+                      <Button
+                        onClick={handleSendFollowUp}
+                        disabled={isSubmitting || !followUpMessage.trim()}
+                        className="flex items-center gap-2"
+                      >
+                        {isSubmitting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Reply className="h-4 w-4" />}
+                        Send Follow-up
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleToggleStar(selectedEnquiry.id)}
+                    className="flex items-center gap-2"
+                  >
+                    <Star className={`h-4 w-4 ${selectedEnquiry.isStarred ? "fill-current text-amber-600" : ""}`} />
+                    {selectedEnquiry.isStarred ? "Unstar" : "Star"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleArchive(selectedEnquiry.id)}
+                    className="flex items-center gap-2"
+                  >
+                    <Archive className="h-4 w-4" />
+                    {selectedEnquiry.isArchived ? "Unarchive" : "Archive"}
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowDetailModal(false)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </TransactionLayout>
   )

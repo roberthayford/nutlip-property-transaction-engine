@@ -105,6 +105,13 @@ function getInitial(): PersistedState {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
       const parsed = JSON.parse(stored) as Partial<PersistedState>
+      // Convert uploadedAt strings back to Date objects
+      if (parsed.documents) {
+        parsed.documents = parsed.documents.map((doc) => ({
+          ...doc,
+          uploadedAt: new Date(doc.uploadedAt),
+        }))
+      }
       return mergeWithDefaults(parsed)
     }
   } catch {
@@ -129,6 +136,7 @@ interface RealTimeCtx {
 
   /* helpers */
   sendUpdate: (u: Omit<RealtimeUpdate, "id" | "createdAt">) => void
+  addDocument: (doc: Omit<RealtimeDocument, "id" | "uploadedAt" | "downloadCount" | "status">) => void
   getDocumentsForRole: (role: Role, stage: string) => RealtimeDocument[]
   downloadDocument: (id: string, role: Role) => Promise<Blob | null>
   markDocumentAsReviewed: (id: string) => void
@@ -158,6 +166,14 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
     const handler = (e: StorageEvent) => {
       if (e.key !== STORAGE_KEY || !e.newValue) return
       const incoming: PersistedState = mergeWithDefaults(JSON.parse(e.newValue))
+
+      // Convert uploadedAt strings back to Date objects
+      if (incoming.documents) {
+        incoming.documents = incoming.documents.map((doc) => ({
+          ...doc,
+          uploadedAt: new Date(doc.uploadedAt),
+        }))
+      }
 
       // defer state update → avoids "setState during render" warning
       setTimeout(() => {
@@ -226,6 +242,36 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
               documents,
               transactionState,
             }),
+          }),
+        )
+      }, 0)
+    },
+    [updates, documents, transactionState],
+  )
+
+  const addDocument = useCallback<RealTimeCtx["addDocument"]>(
+    (docData) => {
+      const fullDocument: RealtimeDocument = {
+        ...docData,
+        id: crypto.randomUUID(),
+        uploadedAt: new Date(),
+        downloadCount: 0,
+        status: "delivered",
+      }
+
+      setDocuments((prev) => {
+        const next = [fullDocument, ...prev]
+        return next
+      })
+
+      // Persist and trigger storage event
+      setTimeout(() => {
+        const newState = { updates, documents: [fullDocument, ...documents], transactionState }
+        savePersisted(newState)
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key: STORAGE_KEY,
+            newValue: JSON.stringify(newState),
           }),
         )
       }, 0)
@@ -406,6 +452,7 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
     documents,
     transactionState,
     sendUpdate,
+    addDocument,
     getDocumentsForRole,
     downloadDocument,
     markDocumentAsReviewed,
