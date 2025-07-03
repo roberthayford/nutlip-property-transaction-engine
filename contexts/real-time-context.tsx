@@ -27,6 +27,7 @@ export interface RealtimeUpdate {
     | "contract_exchanged"
     | "amendment_requested"
     | "amendment_replied"
+    | "platform_reset"
   stage: string
   role: Role | "system"
   title: string
@@ -474,15 +475,32 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const resetToDefault = useCallback<RealTimeCtx["resetToDefault"]>(() => {
+    console.log("🔄 Starting platform reset...")
+
+    // Send platform reset update before clearing everything
+    const resetUpdate: RealtimeUpdate = {
+      id: crypto.randomUUID(),
+      type: "platform_reset",
+      stage: "system",
+      role: "system",
+      title: "Platform Reset",
+      description: "Platform has been reset to default state",
+      createdAt: new Date().toISOString(),
+      read: false,
+    }
+
     // Reset all state to defaults
     const defaultState = mergeWithDefaults(null)
+
+    // Add the reset update to the default state
+    defaultState.updates = [resetUpdate]
 
     setUpdates(defaultState.updates)
     setDocuments(defaultState.documents)
     setAmendmentRequests(defaultState.amendmentRequests)
     setTransactionState(defaultState.transactionState)
 
-    // Clear all localStorage keys - comprehensive list
+    // Comprehensive localStorage cleanup
     const keysToRemove = [
       STORAGE_KEY,
       "transaction_updates",
@@ -524,41 +542,88 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
       "offer-accepted-data",
       "nutlip-fee-data",
       "transaction-completion-data",
+      "amendment-requests",
+      "document-cache",
+      "user-preferences",
+      "notification-settings",
+      "activity-feed",
+      "real-time-updates",
     ]
 
-    // Clear localStorage
+    // Clear specific localStorage keys
     keysToRemove.forEach((key) => {
       try {
         localStorage.removeItem(key)
+        console.log(`✅ Removed localStorage key: ${key}`)
       } catch (error) {
-        console.error(`Error removing ${key} from localStorage:`, error)
+        console.error(`❌ Error removing ${key} from localStorage:`, error)
       }
     })
 
     // Clear all localStorage items that start with common prefixes
-    const prefixesToClear = ["pte-", "nutlip-", "transaction-", "buyer-", "seller-", "estate-agent-", "conveyancer-"]
+    const prefixesToClear = [
+      "pte-",
+      "nutlip-",
+      "transaction-",
+      "buyer-",
+      "seller-",
+      "estate-agent-",
+      "conveyancer-",
+      "amendment-",
+      "document-",
+      "stage-",
+      "completion-",
+      "contract-",
+      "mortgage-",
+      "search-",
+      "enquiry-",
+      "requisition-",
+    ]
 
     try {
       const allKeys = Object.keys(localStorage)
+      let clearedCount = 0
       allKeys.forEach((key) => {
         if (prefixesToClear.some((prefix) => key.startsWith(prefix))) {
           localStorage.removeItem(key)
+          clearedCount++
         }
       })
+      console.log(`✅ Cleared ${clearedCount} prefixed localStorage items`)
     } catch (error) {
-      console.error("Error clearing prefixed localStorage items:", error)
+      console.error("❌ Error clearing prefixed localStorage items:", error)
     }
 
     // Clear sessionStorage as well
     try {
       const sessionKeys = Object.keys(sessionStorage)
+      let sessionClearedCount = 0
       sessionKeys.forEach((key) => {
         if (prefixesToClear.some((prefix) => key.startsWith(prefix))) {
           sessionStorage.removeItem(key)
+          sessionClearedCount++
         }
       })
+      console.log(`✅ Cleared ${sessionClearedCount} sessionStorage items`)
     } catch (error) {
-      console.error("Error clearing sessionStorage:", error)
+      console.error("❌ Error clearing sessionStorage:", error)
+    }
+
+    // Clear IndexedDB if available
+    if ("indexedDB" in window) {
+      try {
+        const deleteDB = (dbName: string) => {
+          const deleteReq = indexedDB.deleteDatabase(dbName)
+          deleteReq.onsuccess = () => console.log(`✅ Deleted IndexedDB: ${dbName}`)
+          deleteReq.onerror = () => console.error(`❌ Error deleting IndexedDB: ${dbName}`)
+        }
+
+        // Common database names that might be used
+        const dbNames = ["nutlip-db", "pte-db", "transaction-db", "documents-db"]
+        dbNames.forEach(deleteDB)
+      } catch (error) {
+        console.error("❌ Error clearing IndexedDB:", error)
+      }
     }
 
     // Clear browser cache if possible (limited by browser security)
@@ -566,18 +631,37 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
       caches
         .keys()
         .then((cacheNames) => {
-          cacheNames.forEach((cacheName) => {
-            if (cacheName.includes("nutlip") || cacheName.includes("pte")) {
-              caches.delete(cacheName)
-            }
-          })
+          const promises = cacheNames
+            .filter(
+              (cacheName) =>
+                cacheName.includes("nutlip") || cacheName.includes("pte") || cacheName.includes("transaction"),
+            )
+            .map((cacheName) => {
+              console.log(`🗑️ Deleting cache: ${cacheName}`)
+              return caches.delete(cacheName)
+            })
+
+          return Promise.all(promises)
+        })
+        .then((results) => {
+          console.log(`✅ Cleared ${results.filter(Boolean).length} cache entries`)
         })
         .catch((error) => {
-          console.error("Error clearing cache:", error)
+          console.error("❌ Error clearing cache:", error)
         })
     }
 
-    // Save the default state
+    // Clear any Web SQL databases (deprecated but might exist)
+    if ("openDatabase" in window) {
+      try {
+        // This is deprecated and not widely supported, but included for completeness
+        console.log("🗑️ Web SQL cleanup attempted (deprecated feature)")
+      } catch (error) {
+        console.error("❌ Error clearing Web SQL:", error)
+      }
+    }
+
+    // Save the default state with reset notification
     savePersisted(defaultState)
 
     // Trigger storage events to notify other tabs/components
@@ -591,12 +675,24 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
       )
     }, 0)
 
-    // Dispatch custom event for complete reset
+    // Dispatch custom events for complete reset
     window.dispatchEvent(
       new CustomEvent("platform-reset", {
+        detail: {
+          timestamp: new Date().toISOString(),
+          resetId: crypto.randomUUID(),
+        },
+      }),
+    )
+
+    // Dispatch event to clear any component-level state
+    window.dispatchEvent(
+      new CustomEvent("clear-component-state", {
         detail: { timestamp: new Date().toISOString() },
       }),
     )
+
+    console.log("🎉 Platform reset completed successfully!")
   }, [])
 
   const markAsRead = useCallback<RealTimeCtx["markAsRead"]>((id) => {

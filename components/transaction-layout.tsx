@@ -187,15 +187,19 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
   const roleFromPath = pathSegments.length > 2 ? (pathSegments[1] as UserRole) : undefined
   const role: UserRole = userRole ?? roleFromPath ?? "buyer"
 
-  const [selectedRole] = useState<UserRole>(role)
+  // Validate that the role is valid
+  const validRoles: UserRole[] = ["buyer", "estate-agent", "buyer-conveyancer", "seller-conveyancer"]
+  const validatedRole: UserRole = validRoles.includes(role) ? role : "buyer"
+
+  const [selectedRole] = useState<UserRole>(validatedRole)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const stageFromPath = pathSegments[pathSegments.length - 1]
   const currentStageId = currentStage || stageFromPath
   const currentStageIndex = transactionStages.findIndex((stage) => stage.id === currentStageId)
 
-  const canAccessStage = (stage: TransactionStage) => stage.allowedRoles.includes(role)
-  const stageUrl = (stage: TransactionStage) => `/${role}/${stage.id}`
+  const canAccessStage = (stage: TransactionStage) => stage.allowedRoles.includes(validatedRole)
+  const stageUrl = (stage: TransactionStage) => `/${validatedRole}/${stage.id}`
 
   /* ------------------------------------------------------- */
   /*                    Reset functionality                  */
@@ -288,13 +292,13 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
               </Badge>
               <Badge
                 className={`text-xs md:text-sm
-                ${role === "buyer" ? "bg-blue-100 text-blue-800" : ""}
-                ${role === "estate-agent" ? "bg-green-100 text-green-800" : ""}
-                ${role === "buyer-conveyancer" ? "bg-purple-100 text-purple-800" : ""}
-                ${role === "seller-conveyancer" ? "bg-orange-100 text-orange-800" : ""}
+                ${validatedRole === "buyer" ? "bg-blue-100 text-blue-800" : ""}
+                ${validatedRole === "estate-agent" ? "bg-green-100 text-green-800" : ""}
+                ${validatedRole === "buyer-conveyancer" ? "bg-purple-100 text-purple-800" : ""}
+                ${validatedRole === "seller-conveyancer" ? "bg-orange-100 text-orange-800" : ""}
               `}
               >
-                {userRoleLabels[role]}
+                {userRoleLabels[validatedRole]}
               </Badge>
             </div>
 
@@ -336,7 +340,7 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
                       </AlertDialogContent>
                     </AlertDialog>
 
-                    <Link href={dashboardUrls[role]} className="w-full">
+                    <Link href={dashboardUrls[validatedRole]} className="w-full">
                       <Button variant="outline" className="w-full justify-start bg-transparent">
                         <Home className="h-4 w-4 mr-2" />
                         Back to Dashboard
@@ -386,7 +390,7 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
                   </AlertDialogContent>
                 </AlertDialog>
 
-                <Link href={dashboardUrls[role]}>
+                <Link href={dashboardUrls[validatedRole]}>
                   <Button variant="outline">Back to Dashboard</Button>
                 </Link>
 
