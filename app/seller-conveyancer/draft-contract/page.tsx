@@ -316,20 +316,6 @@ export default function SellerConveyancerDraftContractPage() {
         counterProposal: replyData.decision === "counter-proposal" ? replyData.counterProposal : undefined,
       })
 
-      // Send additional update to notify buyer conveyancer
-      sendUpdate({
-        type: "amendment_replied",
-        stage: "draft-contract",
-        role: "seller-conveyancer",
-        title: "Amendment Reply Sent",
-        description: `${replyData.decision.replace("-", " ")} amendment request from buyer's conveyancer`,
-        data: {
-          amendmentId: selectedAmendment,
-          decision: replyData.decision,
-          targetRole: "buyer-conveyancer",
-        },
-      })
-
       // Reset form and close modal
       setReplyData({
         decision: "accepted",
@@ -340,8 +326,8 @@ export default function SellerConveyancerDraftContractPage() {
       setShowReplyModal(false)
 
       toast({
-        title: "Reply Sent Successfully",
-        description: `Your ${replyData.decision.replace("-", " ")} response has been sent to the buyer's conveyancer`,
+        title: "Reply Sent",
+        description: "Your response has been sent to the buyer's conveyancer",
       })
     } catch (error) {
       toast({

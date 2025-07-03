@@ -82,10 +82,7 @@ export default function BuyerConveyancerDraftContractPage() {
 
   // Get amendment requests sent BY buyer conveyancer (to track replies)
   const sentAmendmentRequests = amendmentRequests.filter(
-    (req) =>
-      req.requestedBy === "buyer-conveyancer" &&
-      req.stage === "draft-contract" &&
-      req.requestedTo === "seller-conveyancer",
+    (req) => req.requestedBy === "buyer-conveyancer" && req.stage === "draft-contract",
   )
 
   // Check if there are new documents and show notifications
@@ -119,39 +116,22 @@ export default function BuyerConveyancerDraftContractPage() {
 
   // Check for new amendment replies and show notifications
   useEffect(() => {
-    const newReplies = sentAmendmentRequests.filter((req) => {
-      return req.reply && req.status === "replied" && !notifiedReplies.current.has(req.id)
-    })
+    const newReplies = sentAmendmentRequests.filter((req) => req.reply && !notifiedReplies.current.has(req.id))
 
     if (newReplies.length) {
       newReplies.forEach((req) => {
         if (req.reply) {
-          const isPositive = req.reply.decision === "accepted"
           toast({
             title: "Amendment Reply Received",
-            description: `${req.type} amendment request ${req.reply.decision.replace("-", " ")} by seller's conveyancer`,
-            variant: isPositive ? "default" : "destructive",
-          })
-
-          // Send activity update
-          sendUpdate({
-            type: "amendment_replied",
-            stage: "draft-contract",
-            role: "buyer-conveyancer",
-            title: "Amendment Reply Received",
-            description: `Reply received for ${req.type} amendment: ${req.reply.decision}`,
-            data: {
-              amendmentId: req.id,
-              decision: req.reply.decision,
-              replyMessage: req.reply.message,
-            },
+            description: `Reply received for "${req.type}" amendment request - ${req.reply.decision}`,
+            variant: req.reply.decision === "accepted" ? "default" : "destructive",
           })
 
           notifiedReplies.current.add(req.id)
         }
       })
     }
-  }, [sentAmendmentRequests, sendUpdate, toast])
+  }, [sentAmendmentRequests])
 
   // Listen for platform reset events
   useEffect(() => {
