@@ -27,6 +27,8 @@ import {
   CheckCircle2,
   XCircle,
   AlertOctagon,
+  Bell,
+  Sparkles,
 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 
@@ -95,8 +97,9 @@ export default function BuyerConveyancerDraftContractPage() {
       newDelivered.forEach((doc) => {
         // Show toast notification for new document
         toast({
-          title: "New Contract Received",
+          title: "📄 New Contract Received",
           description: `${doc.name} is ready for review from seller's conveyancer`,
+          duration: 8000,
         })
 
         // Send activity update
@@ -114,24 +117,53 @@ export default function BuyerConveyancerDraftContractPage() {
     }
   }, [receivedDocuments, sendUpdate])
 
-  // Check for new amendment replies and show notifications
+  // Check for new amendment replies and show notifications - ENHANCED
   useEffect(() => {
     const newReplies = sentAmendmentRequests.filter((req) => req.reply && !notifiedReplies.current.has(req.id))
 
     if (newReplies.length) {
+      console.log("New amendment replies detected:", newReplies.length)
+
       newReplies.forEach((req) => {
         if (req.reply) {
+          console.log("Processing reply for amendment:", {
+            amendmentId: req.id,
+            amendmentType: req.type,
+            decision: req.reply.decision,
+            message: req.reply.message,
+          })
+
+          // Show prominent toast notification for reply
+          const isAccepted = req.reply.decision === "accepted"
+          const isRejected = req.reply.decision === "rejected"
+          const isCounterProposal = req.reply.decision === "counter-proposal"
+
           toast({
+            title: `🎉 Amendment Reply Received!`,
+            description: `${req.type} amendment request: ${req.reply.decision.toUpperCase().replace("-", " ")}`,
+            duration: 10000,
+            variant: isRejected ? "destructive" : "default",
+          })
+
+          // Send real-time update
+          sendUpdate({
+            type: "amendment_replied",
+            stage: "draft-contract",
+            role: "seller-conveyancer",
             title: "Amendment Reply Received",
-            description: `Reply received for "${req.type}" amendment request - ${req.reply.decision}`,
-            variant: req.reply.decision === "accepted" ? "default" : "destructive",
+            description: `${req.reply.decision.toUpperCase().replace("-", " ")}: ${req.type} amendment request`,
+            data: {
+              amendmentId: req.id,
+              decision: req.reply.decision,
+              replyMessage: req.reply.message,
+            },
           })
 
           notifiedReplies.current.add(req.id)
         }
       })
     }
-  }, [sentAmendmentRequests])
+  }, [sentAmendmentRequests, sendUpdate])
 
   // Listen for platform reset events
   useEffect(() => {
@@ -286,6 +318,8 @@ export default function BuyerConveyancerDraftContractPage() {
       // Simulate sending amendment request
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
+      console.log("Sending amendment request:", amendmentRequest)
+
       // Add amendment request using the real-time context
       addAmendmentRequest({
         stage: "draft-contract",
@@ -311,10 +345,13 @@ export default function BuyerConveyancerDraftContractPage() {
       setShowAmendmentModal(false)
 
       toast({
-        title: "Amendment Request Sent",
-        description: "Your amendment request has been sent to the seller's conveyancer",
+        title: "✅ Amendment Request Sent",
+        description:
+          "Your amendment request has been sent to the seller's conveyancer and they will be notified immediately",
+        duration: 6000,
       })
     } catch (error) {
+      console.error("Failed to send amendment request:", error)
       toast({
         title: "Failed to Send Request",
         description: "Please try again later",
@@ -343,7 +380,7 @@ export default function BuyerConveyancerDraftContractPage() {
             completedAt: new Date().toISOString(),
             contractType: "Standard Residential Purchase",
             reviewedDocuments: receivedDocuments.length,
-            amendmentsRequested: 0,
+            amendmentsRequested: sentAmendmentRequests.length,
             nextStage: "Property Searches & Survey",
           },
         },
@@ -598,10 +635,17 @@ export default function BuyerConveyancerDraftContractPage() {
     }
   }
 
+  // Debug logging for amendment requests
+  console.log("Sent amendment requests:", sentAmendmentRequests)
+  console.log(
+    "Amendment requests with replies:",
+    sentAmendmentRequests.filter((req) => req.reply),
+  )
+
   return (
     <TransactionLayout currentStage="draft-contract" userRole="buyer-conveyancer">
       <div className="space-y-6">
-        {/* Amendment Request Status Section */}
+        {/* Amendment Request Status Section - ENHANCED */}
         {sentAmendmentRequests.length > 0 && (
           <Card className="border-2 border-blue-200 bg-blue-50/30">
             <CardHeader>
@@ -611,6 +655,13 @@ export default function BuyerConveyancerDraftContractPage() {
                 <Badge variant="secondary" className="ml-2">
                   {sentAmendmentRequests.length} request{sentAmendmentRequests.length !== 1 ? "s" : ""}
                 </Badge>
+                {sentAmendmentRequests.some((req) => req.reply && !notifiedReplies.current.has(req.id)) && (
+                  <Badge className="bg-green-100 text-green-800 animate-pulse">
+                    <Bell className="h-3 w-3 mr-1" />
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    New Reply!
+                  </Badge>
+                )}
               </CardTitle>
               <CardDescription>Track the status of your amendment requests to the seller's conveyancer</CardDescription>
             </CardHeader>
@@ -618,7 +669,11 @@ export default function BuyerConveyancerDraftContractPage() {
               {sentAmendmentRequests.map((request) => (
                 <div
                   key={request.id}
-                  className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
+                  className={`border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-all duration-300 ${
+                    request.reply && !notifiedReplies.current.has(request.id)
+                      ? "ring-2 ring-green-200 bg-gradient-to-r from-green-50/80 to-blue-50/80 shadow-lg"
+                      : ""
+                  }`}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
@@ -644,23 +699,24 @@ export default function BuyerConveyancerDraftContractPage() {
                             </div>
                           </Badge>
                         )}
+                        {request.reply && !notifiedReplies.current.has(request.id) && (
+                          <Badge className="bg-green-100 text-green-800 animate-pulse">
+                            <Bell className="h-3 w-3 mr-1" />
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            NEW REPLY!
+                          </Badge>
+                        )}
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          Sent: {request.createdAt.toLocaleDateString()}
+                          Sent: {request.createdAt.toLocaleDateString()} at {request.createdAt.toLocaleTimeString()}
                         </div>
                         {request.deadline && (
                           <div className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             Deadline: {new Date(request.deadline).toLocaleDateString()}
-                          </div>
-                        )}
-                        {request.reply && (
-                          <div className="flex items-center gap-1">
-                            <Reply className="h-3 w-3" />
-                            Replied: {request.reply.repliedAt.toLocaleDateString()}
                           </div>
                         )}
                       </div>
@@ -673,7 +729,7 @@ export default function BuyerConveyancerDraftContractPage() {
 
                         {request.proposedChange && (
                           <div>
-                            <p className="text-sm font-medium text-gray-900 mb-1">Your Proposed Solution:</p>
+                            <p className="text-sm font-medium text-gray-900 mb-1">Proposed Solution:</p>
                             <p className="text-sm text-gray-700">{request.proposedChange}</p>
                           </div>
                         )}
@@ -691,85 +747,58 @@ export default function BuyerConveyancerDraftContractPage() {
                           </div>
                         )}
 
-                        {/* Reply Section */}
-                        {request.reply ? (
+                        {/* Reply Section - ENHANCED */}
+                        {request.reply && (
                           <div
-                            className={`border rounded-lg p-4 ${
+                            className={`border rounded-lg p-4 transition-all duration-300 ${
                               request.reply.decision === "accepted"
-                                ? "bg-green-50 border-green-200"
+                                ? "bg-green-50 border-green-200 shadow-sm"
                                 : request.reply.decision === "rejected"
-                                  ? "bg-red-50 border-red-200"
-                                  : "bg-blue-50 border-blue-200"
+                                  ? "bg-red-50 border-red-200 shadow-sm"
+                                  : "bg-blue-50 border-blue-200 shadow-sm"
+                            } ${
+                              !notifiedReplies.current.has(request.id) ? "ring-2 ring-opacity-50 animate-pulse" : ""
                             }`}
                           >
                             <div className="flex items-start gap-2">
-                              <Reply
-                                className={`h-4 w-4 mt-0.5 ${
-                                  request.reply.decision === "accepted"
-                                    ? "text-green-600"
-                                    : request.reply.decision === "rejected"
-                                      ? "text-red-600"
-                                      : "text-blue-600"
-                                }`}
-                              />
+                              <Reply className="h-4 w-4 text-gray-600 mt-0.5" />
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
-                                  <p
-                                    className={`text-sm font-medium ${
-                                      request.reply.decision === "accepted"
-                                        ? "text-green-900"
-                                        : request.reply.decision === "rejected"
-                                          ? "text-red-900"
-                                          : "text-blue-900"
-                                    }`}
-                                  >
-                                    Seller's Conveyancer Reply ({request.reply.decision.replace("-", " ")}):
-                                  </p>
+                                  <p className="text-sm font-medium text-gray-900">Seller's Conveyancer Reply:</p>
                                   <Badge className={getReplyStatusColor(request.reply.decision)}>
                                     <div className="flex items-center gap-1">
                                       {getReplyStatusIcon(request.reply.decision)}
-                                      {request.reply.decision.replace("-", " ")}
+                                      {request.reply.decision.replace("-", " ").toUpperCase()}
                                     </div>
                                   </Badge>
+                                  {!notifiedReplies.current.has(request.id) && (
+                                    <Badge className="bg-green-100 text-green-800 animate-bounce">
+                                      <Sparkles className="h-3 w-3 mr-1" />
+                                      JUST RECEIVED
+                                    </Badge>
+                                  )}
                                 </div>
-                                <p
-                                  className={`text-sm mb-2 ${
-                                    request.reply.decision === "accepted"
-                                      ? "text-green-800"
-                                      : request.reply.decision === "rejected"
-                                        ? "text-red-800"
-                                        : "text-blue-800"
-                                  }`}
-                                >
-                                  {request.reply.message}
-                                </p>
+                                <p className="text-sm text-gray-700 mb-2">{request.reply.message}</p>
                                 {request.reply.counterProposal && (
-                                  <div className="mt-3 p-3 bg-white border border-blue-200 rounded-lg">
-                                    <p className="text-sm font-medium text-blue-900 mb-1">Counter-proposal:</p>
-                                    <p className="text-sm text-blue-800">{request.reply.counterProposal}</p>
+                                  <div className="mt-2 p-3 bg-white rounded border border-blue-200">
+                                    <p className="text-sm font-medium text-gray-900 mb-1">Counter-proposal:</p>
+                                    <p className="text-sm text-gray-700">{request.reply.counterProposal}</p>
                                   </div>
                                 )}
-                                <p
-                                  className={`text-xs mt-2 ${
-                                    request.reply.decision === "accepted"
-                                      ? "text-green-600"
-                                      : request.reply.decision === "rejected"
-                                        ? "text-red-600"
-                                        : "text-blue-600"
-                                  }`}
-                                >
+                                <p className="text-xs text-gray-500 mt-2">
                                   Replied on {request.reply.repliedAt.toLocaleDateString()} at{" "}
                                   {request.reply.repliedAt.toLocaleTimeString()}
                                 </p>
                               </div>
                             </div>
                           </div>
-                        ) : (
-                          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-amber-600" />
-                              <p className="text-sm text-amber-800">Waiting for reply from seller's conveyancer...</p>
-                            </div>
+                        )}
+
+                        {/* Status Messages */}
+                        {!request.reply && (
+                          <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 p-3 rounded-lg">
+                            <Clock className="h-4 w-4" />
+                            <span>Awaiting response from seller's conveyancer...</span>
                           </div>
                         )}
                       </div>
@@ -777,174 +806,128 @@ export default function BuyerConveyancerDraftContractPage() {
                   </div>
                 </div>
               ))}
-
-              {/* Amendment Summary */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 mb-3">Amendment Summary</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">{sentAmendmentRequests.length}</div>
-                    <div className="text-gray-600">Total Sent</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
-                      {sentAmendmentRequests.filter((r) => r.reply?.decision === "accepted").length}
-                    </div>
-                    <div className="text-gray-600">Accepted</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-red-600">
-                      {sentAmendmentRequests.filter((r) => r.reply?.decision === "rejected").length}
-                    </div>
-                    <div className="text-gray-600">Rejected</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-amber-600">
-                      {sentAmendmentRequests.filter((r) => !r.reply).length}
-                    </div>
-                    <div className="text-gray-600">Pending</div>
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Received Documents Section */}
-        <Card className="border-2 border-green-200 bg-green-50/30">
+        {/* Contract Documents Section */}
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-green-800">
+            <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Received Draft Contracts
+              Draft Contract Documents
               {receivedDocuments.length > 0 && (
                 <Badge variant="secondary" className="ml-2">
                   {receivedDocuments.length} document{receivedDocuments.length !== 1 ? "s" : ""}
                 </Badge>
               )}
             </CardTitle>
-            <CardDescription>Draft contracts received from the seller's conveyancer for your review</CardDescription>
+            <CardDescription>Review and download contract documents from the seller's conveyancer</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             {receivedDocuments.length === 0 ? (
               <div className="text-center py-8">
-                <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Documents Received Yet</h3>
-                <p className="text-gray-600">
-                  Waiting for the seller's conveyancer to send the draft contract documents.
+                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-2">No contract documents received yet</p>
+                <p className="text-sm text-gray-500">
+                  Documents will appear here when sent by the seller's conveyancer
                 </p>
-                <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-500">
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                  Monitoring for incoming documents...
-                </div>
               </div>
             ) : (
               <div className="space-y-4">
-                {receivedDocuments.map((document) => (
-                  <div
-                    key={document.id}
-                    className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-start justify-between">
+                {receivedDocuments.map((doc) => (
+                  <div key={doc.id} className="border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <FileText className="h-5 w-5 text-blue-600" />
-                          <h4 className="font-semibold text-gray-900">{document.name}</h4>
-                          <Badge className={getStatusColor(document.status)}>
+                          <h4 className="font-medium text-gray-900">{doc.name}</h4>
+                          <Badge className={getStatusColor(doc.status)}>
                             <div className="flex items-center gap-1">
-                              {getStatusIcon(document.status)}
-                              {document.status}
+                              {getStatusIcon(doc.status)}
+                              {doc.status}
                             </div>
                           </Badge>
-                          {document.priority && document.priority !== "standard" && (
+                          {doc.priority && doc.priority !== "standard" && (
                             <Badge
-                              variant="outline"
                               className={
-                                document.priority === "critical"
-                                  ? "border-red-300 text-red-700"
-                                  : document.priority === "urgent"
-                                    ? "border-amber-300 text-amber-700"
-                                    : "border-gray-300 text-gray-700"
+                                doc.priority === "urgent" ? "bg-orange-100 text-orange-800" : "bg-red-100 text-red-800"
                               }
                             >
-                              {document.priority}
+                              {doc.priority}
                             </Badge>
                           )}
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
                           <div className="flex items-center gap-1">
                             <User className="h-3 w-3" />
-                            From: {document.uploadedBy.replace("-", " ")}
+                            From: {doc.uploadedBy.replace("-", " ")}
                           </div>
                           <div className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            Received: {document.uploadedAt.toLocaleDateString()}
+                            Received: {doc.uploadedAt.toLocaleDateString()}
                           </div>
                           <div className="flex items-center gap-1">
                             <FileCheck className="h-3 w-3" />
-                            Size: {(document.size / 1024 / 1024).toFixed(2)} MB
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Download className="h-3 w-3" />
-                            Downloads: {document.downloadCount}
+                            Size: {(doc.size / 1024 / 1024).toFixed(2)} MB
                           </div>
                         </div>
 
-                        {document.coverMessage && (
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                            <div className="flex items-start gap-2">
-                              <MessageSquare className="h-4 w-4 text-blue-600 mt-0.5" />
-                              <div>
-                                <p className="text-sm font-medium text-blue-900 mb-1">Cover Message:</p>
-                                <p className="text-sm text-blue-800">{document.coverMessage}</p>
-                              </div>
-                            </div>
+                        {doc.coverMessage && (
+                          <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-3">
+                            <p className="text-sm font-medium text-blue-900 mb-1">Cover Message:</p>
+                            <p className="text-sm text-blue-800">{doc.coverMessage}</p>
                           </div>
                         )}
 
-                        {document.deadline && (
-                          <div className="flex items-center gap-2 text-sm text-amber-700 mb-3">
+                        {doc.deadline && (
+                          <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 p-2 rounded mb-3">
                             <AlertTriangle className="h-4 w-4" />
-                            <span>Response deadline: {new Date(document.deadline).toLocaleDateString()}</span>
+                            <span>Response deadline: {new Date(doc.deadline).toLocaleDateString()}</span>
                           </div>
                         )}
                       </div>
 
                       <div className="flex flex-col gap-2 ml-4">
-                        <Button
-                          onClick={() => handleDownloadDocument(document.id, document.name)}
-                          disabled={downloadingDocuments.has(document.id)}
-                          size="sm"
-                          variant={downloadedDocuments.has(document.id) ? "secondary" : "default"}
-                        >
-                          {downloadingDocuments.has(document.id) ? (
-                            <>
-                              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                              Downloading...
-                            </>
-                          ) : downloadedDocuments.has(document.id) ? (
-                            <>
-                              <Download className="h-4 w-4 mr-2" />
-                              Re-download
-                            </>
-                          ) : (
-                            <>
-                              <Download className="h-4 w-4 mr-2" />
-                              Download
-                            </>
-                          )}
-                        </Button>
-
-                        {downloadedDocuments.has(document.id) && document.status !== "reviewed" && (
+                        {doc.status === "delivered" && (
                           <Button
-                            onClick={() => handleMarkAsReviewed(document.id)}
+                            onClick={() => handleDownloadDocument(doc.id, doc.name)}
+                            disabled={downloadingDocuments.has(doc.id)}
                             size="sm"
+                            className="w-32"
+                          >
+                            {downloadingDocuments.has(doc.id) ? (
+                              <>
+                                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                Downloading...
+                              </>
+                            ) : (
+                              <>
+                                <Download className="h-4 w-4 mr-2" />
+                                Download
+                              </>
+                            )}
+                          </Button>
+                        )}
+
+                        {downloadedDocuments.has(doc.id) && doc.status !== "reviewed" && (
+                          <Button
+                            onClick={() => handleMarkAsReviewed(doc.id)}
                             variant="outline"
-                            className="border-green-300 text-green-700 hover:bg-green-50"
+                            size="sm"
+                            className="w-32"
                           >
                             <Eye className="h-4 w-4 mr-2" />
                             Mark Reviewed
                           </Button>
+                        )}
+
+                        {doc.status === "reviewed" && (
+                          <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 p-2 rounded w-32 justify-center">
+                            <CheckCircle className="h-4 w-4" />
+                            <span>Reviewed</span>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -955,161 +938,38 @@ export default function BuyerConveyancerDraftContractPage() {
           </CardContent>
         </Card>
 
-        {/* Review Status Card */}
-        {receivedDocuments.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5" />
-                Review Progress
-              </CardTitle>
-              <CardDescription>Track your review progress of the draft contract</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Overall Review Status:</span>
-                  <Badge
-                    className={
-                      reviewStatus === "completed"
-                        ? "bg-green-100 text-green-800"
-                        : reviewStatus === "in-progress"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-gray-100 text-gray-600"
-                    }
-                  >
-                    {reviewStatus === "completed"
-                      ? "Review Complete"
-                      : reviewStatus === "in-progress"
-                        ? "In Progress"
-                        : "Not Started"}
-                  </Badge>
-                </div>
-
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className={`h-2 rounded-full transition-all duration-500 ${
-                      reviewStatus === "completed"
-                        ? "w-full bg-green-500"
-                        : reviewStatus === "in-progress"
-                          ? "w-1/2 bg-blue-500"
-                          : "w-0 bg-gray-400"
-                    }`}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-3 h-3 rounded-full ${
-                        receivedDocuments.some((d) => downloadedDocuments.has(d.id)) ? "bg-green-500" : "bg-gray-300"
-                      }`}
-                    />
-                    <span>Documents Downloaded</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-3 h-3 rounded-full ${
-                        reviewStatus === "in-progress" || reviewStatus === "completed" ? "bg-green-500" : "bg-gray-300"
-                      }`}
-                    />
-                    <span>Review Started</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-3 h-3 rounded-full ${reviewStatus === "completed" ? "bg-green-500" : "bg-gray-300"}`}
-                    />
-                    <span>Review Completed</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Contract Review Checklist */}
+        {/* Contract Issues Tracker */}
         <Card>
           <CardHeader>
-            <CardTitle>Contract Review Checklist</CardTitle>
-            <CardDescription>Key areas to review in the draft contract</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[
-                { item: "Property description and boundaries", completed: reviewStatus === "completed" },
-                { item: "Purchase price and payment terms", completed: reviewStatus === "completed" },
-                { item: "Completion date and timeline", completed: reviewStatus === "completed" },
-                { item: "Special conditions and covenants", completed: reviewStatus === "completed" },
-                { item: "Fixtures and fittings included", completed: reviewStatus === "completed" },
-                { item: "Title guarantee and restrictions", completed: reviewStatus === "completed" },
-                { item: "Planning permissions and building regulations", completed: reviewStatus === "completed" },
-                { item: "Environmental and contamination issues", completed: reviewStatus === "completed" },
-              ].map((task, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  {task.completed ? (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <Clock className="h-4 w-4 text-yellow-600" />
-                  )}
-                  <span className={task.completed ? "text-gray-900" : "text-gray-600"}>{task.item}</span>
-                  {!task.completed && (
-                    <Badge variant="outline" className="ml-auto">
-                      To Review
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  Contract Issues
+                  {contractIssues.length > 0 && (
+                    <Badge variant="secondary" className="ml-2">
+                      {contractIssues.length} issue{contractIssues.length !== 1 ? "s" : ""}
                     </Badge>
                   )}
-                </div>
-              ))}
+                </CardTitle>
+                <CardDescription>Identify and track issues found during contract review</CardDescription>
+              </div>
+              <Button onClick={() => setShowIssueModal(true)} size="sm">
+                Add Issue
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Contract Issues Identified */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" />
-              Contract Issues Identified
-              {contractIssues.length > 0 && (
-                <Badge variant="secondary" className="ml-2">
-                  {contractIssues.length} issue{contractIssues.length !== 1 ? "s" : ""}
-                </Badge>
-              )}
-            </CardTitle>
-            <CardDescription>Document and track specific issues found during contract review</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Add New Issue Button */}
-            <Button
-              onClick={() => setShowIssueModal(true)}
-              variant="outline"
-              className="w-full border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50"
-            >
-              <AlertTriangle className="h-4 w-4 mr-2" />
-              Add New Issue
-            </Button>
-
-            {/* Issues List */}
+          <CardContent>
             {contractIssues.length === 0 ? (
-              <div className="text-center py-8 bg-gray-50 rounded-lg">
-                <AlertTriangle className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Issues Identified</h3>
-                <p className="text-gray-600">
-                  Issues found during contract review will appear here. Click "Add New Issue" to document any concerns.
-                </p>
+              <div className="text-center py-8">
+                <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-2">No issues identified</p>
+                <p className="text-sm text-gray-500">Issues will be tracked here as you review the contract</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {contractIssues.map((issue) => (
-                  <div
-                    key={issue.id}
-                    className={`border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow ${
-                      issue.severity === "critical"
-                        ? "border-red-200 bg-red-50/30"
-                        : issue.severity === "major"
-                          ? "border-amber-200 bg-amber-50/30"
-                          : "border-blue-200 bg-blue-50/30"
-                    }`}
-                  >
+                  <div key={issue.id} className="border rounded-lg p-4 bg-white shadow-sm">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
@@ -1119,207 +979,164 @@ export default function BuyerConveyancerDraftContractPage() {
                               issue.severity === "critical"
                                 ? "bg-red-100 text-red-800"
                                 : issue.severity === "major"
-                                  ? "bg-amber-100 text-amber-800"
-                                  : "bg-blue-100 text-blue-800"
+                                  ? "bg-orange-100 text-orange-800"
+                                  : "bg-yellow-100 text-yellow-800"
                             }
                           >
                             {issue.severity}
                           </Badge>
                           <Badge
-                            variant="outline"
                             className={
                               issue.status === "resolved"
-                                ? "border-green-300 text-green-700"
+                                ? "bg-green-100 text-green-800"
                                 : issue.status === "in-progress"
-                                  ? "border-blue-300 text-blue-700"
-                                  : "border-gray-300 text-gray-700"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-gray-100 text-gray-800"
                             }
                           >
-                            {issue.status.replace("-", " ")}
+                            {issue.status}
                           </Badge>
                         </div>
-                        <div className="text-sm text-gray-600 mb-2">
-                          <span className="font-medium">Category:</span> {issue.category} |{" "}
-                          <span className="font-medium">Section:</span> {issue.contractSection} |{" "}
-                          <span className="font-medium">Identified:</span> {issue.identifiedAt.toLocaleDateString()}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                          <div>Category: {issue.category}</div>
+                          <div>Section: {issue.contractSection}</div>
+                          <div>Identified: {issue.identifiedAt.toLocaleDateString()}</div>
+                          {issue.resolvedAt && <div>Resolved: {issue.resolvedAt.toLocaleDateString()}</div>}
                         </div>
-                        <p className="text-gray-700 mb-3">{issue.description}</p>
-                        {issue.proposedSolution && (
-                          <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
-                            <p className="text-sm font-medium text-green-900 mb-1">Proposed Solution:</p>
-                            <p className="text-sm text-green-800">{issue.proposedSolution}</p>
+
+                        <div className="space-y-2">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Description:</p>
+                            <p className="text-sm text-gray-700">{issue.description}</p>
                           </div>
-                        )}
-                        {issue.legalImplications && (
-                          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
-                            <p className="text-sm font-medium text-amber-900 mb-1">Legal Implications:</p>
-                            <p className="text-sm text-amber-800">{issue.legalImplications}</p>
-                          </div>
-                        )}
+
+                          {issue.proposedSolution && (
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">Proposed Solution:</p>
+                              <p className="text-sm text-gray-700">{issue.proposedSolution}</p>
+                            </div>
+                          )}
+
+                          {issue.legalImplications && (
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">Legal Implications:</p>
+                              <p className="text-sm text-gray-700">{issue.legalImplications}</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
+
                       <div className="flex flex-col gap-2 ml-4">
-                        <Button
-                          onClick={() => handleEditIssue(issue)}
-                          size="sm"
-                          variant="outline"
-                          className="border-blue-300 text-blue-700 hover:bg-blue-50"
-                        >
-                          <MessageSquare className="h-4 w-4 mr-2" />
+                        <Button onClick={() => handleEditIssue(issue)} variant="outline" size="sm">
                           Edit
                         </Button>
                         {issue.status !== "resolved" && (
-                          <Button
-                            onClick={() => handleResolveIssue(issue.id)}
-                            size="sm"
-                            variant="outline"
-                            className="border-green-300 text-green-700 hover:bg-green-50"
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
+                          <Button onClick={() => handleResolveIssue(issue.id)} variant="outline" size="sm">
                             Resolve
                           </Button>
                         )}
-                        <Button
-                          onClick={() => handleCreateAmendmentFromIssue(issue)}
-                          size="sm"
-                          variant="outline"
-                          className="border-amber-300 text-amber-700 hover:bg-amber-50"
-                        >
-                          <Send className="h-4 w-4 mr-2" />
-                          Request Amendment
-                        </Button>
+                        {issue.proposedSolution && (
+                          <Button onClick={() => handleCreateAmendmentFromIssue(issue)} size="sm">
+                            Create Amendment
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
-
-            {/* Issues Summary */}
-            {contractIssues.length > 0 && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 mb-3">Issues Summary</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-red-600">
-                      {contractIssues.filter((i) => i.severity === "critical").length}
-                    </div>
-                    <div className="text-gray-600">Critical</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-amber-600">
-                      {contractIssues.filter((i) => i.severity === "major").length}
-                    </div>
-                    <div className="text-gray-600">Major</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {contractIssues.filter((i) => i.severity === "minor").length}
-                    </div>
-                    <div className="text-gray-600">Minor</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
-                      {contractIssues.filter((i) => i.status === "resolved").length}
-                    </div>
-                    <div className="text-gray-600">Resolved</div>
-                  </div>
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
 
-        {/* Amendment Notes */}
+        {/* Amendment Request Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Amendment Notes</CardTitle>
-            <CardDescription>Document any issues or amendments needed for the contract</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="amendments">Notes and Comments</Label>
-              <Textarea
-                id="amendments"
-                placeholder="Document any issues, concerns, or amendments needed for the draft contract..."
-                className="mt-2"
-                rows={4}
-                value={amendments}
-                onChange={(e) => setAmendments(e.target.value)}
-              />
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Request Contract Amendments
+                </CardTitle>
+                <CardDescription>Send amendment requests to the seller's conveyancer</CardDescription>
+              </div>
+              <Button onClick={() => setShowAmendmentModal(true)} size="sm">
+                New Amendment Request
+              </Button>
             </div>
-            <Button variant="outline" className="w-full bg-transparent">
-              Save Notes
-            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-600">
+                Click "New Amendment Request" to request changes to the draft contract
+              </p>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Action Buttons - Main CTA Section */}
-        <Card className="border-2 border-blue-200 bg-blue-50/30">
+        {/* Review Status and Actions */}
+        <Card className="border-2 border-green-200 bg-green-50/30">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-800">
-              <ArrowRight className="h-5 w-5" />
-              Next Steps
+            <CardTitle className="flex items-center gap-2 text-green-800">
+              <CheckCircle className="h-5 w-5" />
+              Review Status & Next Steps
             </CardTitle>
-            <CardDescription>Choose your next action based on the contract review</CardDescription>
+            <CardDescription>Complete your review and proceed to the next stage</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4">
-              {/* Continue to Search & Survey Button */}
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{receivedDocuments.length}</div>
+                <div className="text-sm text-gray-600">Documents Received</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{downloadedDocuments.size}</div>
+                <div className="text-sm text-gray-600">Documents Downloaded</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600">
+                  {receivedDocuments.filter((doc) => doc.status === "reviewed").length}
+                </div>
+                <div className="text-sm text-gray-600">Documents Reviewed</div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t">
               <Button
                 onClick={handleContinueToNextStage}
-                disabled={continuingToNext || reviewStatus !== "completed"}
-                className="flex-1 h-12 text-base font-medium bg-green-600 hover:bg-green-700 disabled:bg-gray-300"
+                disabled={
+                  continuingToNext ||
+                  receivedDocuments.length === 0 ||
+                  receivedDocuments.some((doc) => doc.status !== "reviewed")
+                }
+                className="w-full h-12 text-base font-medium bg-green-600 hover:bg-green-700 disabled:bg-gray-300"
                 size="lg"
               >
                 {continuingToNext ? (
                   <>
                     <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
-                    Completing Stage...
+                    Processing...
                   </>
                 ) : (
                   <>
-                    <ArrowRight className="h-5 w-5 mr-2" />
-                    Continue to Search & Survey
+                    Continue to Property Searches & Survey
+                    <ArrowRight className="h-5 w-5 ml-2" />
                   </>
                 )}
               </Button>
 
-              {/* Send Amendment Request Button */}
-              <Button
-                onClick={() => setShowAmendmentModal(true)}
-                disabled={receivedDocuments.length === 0}
-                variant="outline"
-                className="flex-1 h-12 text-base font-medium border-2 border-amber-300 text-amber-700 hover:bg-amber-50 disabled:border-gray-300 disabled:text-gray-400"
-                size="lg"
-              >
-                <Send className="h-5 w-5 mr-2" />
-                Send Amendment Request
-              </Button>
-            </div>
-
-            {/* Status Messages */}
-            <div className="mt-4 space-y-2">
-              {reviewStatus !== "completed" && (
-                <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 p-3 rounded-lg">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>
-                    Complete the contract review by downloading and marking all documents as reviewed to continue to the
-                    next stage.
-                  </span>
-                </div>
-              )}
-
               {receivedDocuments.length === 0 && (
-                <div className="flex items-center gap-2 text-sm text-blue-700 bg-blue-50 p-3 rounded-lg">
-                  <Clock className="h-4 w-4" />
-                  <span>Waiting for draft contract documents from the seller's conveyancer.</span>
+                <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 p-3 rounded-lg mt-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>Waiting for contract documents from seller's conveyancer</span>
                 </div>
               )}
 
-              {reviewStatus === "completed" && (
-                <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 p-3 rounded-lg">
-                  <CheckCircle className="h-4 w-4" />
-                  <span>Contract review completed successfully. Ready to proceed to Property Searches & Survey.</span>
+              {receivedDocuments.length > 0 && receivedDocuments.some((doc) => doc.status !== "reviewed") && (
+                <div className="flex items-center gap-2 text-sm text-blue-700 bg-blue-50 p-3 rounded-lg mt-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>Please review all documents before proceeding to the next stage</span>
                 </div>
               )}
             </div>
@@ -1337,7 +1154,7 @@ export default function BuyerConveyancerDraftContractPage() {
                       <MessageSquare className="h-5 w-5" />
                       Request Contract Amendment
                     </CardTitle>
-                    <CardDescription>Provide details about the changes you need to the draft contract</CardDescription>
+                    <CardDescription>Submit a request for changes to the draft contract</CardDescription>
                   </div>
                   <Button
                     variant="ghost"
@@ -1350,71 +1167,59 @@ export default function BuyerConveyancerDraftContractPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="amendment-type" className="text-sm font-medium">
-                    Amendment Type *
-                  </Label>
-                  <select
-                    id="amendment-type"
-                    value={amendmentRequest.type}
-                    onChange={(e) => setAmendmentRequest({ ...amendmentRequest, type: e.target.value })}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Select amendment type</option>
-                    <option value="Price Adjustment">Price Adjustment</option>
-                    <option value="Completion Date">Completion Date</option>
-                    <option value="Special Conditions">Special Conditions</option>
-                    <option value="Fixtures & Fittings">Fixtures & Fittings</option>
-                    <option value="Legal Clauses">Legal Clauses</option>
-                    <option value="Title Issues">Title Issues</option>
-                    <option value="Planning Permissions">Planning Permissions</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="amendment-type" className="text-sm font-medium">
+                      Amendment Type *
+                    </Label>
+                    <input
+                      id="amendment-type"
+                      type="text"
+                      value={amendmentRequest.type}
+                      onChange={(e) => setAmendmentRequest({ ...amendmentRequest, type: e.target.value })}
+                      placeholder="e.g., Price Adjustment, Completion Date, Special Conditions"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Priority Level</Label>
-                  <div className="flex gap-4">
-                    {(["low", "medium", "high"] as const).map((priority) => (
-                      <label key={priority} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="priority"
-                          value={priority}
-                          checked={amendmentRequest.priority === priority}
-                          onChange={(e) =>
-                            setAmendmentRequest({
-                              ...amendmentRequest,
-                              priority: e.target.value as "low" | "medium" | "high",
-                            })
-                          }
-                          className="text-blue-600"
-                        />
-                        <span
-                          className={`capitalize px-3 py-1 rounded-full text-sm font-medium ${
-                            priority === "high"
-                              ? "bg-red-100 text-red-800"
-                              : priority === "medium"
-                                ? "bg-amber-100 text-amber-800"
-                                : "bg-green-100 text-green-800"
-                          }`}
-                        >
-                          {priority}
-                        </span>
-                      </label>
-                    ))}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Priority Level</Label>
+                    <div className="flex gap-4">
+                      {(["low", "medium", "high"] as const).map((priority) => (
+                        <label key={priority} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="priority"
+                            value={priority}
+                            checked={amendmentRequest.priority === priority}
+                            onChange={(e) =>
+                              setAmendmentRequest({
+                                ...amendmentRequest,
+                                priority: e.target.value as "low" | "medium" | "high",
+                              })
+                            }
+                            className="text-blue-600"
+                          />
+                          <span
+                            className={`capitalize px-2 py-1 rounded text-sm font-medium ${getPriorityColor(priority)}`}
+                          >
+                            {priority}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="amendment-description" className="text-sm font-medium">
-                    Description of Required Changes *
+                    Description *
                   </Label>
                   <Textarea
                     id="amendment-description"
                     value={amendmentRequest.description}
                     onChange={(e) => setAmendmentRequest({ ...amendmentRequest, description: e.target.value })}
-                    placeholder="Describe the specific changes needed in detail..."
+                    placeholder="Describe the issue or concern that requires amendment..."
                     rows={4}
                     className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -1428,7 +1233,7 @@ export default function BuyerConveyancerDraftContractPage() {
                     id="proposed-change"
                     value={amendmentRequest.proposedChange}
                     onChange={(e) => setAmendmentRequest({ ...amendmentRequest, proposedChange: e.target.value })}
-                    placeholder="Suggest how this issue should be addressed..."
+                    placeholder="Suggest how this issue should be resolved..."
                     rows={3}
                     className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -1444,46 +1249,8 @@ export default function BuyerConveyancerDraftContractPage() {
                     value={amendmentRequest.deadline}
                     onChange={(e) => setAmendmentRequest({ ...amendmentRequest, deadline: e.target.value })}
                     min={new Date().toISOString().split("T")[0]}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Affected Contract Clauses</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      "Purchase Price",
-                      "Completion Date",
-                      "Deposit Terms",
-                      "Title Guarantee",
-                      "Fixtures List",
-                      "Special Conditions",
-                      "Mortgage Clause",
-                      "Insurance Requirements",
-                    ].map((clause) => (
-                      <label key={clause} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={amendmentRequest.affectedClauses.includes(clause)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setAmendmentRequest((prev) => ({
-                                ...prev,
-                                affectedClauses: [...prev.affectedClauses, clause],
-                              }))
-                            } else {
-                              setAmendmentRequest((prev) => ({
-                                ...prev,
-                                affectedClauses: prev.affectedClauses.filter((c) => c !== clause),
-                              }))
-                            }
-                          }}
-                          className="text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="text-sm">{clause}</span>
-                      </label>
-                    ))}
-                  </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-6 border-t">
@@ -1498,12 +1265,12 @@ export default function BuyerConveyancerDraftContractPage() {
                     {sendingRequest ? (
                       <>
                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        Sending Request...
+                        Sending...
                       </>
                     ) : (
                       <>
                         <Send className="h-4 w-4 mr-2" />
-                        Send Amendment Request
+                        Send Request
                       </>
                     )}
                   </Button>
@@ -1513,7 +1280,7 @@ export default function BuyerConveyancerDraftContractPage() {
           </div>
         )}
 
-        {/* Issue Modal */}
+        {/* Contract Issue Modal */}
         {showIssueModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -1525,9 +1292,7 @@ export default function BuyerConveyancerDraftContractPage() {
                       {editingIssue ? "Edit Contract Issue" : "Add Contract Issue"}
                     </CardTitle>
                     <CardDescription>
-                      {editingIssue
-                        ? "Update the details of this contract issue"
-                        : "Document a specific issue found in the draft contract"}
+                      {editingIssue ? "Update the contract issue details" : "Document an issue found in the contract"}
                     </CardDescription>
                   </div>
                   <Button
@@ -1564,8 +1329,8 @@ export default function BuyerConveyancerDraftContractPage() {
                       type="text"
                       value={issueForm.title}
                       onChange={(e) => setIssueForm({ ...issueForm, title: e.target.value })}
-                      placeholder="Brief title for the issue"
-                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Brief description of the issue"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
 
@@ -1573,30 +1338,21 @@ export default function BuyerConveyancerDraftContractPage() {
                     <Label htmlFor="issue-category" className="text-sm font-medium">
                       Category *
                     </Label>
-                    <select
+                    <input
                       id="issue-category"
+                      type="text"
                       value={issueForm.category}
                       onChange={(e) => setIssueForm({ ...issueForm, category: e.target.value })}
-                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Select category</option>
-                      <option value="Price & Payment">Price & Payment</option>
-                      <option value="Property Description">Property Description</option>
-                      <option value="Legal Clauses">Legal Clauses</option>
-                      <option value="Title Issues">Title Issues</option>
-                      <option value="Planning & Building">Planning & Building</option>
-                      <option value="Environmental">Environmental</option>
-                      <option value="Fixtures & Fittings">Fixtures & Fittings</option>
-                      <option value="Completion Terms">Completion Terms</option>
-                      <option value="Other">Other</option>
-                    </select>
+                      placeholder="e.g., Price, Conditions, Dates, Legal"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium">Severity Level *</Label>
-                    <div className="flex gap-3">
+                    <Label className="text-sm font-medium">Severity</Label>
+                    <div className="flex gap-4">
                       {(["minor", "major", "critical"] as const).map((severity) => (
                         <label key={severity} className="flex items-center gap-2 cursor-pointer">
                           <input
@@ -1613,12 +1369,12 @@ export default function BuyerConveyancerDraftContractPage() {
                             className="text-blue-600"
                           />
                           <span
-                            className={`capitalize px-3 py-1 rounded-full text-sm font-medium ${
+                            className={`capitalize px-2 py-1 rounded text-sm font-medium ${
                               severity === "critical"
                                 ? "bg-red-100 text-red-800"
                                 : severity === "major"
-                                  ? "bg-amber-100 text-amber-800"
-                                  : "bg-blue-100 text-blue-800"
+                                  ? "bg-orange-100 text-orange-800"
+                                  : "bg-yellow-100 text-yellow-800"
                             }`}
                           >
                             {severity}
@@ -1638,20 +1394,20 @@ export default function BuyerConveyancerDraftContractPage() {
                       value={issueForm.contractSection}
                       onChange={(e) => setIssueForm({ ...issueForm, contractSection: e.target.value })}
                       placeholder="e.g., Clause 5.2, Schedule A"
-                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="issue-description" className="text-sm font-medium">
-                    Issue Description *
+                    Description *
                   </Label>
                   <Textarea
                     id="issue-description"
                     value={issueForm.description}
                     onChange={(e) => setIssueForm({ ...issueForm, description: e.target.value })}
-                    placeholder="Detailed description of the issue found..."
+                    placeholder="Detailed description of the issue..."
                     rows={4}
                     className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -1679,8 +1435,8 @@ export default function BuyerConveyancerDraftContractPage() {
                     id="legal-implications"
                     value={issueForm.legalImplications}
                     onChange={(e) => setIssueForm({ ...issueForm, legalImplications: e.target.value })}
-                    placeholder="What are the potential legal consequences if not addressed?"
-                    rows={3}
+                    placeholder="What are the potential legal consequences?"
+                    rows={2}
                     className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -1704,7 +1460,17 @@ export default function BuyerConveyancerDraftContractPage() {
                             }
                             className="text-blue-600"
                           />
-                          <span className="capitalize text-sm">{status.replace("-", " ")}</span>
+                          <span
+                            className={`capitalize px-2 py-1 rounded text-sm font-medium ${
+                              status === "resolved"
+                                ? "bg-green-100 text-green-800"
+                                : status === "in-progress"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {status.replace("-", " ")}
+                          </span>
                         </label>
                       ))}
                     </div>
@@ -1740,11 +1506,11 @@ export default function BuyerConveyancerDraftContractPage() {
                     {savingIssue ? (
                       <>
                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        {editingIssue ? "Updating..." : "Adding..."}
+                        {editingIssue ? "Updating..." : "Saving..."}
                       </>
                     ) : (
                       <>
-                        <AlertTriangle className="h-4 w-4 mr-2" />
+                        <CheckCircle className="h-4 w-4 mr-2" />
                         {editingIssue ? "Update Issue" : "Add Issue"}
                       </>
                     )}

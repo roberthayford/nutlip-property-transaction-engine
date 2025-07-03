@@ -26,6 +26,7 @@ import {
   CheckCircle2,
   MessageSquare,
   Reply,
+  Bell,
 } from "lucide-react"
 
 // Enhanced status types for better tracking
@@ -97,8 +98,9 @@ export default function SellerConveyancerDraftContractPage() {
     if (newRequests.length) {
       newRequests.forEach((req) => {
         toast({
-          title: "New Amendment Request",
-          description: `${req.type} amendment requested by buyer's conveyancer`,
+          title: "🔔 New Amendment Request",
+          description: `${req.type} amendment requested by buyer's conveyancer - ${req.priority.toUpperCase()} priority`,
+          duration: 8000,
         })
 
         notifiedAmendments.current.add(req.id)
@@ -294,7 +296,7 @@ export default function SellerConveyancerDraftContractPage() {
   }
 
   const handleReplyToAmendment = async () => {
-    if (!selectedAmendment || !replyData.message) {
+    if (!selectedAmendment || !replyData.message.trim()) {
       toast({
         title: "Incomplete Reply",
         description: "Please provide a response message",
@@ -309,11 +311,22 @@ export default function SellerConveyancerDraftContractPage() {
       // Simulate sending reply
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      // Send reply using real-time context
+      // Get the amendment request details for logging
+      const amendmentRequest = receivedAmendmentRequests.find((req) => req.id === selectedAmendment)
+
+      // Send reply using real-time context - this will update the amendment request with the reply
       replyToAmendmentRequest(selectedAmendment, {
         message: replyData.message,
         decision: replyData.decision,
         counterProposal: replyData.decision === "counter-proposal" ? replyData.counterProposal : undefined,
+      })
+
+      console.log("Amendment reply sent:", {
+        amendmentId: selectedAmendment,
+        decision: replyData.decision,
+        message: replyData.message,
+        counterProposal: replyData.counterProposal,
+        amendmentType: amendmentRequest?.type,
       })
 
       // Reset form and close modal
@@ -326,10 +339,12 @@ export default function SellerConveyancerDraftContractPage() {
       setShowReplyModal(false)
 
       toast({
-        title: "Reply Sent",
-        description: "Your response has been sent to the buyer's conveyancer",
+        title: "✅ Reply Sent Successfully",
+        description: `Your ${replyData.decision.toUpperCase().replace("-", " ")} response has been sent to the buyer's conveyancer`,
+        duration: 6000,
       })
     } catch (error) {
+      console.error("Failed to send amendment reply:", error)
       toast({
         title: "Failed to Send Reply",
         description: "Please try again later",
@@ -338,6 +353,18 @@ export default function SellerConveyancerDraftContractPage() {
     } finally {
       setSendingReply(false)
     }
+  }
+
+  const handleOpenReplyModal = (amendmentId: string) => {
+    console.log("Opening reply modal for amendment:", amendmentId)
+    setSelectedAmendment(amendmentId)
+    setShowReplyModal(true)
+    // Reset reply form when opening modal
+    setReplyData({
+      decision: "accepted",
+      message: "",
+      counterProposal: "",
+    })
   }
 
   const handleMarkContractComplete = () => {
@@ -438,6 +465,12 @@ export default function SellerConveyancerDraftContractPage() {
                 <Badge variant="secondary" className="ml-2">
                   {receivedAmendmentRequests.length} request{receivedAmendmentRequests.length !== 1 ? "s" : ""}
                 </Badge>
+                {receivedAmendmentRequests.some((req) => req.status === "pending") && (
+                  <Badge className="bg-red-100 text-red-800 animate-pulse">
+                    <Bell className="h-3 w-3 mr-1" />
+                    Action Required
+                  </Badge>
+                )}
               </CardTitle>
               <CardDescription>Amendment requests received from the buyer's conveyancer</CardDescription>
             </CardHeader>
@@ -445,7 +478,9 @@ export default function SellerConveyancerDraftContractPage() {
               {receivedAmendmentRequests.map((request) => (
                 <div
                   key={request.id}
-                  className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
+                  className={`border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow ${
+                    request.status === "pending" ? "ring-2 ring-amber-200 bg-amber-50/20" : ""
+                  }`}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
@@ -463,12 +498,18 @@ export default function SellerConveyancerDraftContractPage() {
                         >
                           {request.status}
                         </Badge>
+                        {request.status === "pending" && (
+                          <Badge className="bg-red-100 text-red-800 animate-pulse">
+                            <Bell className="h-3 w-3 mr-1" />
+                            Needs Reply
+                          </Badge>
+                        )}
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          Received: {request.createdAt.toLocaleDateString()}
+                          Received: {request.createdAt.toLocaleDateString()} at {request.createdAt.toLocaleTimeString()}
                         </div>
                         {request.deadline && (
                           <div className="flex items-center gap-1">
@@ -510,7 +551,7 @@ export default function SellerConveyancerDraftContractPage() {
                               <Reply className="h-4 w-4 text-green-600 mt-0.5" />
                               <div>
                                 <p className="text-sm font-medium text-green-900 mb-1">
-                                  Your Reply ({request.reply.decision}):
+                                  Your Reply ({request.reply.decision.toUpperCase().replace("-", " ")}):
                                 </p>
                                 <p className="text-sm text-green-800">{request.reply.message}</p>
                                 {request.reply.counterProposal && (
@@ -520,7 +561,8 @@ export default function SellerConveyancerDraftContractPage() {
                                   </div>
                                 )}
                                 <p className="text-xs text-green-600 mt-2">
-                                  Replied on {request.reply.repliedAt.toLocaleDateString()}
+                                  Replied on {request.reply.repliedAt.toLocaleDateString()} at{" "}
+                                  {request.reply.repliedAt.toLocaleTimeString()}
                                 </p>
                               </div>
                             </div>
@@ -531,15 +573,12 @@ export default function SellerConveyancerDraftContractPage() {
 
                     {request.status === "pending" && (
                       <Button
-                        onClick={() => {
-                          setSelectedAmendment(request.id)
-                          setShowReplyModal(true)
-                        }}
+                        onClick={() => handleOpenReplyModal(request.id)}
                         size="sm"
-                        className="ml-4"
+                        className="ml-4 bg-blue-600 hover:bg-blue-700"
                       >
                         <Reply className="h-4 w-4 mr-2" />
-                        Reply
+                        Reply Now
                       </Button>
                     )}
                   </div>
@@ -850,7 +889,20 @@ export default function SellerConveyancerDraftContractPage() {
                     </CardTitle>
                     <CardDescription>Provide your response to the buyer's amendment request</CardDescription>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => setShowReplyModal(false)} className="h-8 w-8 p-0">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowReplyModal(false)
+                      setSelectedAmendment(null)
+                      setReplyData({
+                        decision: "accepted",
+                        message: "",
+                        counterProposal: "",
+                      })
+                    }}
+                    className="h-8 w-8 p-0"
+                  >
                     ×
                   </Button>
                 </div>
@@ -921,12 +973,24 @@ export default function SellerConveyancerDraftContractPage() {
                 )}
 
                 <div className="flex justify-end gap-3 pt-6 border-t">
-                  <Button variant="outline" onClick={() => setShowReplyModal(false)} className="px-6">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowReplyModal(false)
+                      setSelectedAmendment(null)
+                      setReplyData({
+                        decision: "accepted",
+                        message: "",
+                        counterProposal: "",
+                      })
+                    }}
+                    className="px-6"
+                  >
                     Cancel
                   </Button>
                   <Button
                     onClick={handleReplyToAmendment}
-                    disabled={sendingReply || !replyData.message}
+                    disabled={sendingReply || !replyData.message.trim()}
                     className="px-6 bg-blue-600 hover:bg-blue-700"
                   >
                     {sendingReply ? (
