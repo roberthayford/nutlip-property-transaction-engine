@@ -381,7 +381,7 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
   const replyToAmendmentRequest = useCallback<RealTimeCtx["replyToAmendmentRequest"]>(
     (id, replyData) => {
       setAmendmentRequests((prev) => {
-        return prev.map((req) => {
+        const updatedRequests = prev.map((req) => {
           if (req.id === id) {
             const updatedReq = {
               ...req,
@@ -411,9 +411,23 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
           }
           return req
         })
+
+        // Force persistence and cross-tab sync
+        setTimeout(() => {
+          const newState = { updates, documents, amendmentRequests: updatedRequests, transactionState }
+          savePersisted(newState)
+          window.dispatchEvent(
+            new StorageEvent("storage", {
+              key: STORAGE_KEY,
+              newValue: JSON.stringify(newState),
+            }),
+          )
+        }, 0)
+
+        return updatedRequests
       })
     },
-    [sendUpdate],
+    [sendUpdate, updates, documents, transactionState],
   )
 
   const getDocumentsForRole = useCallback<RealTimeCtx["getDocumentsForRole"]>(

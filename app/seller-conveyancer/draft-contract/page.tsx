@@ -296,7 +296,7 @@ export default function SellerConveyancerDraftContractPage() {
   }
 
   const handleReplyToAmendment = async () => {
-    if (!selectedAmendment || !replyData.message.trim()) {
+    if (!selectedAmendment || !replyData.message) {
       toast({
         title: "Incomplete Reply",
         description: "Please provide a response message",
@@ -311,23 +311,17 @@ export default function SellerConveyancerDraftContractPage() {
       // Simulate sending reply
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      // Get the amendment request details for logging
-      const amendmentRequest = receivedAmendmentRequests.find((req) => req.id === selectedAmendment)
-
-      // Send reply using real-time context - this will update the amendment request with the reply
+      // Send reply using real-time context
       replyToAmendmentRequest(selectedAmendment, {
         message: replyData.message,
         decision: replyData.decision,
         counterProposal: replyData.decision === "counter-proposal" ? replyData.counterProposal : undefined,
       })
 
-      console.log("Amendment reply sent:", {
-        amendmentId: selectedAmendment,
-        decision: replyData.decision,
-        message: replyData.message,
-        counterProposal: replyData.counterProposal,
-        amendmentType: amendmentRequest?.type,
-      })
+      // Force storage event to ensure cross-tab sync
+      setTimeout(() => {
+        window.dispatchEvent(new Event("storage"))
+      }, 100)
 
       // Reset form and close modal
       setReplyData({
@@ -340,11 +334,10 @@ export default function SellerConveyancerDraftContractPage() {
 
       toast({
         title: "✅ Reply Sent Successfully",
-        description: `Your ${replyData.decision.toUpperCase().replace("-", " ")} response has been sent to the buyer's conveyancer`,
+        description: "Your response has been sent to the buyer's conveyancer and they will be notified immediately",
         duration: 6000,
       })
     } catch (error) {
-      console.error("Failed to send amendment reply:", error)
       toast({
         title: "Failed to Send Reply",
         description: "Please try again later",
@@ -353,18 +346,6 @@ export default function SellerConveyancerDraftContractPage() {
     } finally {
       setSendingReply(false)
     }
-  }
-
-  const handleOpenReplyModal = (amendmentId: string) => {
-    console.log("Opening reply modal for amendment:", amendmentId)
-    setSelectedAmendment(amendmentId)
-    setShowReplyModal(true)
-    // Reset reply form when opening modal
-    setReplyData({
-      decision: "accepted",
-      message: "",
-      counterProposal: "",
-    })
   }
 
   const handleMarkContractComplete = () => {
@@ -551,7 +532,7 @@ export default function SellerConveyancerDraftContractPage() {
                               <Reply className="h-4 w-4 text-green-600 mt-0.5" />
                               <div>
                                 <p className="text-sm font-medium text-green-900 mb-1">
-                                  Your Reply ({request.reply.decision.toUpperCase().replace("-", " ")}):
+                                  Your Reply ({request.reply.decision.toUpperCase()}):
                                 </p>
                                 <p className="text-sm text-green-800">{request.reply.message}</p>
                                 {request.reply.counterProposal && (
@@ -573,7 +554,10 @@ export default function SellerConveyancerDraftContractPage() {
 
                     {request.status === "pending" && (
                       <Button
-                        onClick={() => handleOpenReplyModal(request.id)}
+                        onClick={() => {
+                          setSelectedAmendment(request.id)
+                          setShowReplyModal(true)
+                        }}
                         size="sm"
                         className="ml-4 bg-blue-600 hover:bg-blue-700"
                       >
@@ -889,20 +873,7 @@ export default function SellerConveyancerDraftContractPage() {
                     </CardTitle>
                     <CardDescription>Provide your response to the buyer's amendment request</CardDescription>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setShowReplyModal(false)
-                      setSelectedAmendment(null)
-                      setReplyData({
-                        decision: "accepted",
-                        message: "",
-                        counterProposal: "",
-                      })
-                    }}
-                    className="h-8 w-8 p-0"
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setShowReplyModal(false)} className="h-8 w-8 p-0">
                     ×
                   </Button>
                 </div>
@@ -973,24 +944,12 @@ export default function SellerConveyancerDraftContractPage() {
                 )}
 
                 <div className="flex justify-end gap-3 pt-6 border-t">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setShowReplyModal(false)
-                      setSelectedAmendment(null)
-                      setReplyData({
-                        decision: "accepted",
-                        message: "",
-                        counterProposal: "",
-                      })
-                    }}
-                    className="px-6"
-                  >
+                  <Button variant="outline" onClick={() => setShowReplyModal(false)} className="px-6">
                     Cancel
                   </Button>
                   <Button
                     onClick={handleReplyToAmendment}
-                    disabled={sendingReply || !replyData.message.trim()}
+                    disabled={sendingReply || !replyData.message}
                     className="px-6 bg-blue-600 hover:bg-blue-700"
                   >
                     {sendingReply ? (

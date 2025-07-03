@@ -38,6 +38,7 @@ export default function BuyerConveyancerDraftContractPage() {
   const [downloadedDocuments, setDownloadedDocuments] = useState<Set<string>>(new Set())
   const [reviewStatus, setReviewStatus] = useState<"not-started" | "in-progress" | "completed">("not-started")
   const [continuingToNext, setContinuingToNext] = useState(false)
+  const [refreshingReplies, setRefreshingReplies] = useState(false)
 
   // keeps track of docs we've already shown a notification for
   const notifiedDocs = useRef<Set<string>>(new Set())
@@ -117,22 +118,13 @@ export default function BuyerConveyancerDraftContractPage() {
     }
   }, [receivedDocuments, sendUpdate])
 
-  // Check for new amendment replies and show notifications - ENHANCED
+  // Check for new amendment replies and show notifications
   useEffect(() => {
     const newReplies = sentAmendmentRequests.filter((req) => req.reply && !notifiedReplies.current.has(req.id))
 
     if (newReplies.length) {
-      console.log("New amendment replies detected:", newReplies.length)
-
       newReplies.forEach((req) => {
         if (req.reply) {
-          console.log("Processing reply for amendment:", {
-            amendmentId: req.id,
-            amendmentType: req.type,
-            decision: req.reply.decision,
-            message: req.reply.message,
-          })
-
           // Show prominent toast notification for reply
           const isAccepted = req.reply.decision === "accepted"
           const isRejected = req.reply.decision === "rejected"
@@ -163,7 +155,7 @@ export default function BuyerConveyancerDraftContractPage() {
         }
       })
     }
-  }, [sentAmendmentRequests, sendUpdate])
+  }, [sentAmendmentRequests, sendUpdate, toast])
 
   // Listen for platform reset events
   useEffect(() => {
@@ -318,8 +310,6 @@ export default function BuyerConveyancerDraftContractPage() {
       // Simulate sending amendment request
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      console.log("Sending amendment request:", amendmentRequest)
-
       // Add amendment request using the real-time context
       addAmendmentRequest({
         stage: "draft-contract",
@@ -351,7 +341,6 @@ export default function BuyerConveyancerDraftContractPage() {
         duration: 6000,
       })
     } catch (error) {
-      console.error("Failed to send amendment request:", error)
       toast({
         title: "Failed to Send Request",
         description: "Please try again later",
@@ -635,35 +624,62 @@ export default function BuyerConveyancerDraftContractPage() {
     }
   }
 
-  // Debug logging for amendment requests
-  console.log("Sent amendment requests:", sentAmendmentRequests)
-  console.log(
-    "Amendment requests with replies:",
-    sentAmendmentRequests.filter((req) => req.reply),
-  )
+  const handleRefreshReplies = async () => {
+    setRefreshingReplies(true)
+
+    // Force a re-check of the real-time context
+    setTimeout(() => {
+      window.dispatchEvent(new Event("storage"))
+      setRefreshingReplies(false)
+
+      toast({
+        title: "Refreshed",
+        description: "Checked for new amendment replies",
+      })
+    }, 1000)
+  }
 
   return (
     <TransactionLayout currentStage="draft-contract" userRole="buyer-conveyancer">
       <div className="space-y-6">
-        {/* Amendment Request Status Section - ENHANCED */}
+        {/* Amendment Request Status Section */}
         {sentAmendmentRequests.length > 0 && (
           <Card className="border-2 border-blue-200 bg-blue-50/30">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-blue-800">
-                <Send className="h-5 w-5" />
-                Amendment Request Status
-                <Badge variant="secondary" className="ml-2">
-                  {sentAmendmentRequests.length} request{sentAmendmentRequests.length !== 1 ? "s" : ""}
-                </Badge>
-                {sentAmendmentRequests.some((req) => req.reply && !notifiedReplies.current.has(req.id)) && (
-                  <Badge className="bg-green-100 text-green-800 animate-pulse">
-                    <Bell className="h-3 w-3 mr-1" />
-                    <Sparkles className="h-3 w-3 mr-1" />
-                    New Reply!
-                  </Badge>
-                )}
-              </CardTitle>
-              <CardDescription>Track the status of your amendment requests to the seller's conveyancer</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-blue-800">
+                    <Send className="h-5 w-5" />
+                    Amendment Request Status
+                    <Badge variant="secondary" className="ml-2">
+                      {sentAmendmentRequests.length} request{sentAmendmentRequests.length !== 1 ? "s" : ""}
+                    </Badge>
+                    {sentAmendmentRequests.some((req) => req.reply && !notifiedReplies.current.has(req.id)) && (
+                      <Badge className="bg-green-100 text-green-800 animate-pulse">
+                        <Bell className="h-3 w-3 mr-1" />
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        New Reply!
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    Track the status of your amendment requests to the seller's conveyancer
+                  </CardDescription>
+                </div>
+                <Button onClick={handleRefreshReplies} disabled={refreshingReplies} variant="outline" size="sm">
+                  {refreshingReplies ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Checking...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Refresh
+                    </>
+                  )}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               {sentAmendmentRequests.map((request) => (
@@ -747,7 +763,7 @@ export default function BuyerConveyancerDraftContractPage() {
                           </div>
                         )}
 
-                        {/* Reply Section - ENHANCED */}
+                        {/* Reply Section */}
                         {request.reply && (
                           <div
                             className={`border rounded-lg p-4 transition-all duration-300 ${
