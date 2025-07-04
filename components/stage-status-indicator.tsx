@@ -1,46 +1,76 @@
 "use client"
 
-import { useRealTime } from "@/contexts/real-time-context"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, Clock, AlertTriangle } from "lucide-react"
+import { CheckCircle, Clock, AlertCircle, Circle } from "lucide-react"
 
 interface StageStatusIndicatorProps {
   stageId: string
   className?: string
 }
 
-export function StageStatusIndicator({ stageId, className }: StageStatusIndicatorProps) {
-  const { transactionState } = useRealTime()
-  const status = transactionState?.stageStatuses?.[stageId] ?? "pending"
+type StageStatus = "pending" | "in-progress" | "completed" | "blocked"
 
-  const statusConfig = {
-    pending: {
-      icon: Clock,
-      label: "Pending",
-      className: "bg-gray-100 text-gray-800",
-    },
-    "in-progress": {
-      icon: Clock,
-      label: "In Progress",
-      className: "bg-blue-100 text-blue-800",
-    },
-    completed: {
-      icon: CheckCircle,
-      label: "Completed",
-      className: "bg-green-100 text-green-800",
-    },
-    blocked: {
-      icon: AlertTriangle,
-      label: "Blocked",
-      className: "bg-red-100 text-red-800",
-    },
+// Mock stage statuses - in a real app this would come from your state management
+const getStageStatus = (stageId: string): StageStatus => {
+  const statusMap: Record<string, StageStatus> = {
+    "offer-accepted": "completed",
+    "proof-of-funds": "in-progress",
+    "add-conveyancer": "pending",
+    "draft-contract": "pending",
+    "search-survey": "pending",
+    enquiries: "pending",
+    "mortgage-offer": "pending",
+    "completion-date": "pending",
+    "contract-exchange": "pending",
+    "nutlip-transaction-fee": "pending",
+    "replies-to-requisitions": "pending",
+    completion: "pending",
   }
 
-  const config = statusConfig[status]
+  return statusMap[stageId] || "pending"
+}
+
+export function StageStatusIndicator({ stageId, className = "" }: StageStatusIndicatorProps) {
+  const status = getStageStatus(stageId)
+
+  const getStatusConfig = (status: StageStatus) => {
+    switch (status) {
+      case "completed":
+        return {
+          icon: CheckCircle,
+          color: "text-green-600",
+          bgColor: "bg-green-100",
+          label: "Completed",
+        }
+      case "in-progress":
+        return {
+          icon: Clock,
+          color: "text-blue-600",
+          bgColor: "bg-blue-100",
+          label: "In Progress",
+        }
+      case "blocked":
+        return {
+          icon: AlertCircle,
+          color: "text-red-600",
+          bgColor: "bg-red-100",
+          label: "Blocked",
+        }
+      default:
+        return {
+          icon: Circle,
+          color: "text-gray-400",
+          bgColor: "bg-gray-100",
+          label: "Pending",
+        }
+    }
+  }
+
+  const config = getStatusConfig(status)
   const Icon = config.icon
 
   return (
-    <Badge className={`${config.className} ${className}`}>
+    <Badge variant="secondary" className={`${config.bgColor} ${config.color} border-0 ${className}`}>
       <Icon className="h-3 w-3 mr-1" />
       {config.label}
     </Badge>

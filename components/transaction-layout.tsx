@@ -40,6 +40,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { RealTimeProvider, useRealTime } from "@/contexts/real-time-context"
 import { RealTimeIndicator } from "@/components/real-time-indicator"
 import { StageStatusIndicator } from "@/components/stage-status-indicator"
+import { MessengerChat } from "@/components/messenger-chat"
 import { toast } from "@/hooks/use-toast"
 
 /* -------------------------------------------------------------------------- */
@@ -76,8 +77,8 @@ export const transactionStages: TransactionStage[] = [
     allowedRoles: ["buyer", "estate-agent", "buyer-conveyancer", "seller-conveyancer"],
   },
   {
-    id: "conveyancers",
-    title: "Conveyancers",
+    id: "add-conveyancer",
+    title: "Add Conveyancer",
     icon: Users,
     description: "Legal representatives appointment",
     allowedRoles: ["buyer", "estate-agent", "buyer-conveyancer", "seller-conveyancer"],
@@ -165,6 +166,24 @@ const dashboardUrls: Record<UserRole, string> = {
   "seller-conveyancer": "/seller-conveyancer",
 }
 
+const getUserName = (userRole: UserRole): string => {
+  switch (userRole) {
+    case "buyer":
+      return "John D"
+    case "buyer-conveyancer":
+      return "Sarah J"
+    case "seller-conveyancer":
+      return "Alex M"
+    case "estate-agent":
+      return "Emma R"
+    default:
+      return "User"
+  }
+}
+
+// Roles that can access the messenger chat (excluding buyer)
+const CHAT_ENABLED_ROLES: UserRole[] = ["estate-agent", "buyer-conveyancer", "seller-conveyancer"]
+
 /* -------------------------------------------------------------------------- */
 /*                              Layout component                              */
 /* -------------------------------------------------------------------------- */
@@ -195,12 +214,20 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
   const currentStageIndex = transactionStages.findIndex((stage) => stage.id === currentStageId)
 
   const canAccessStage = (stage: TransactionStage) => stage.allowedRoles.includes(role)
-  const stageUrl = (stage: TransactionStage) => `/${role}/${stage.id}`
+
+  // Fix the stage URL to use add-conveyancer instead of conveyancers
+  const stageUrl = (stage: TransactionStage) => {
+    const stageId = stage.id === "conveyancers" ? "add-conveyancer" : stage.id
+    return `/${role}/${stageId}`
+  }
+
+  // Check if current role can access messenger chat
+  const canUseChat = CHAT_ENABLED_ROLES.includes(role)
 
   /* ------------------------------------------------------- */
   /*                    Reset functionality                  */
   /* ------------------------------------------------------- */
-  const { resetToDefault } = useRealTime()
+  const { sendUpdate } = useRealTime()
 
   const handleReset = () => {
     // Show loading state
@@ -209,12 +236,8 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
       description: "Clearing all data and resetting to default state.",
     })
 
-    // Use the context's reset function
-    resetToDefault()
-
-    // Additional cleanup for any remaining data
+    // Clear all localStorage items
     try {
-      // Clear any remaining localStorage items
       const allKeys = Object.keys(localStorage)
       allKeys.forEach((key) => {
         if (
@@ -224,7 +247,8 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
           key.includes("buyer") ||
           key.includes("seller") ||
           key.includes("conveyancer") ||
-          key.includes("estate-agent")
+          key.includes("estate-agent") ||
+          key.includes("chat")
         ) {
           localStorage.removeItem(key)
         }
@@ -240,13 +264,14 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
           key.includes("buyer") ||
           key.includes("seller") ||
           key.includes("conveyancer") ||
-          key.includes("estate-agent")
+          key.includes("estate-agent") ||
+          key.includes("chat")
         ) {
           sessionStorage.removeItem(key)
         }
       })
     } catch (error) {
-      console.error("Error during additional cleanup:", error)
+      console.error("Error during cleanup:", error)
     }
 
     // Show success toast
@@ -455,6 +480,9 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
 
       {/* Main content */}
       <main className="container mx-auto px-4 py-6 md:py-8">{children}</main>
+
+      {/* Messenger Chat - Only for estate agent and conveyancers, NOT for buyer */}
+      {canUseChat && <MessengerChat currentUserRole={role} currentUserName={getUserName(role)} />}
     </div>
   )
 }

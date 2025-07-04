@@ -1,632 +1,269 @@
 "use client"
 
-/* ------------------------------------------------------------------
-   LIGHTWEIGHT IN-BROWSER REAL-TIME LAYER
-   • Keeps updates, documents, and stageStatuses in localStorage
-   • Synchronises across tabs via the "storage" event
-   • Provides helpers demanded by the rest of the code-base
-------------------------------------------------------------------- */
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type MutableRefObject } from "react"
 
-import { createContext, useContext, useState, useEffect, useCallback, startTransition, type ReactNode } from "react"
+/* -------------------------------------------------------------------------- */
+/*  Types                                                                     */
+/* -------------------------------------------------------------------------- */
 
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
+export type Role = "estate-agent" | "buyer-conveyancer" | "seller-conveyancer" | "buyer" | "seller"
 
-export type Role = "buyer" | "buyer-conveyancer" | "seller-conveyancer" | "estate-agent"
+export type StageId =
+  | "offer-accepted"
+  | "draft-contract"
+  | "search-survey"
+  | "replies-to-requisitions"
+  | "completion-date"
+  | "contract-exchange"
+  | "completion"
+  | "nutlip-transaction-fee"
 
-export interface RealtimeUpdate {
-  id: string
-  type:
-    | "document_uploaded"
-    | "status_changed"
-    | "stage_completed"
-    | "completion_date_confirmed"
-    | "completion_date_rejected"
-    | "completion_date_proposed"
-    | "contract_exchanged"
-    | "amendment_requested"
-    | "amendment_replied"
-  stage: string
-  role: Role | "system"
-  title: string
-  description: string
-  createdAt: string
-  data?: Record<string, unknown>
-  /** whether this update has been seen in the current tab */
-  read?: boolean
-}
-
-export interface RealtimeDocument {
+export interface DocumentRecord {
   id: string
   name: string
-  stage: string
-  uploadedBy: Role
-  deliveredTo: Role
-  uploadedAt: Date
   size: number
+  stage: StageId
+  recipientRole: Role
+  uploadedBy: Role
+  uploadedAt: Date
+  priority?: "standard" | "urgent" | "high"
   status: "delivered" | "downloaded" | "reviewed"
-  priority?: "standard" | "urgent" | "critical"
   coverMessage?: string
   deadline?: string
-  downloadCount: number
 }
 
 export interface AmendmentRequest {
   id: string
-  stage: string
+  stage: StageId
   requestedBy: Role
   requestedTo: Role
   type: string
   priority: "low" | "medium" | "high"
   description: string
-  proposedChange: string
+  proposedChange?: string
   deadline?: string
   affectedClauses: string[]
-  status: "pending" | "acknowledged" | "replied" | "resolved" | "rejected"
-  createdAt: Date
+  status: "sent" | "acknowledged" | "replied"
   reply?: {
-    message: string
     decision: "accepted" | "rejected" | "counter-proposal"
+    message: string
     counterProposal?: string
     repliedAt: Date
-    repliedBy: Role
   }
 }
 
-type StageStatus = "pending" | "in-progress" | "completed" | "blocked"
-
-export interface TransactionState {
-  currentStage: string
-  stageStatuses: Record<string, StageStatus>
+export interface Update {
+  id: string
+  stage: StageId
+  role: Role | "system"
+  type: string
+  title: string
+  description?: string
+  data?: unknown
+  createdAt: Date
+  read?: boolean
 }
 
-/* ------------------------------------------------------------------ */
-/*  Persistent helpers                                                 */
-/* ------------------------------------------------------------------ */
+/* -------------------------------------------------------------------------- */
+/*  Local-storage helpers                                                     */
+/* -------------------------------------------------------------------------- */
 
-const STORAGE_KEY = "pte-realtime"
+const STORAGE_KEY = "pte-state-v3"
 
 interface PersistedState {
-  updates: RealtimeUpdate[]
-  documents: RealtimeDocument[]
+  documents: DocumentRecord[]
   amendmentRequests: AmendmentRequest[]
-  transactionState: TransactionState
+  updates: Update[]
 }
 
-const defaultStages: Record<string, StageStatus> = {
-  "offer-accepted": "completed",
-  "proof-of-funds": "in-progress",
-  conveyancers: "pending",
-  "draft-contract": "pending",
-  "search-survey": "pending",
-  enquiries: "pending",
-  "mortgage-offer": "pending",
-  "completion-date": "pending",
-  "contract-exchange": "pending",
-  "nutlip-transaction-fee": "pending",
-  "replies-to-requisitions": "pending",
-  transaction: "pending",
+function reviveDates(raw: PersistedState): PersistedState {
+  raw.documents.forEach((d) => (d.uploadedAt = new Date(d.uploadedAt)))
+  raw.updates.forEach((u) => (u.createdAt = new Date(u.createdAt)))
+  raw.amendmentRequests.forEach((r) => {
+    if (r.reply) r.reply.repliedAt = new Date(r.reply.repliedAt)
+  })
+  return raw
 }
 
-// ---------- helpers -------------------------------------------------
-function mergeWithDefaults(raw: Partial<PersistedState> | null): PersistedState {
-  return {
-    updates: raw?.updates ?? [],
-    documents: raw?.documents ?? [],
-    amendmentRequests: raw?.amendmentRequests ?? [],
-    transactionState: raw?.transactionState ?? {
-      currentStage: "proof-of-funds",
-      stageStatuses: { ...defaultStages },
-    },
-  }
-}
-
-function getInitial(): PersistedState {
-  if (typeof window === "undefined") {
-    return mergeWithDefaults(null)
-  }
-
+function loadInitial(): PersistedState {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      const parsed = JSON.parse(stored) as Partial<PersistedState>
-      // Convert date strings back to Date objects
-      if (parsed.documents) {
-        parsed.documents = parsed.documents.map((doc) => ({
-          ...doc,
-          uploadedAt: new Date(doc.uploadedAt),
-        }))
-      }
-      if (parsed.amendmentRequests) {
-        parsed.amendmentRequests = parsed.amendmentRequests.map((req) => ({
-          ...req,
-          createdAt: new Date(req.createdAt),
-          reply: req.reply
-            ? {
-                ...req.reply,
-                repliedAt: new Date(req.reply.repliedAt),
-              }
-            : undefined,
-        }))
-      }
-      return mergeWithDefaults(parsed)
-    }
+    if (!stored) return { documents: [], amendmentRequests: [], updates: [] }
+    return reviveDates(JSON.parse(stored))
   } catch {
-    /* ignore corrupt JSON and fall through */
+    return { documents: [], amendmentRequests: [], updates: [] }
   }
-
-  return mergeWithDefaults(null)
 }
 
-function savePersisted(state: PersistedState) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-}
+const deepEqual = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 
-/* ------------------------------------------------------------------ */
-/*  Context                                                            */
-/* ------------------------------------------------------------------ */
+/* -------------------------------------------------------------------------- */
+/*  Context shape                                                             */
+/* -------------------------------------------------------------------------- */
 
-interface RealTimeCtx {
-  updates: RealtimeUpdate[]
-  documents: RealtimeDocument[]
-  amendmentRequests: AmendmentRequest[]
-  transactionState: TransactionState
-
-  /* helpers */
-  sendUpdate: (u: Omit<RealtimeUpdate, "id" | "createdAt">) => void
-  addDocument: (doc: Omit<RealtimeDocument, "id" | "uploadedAt" | "downloadCount" | "status">) => void
-  addAmendmentRequest: (req: Omit<AmendmentRequest, "id" | "createdAt" | "status">) => void
-  replyToAmendmentRequest: (id: string, reply: Omit<AmendmentRequest["reply"], "repliedAt" | "repliedBy">) => void
-  getDocumentsForRole: (role: Role, stage: string) => RealtimeDocument[]
-  getAmendmentRequestsForRole: (role: Role, stage: string) => AmendmentRequest[]
-  downloadDocument: (id: string, role: Role) => Promise<Blob | null>
+interface RealTimeCtx extends PersistedState {
+  /* document helpers */
+  getDocumentsForRole: (role: Role, stage: StageId) => DocumentRecord[]
+  downloadDocument: (id: string, asRole: Role) => Promise<Blob | null>
   markDocumentAsReviewed: (id: string) => void
-  resetToDefault: () => void
+
+  /* amendment helpers */
+  getAmendmentRequestsForRole: (role: Role, stage: StageId) => AmendmentRequest[]
+  addAmendmentRequest: (req: Omit<AmendmentRequest, "id" | "status">) => void
+  replyToAmendmentRequest: (id: string, reply: Omit<AmendmentRequest["reply"], "repliedAt">) => void
+
+  /* update helpers */
+  sendUpdate: (u: Omit<Update, "id" | "createdAt" | "read">) => void
   markAsRead: (id: string) => void
 }
 
-const RealTimeContext = createContext<RealTimeCtx | undefined>(undefined)
+const RealTimeContext = createContext<RealTimeCtx | null>(null)
 
-/* ------------------------------------------------------------------ */
-/*  Provider                                                           */
-/* ------------------------------------------------------------------ */
+/* -------------------------------------------------------------------------- */
+/*  Provider                                                                  */
+/* -------------------------------------------------------------------------- */
 
 export function RealTimeProvider({ children }: { children: ReactNode }) {
-  const initial = getInitial()
-  const [updates, setUpdates] = useState<RealtimeUpdate[]>(initial.updates)
-  const [documents, setDocuments] = useState<RealtimeDocument[]>(initial.documents)
+  const initial = loadInitial()
+  const [documents, setDocuments] = useState<DocumentRecord[]>(initial.documents)
   const [amendmentRequests, setAmendmentRequests] = useState<AmendmentRequest[]>(initial.amendmentRequests)
-  const [transactionState, setTransactionState] = useState<TransactionState>(initial.transactionState)
+  const [updates, setUpdates] = useState<Update[]>(initial.updates)
 
-  /* ---------- persist whenever any slice changes ------------------ */
+  /* snapshot — prevents localStorage ↔ React infinite loops */
+  const snapshot: MutableRefObject<string> = useRef(JSON.stringify(initial))
+
+  /* -------- persist whenever state changes -------- */
   useEffect(() => {
-    savePersisted({ updates, documents, amendmentRequests, transactionState })
-  }, [updates, documents, amendmentRequests, transactionState])
-
-  /* ---------- cross-tab sync -------------------------------------- */
-  useEffect(() => {
-    const handler = (e: StorageEvent) => {
-      if (e.key !== STORAGE_KEY || !e.newValue) return
-      const incoming: PersistedState = mergeWithDefaults(JSON.parse(e.newValue))
-
-      // Convert date strings back to Date objects
-      if (incoming.documents) {
-        incoming.documents = incoming.documents.map((doc) => ({
-          ...doc,
-          uploadedAt: new Date(doc.uploadedAt),
-        }))
-      }
-      if (incoming.amendmentRequests) {
-        incoming.amendmentRequests = incoming.amendmentRequests.map((req) => ({
-          ...req,
-          createdAt: new Date(req.createdAt),
-          reply: req.reply
-            ? {
-                ...req.reply,
-                repliedAt: new Date(req.reply.repliedAt),
-              }
-            : undefined,
-        }))
-      }
-
-      // defer state update → avoids "setState during render" warning
-      setTimeout(() => {
-        startTransition(() => {
-          setUpdates(incoming.updates)
-          setDocuments(incoming.documents)
-          setAmendmentRequests(incoming.amendmentRequests)
-          setTransactionState(incoming.transactionState)
-        })
-      }, 0)
+    const next = JSON.stringify({ documents, amendmentRequests, updates })
+    if (next !== snapshot.current) {
+      snapshot.current = next
+      localStorage.setItem(STORAGE_KEY, next)
     }
+  }, [documents, amendmentRequests, updates])
 
-    window.addEventListener("storage", handler)
-    return () => window.removeEventListener("storage", handler)
-  }, [])
-
-  /* ---------- helpers --------------------------------------------- */
-
-  const sendUpdate = useCallback<RealTimeCtx["sendUpdate"]>(
-    (partial) => {
-      const full: RealtimeUpdate = {
-        ...partial,
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-        read: false,
-      }
-
-      // 1. updates
-      setUpdates((prev) => {
-        const next = [full, ...prev.slice(0, 49)]
-        return next
-      })
-
-      // 2. stage status bookkeeping
-      if (full.type === "stage_completed") {
-        setTransactionState((prev) => ({
-          ...prev,
-          stageStatuses: { ...(prev?.stageStatuses ?? defaultStages), [full.stage]: "completed" },
-        }))
-      } else if (full.type === "status_changed") {
-        setTransactionState((prev) => ({
-          ...prev,
-          stageStatuses: { ...(prev?.stageStatuses ?? defaultStages), [full.stage]: "in-progress" },
-        }))
-      } else if (full.type === "completion_date_confirmed") {
-        setTransactionState((prev) => ({
-          ...prev,
-          stageStatuses: { ...(prev?.stageStatuses ?? defaultStages), "completion-date": "completed" },
-        }))
-      } else if (full.type === "contract_exchanged") {
-        setTransactionState((prev) => ({
-          ...prev,
-          stageStatuses: { ...(prev?.stageStatuses ?? defaultStages), "contract-exchange": "completed" },
-        }))
-      }
-
-      // 3. persist and trigger storage event
-      setTimeout(() => {
-        const newState = { updates: [full, ...updates], documents, amendmentRequests, transactionState }
-        savePersisted(newState)
-        window.dispatchEvent(
-          new StorageEvent("storage", {
-            key: STORAGE_KEY,
-            newValue: JSON.stringify(newState),
-          }),
-        )
-      }, 0)
-    },
-    [updates, documents, amendmentRequests, transactionState],
-  )
-
-  const addDocument = useCallback<RealTimeCtx["addDocument"]>(
-    (docData) => {
-      const fullDocument: RealtimeDocument = {
-        ...docData,
-        id: crypto.randomUUID(),
-        uploadedAt: new Date(),
-        downloadCount: 0,
-        status: "delivered",
-      }
-
-      setDocuments((prev) => {
-        const next = [fullDocument, ...prev]
-        return next
-      })
-
-      // Persist and trigger storage event
-      setTimeout(() => {
-        const newState = { updates, documents: [fullDocument, ...documents], amendmentRequests, transactionState }
-        savePersisted(newState)
-        window.dispatchEvent(
-          new StorageEvent("storage", {
-            key: STORAGE_KEY,
-            newValue: JSON.stringify(newState),
-          }),
-        )
-      }, 0)
-    },
-    [updates, documents, amendmentRequests, transactionState],
-  )
-
-  const addAmendmentRequest = useCallback<RealTimeCtx["addAmendmentRequest"]>(
-    (reqData) => {
-      const fullRequest: AmendmentRequest = {
-        ...reqData,
-        id: crypto.randomUUID(),
-        createdAt: new Date(),
-        status: "pending",
-      }
-
-      setAmendmentRequests((prev) => {
-        const next = [fullRequest, ...prev]
-        return next
-      })
-
-      // Send real-time update
-      sendUpdate({
-        type: "amendment_requested",
-        stage: reqData.stage,
-        role: reqData.requestedBy,
-        title: "Amendment Request Sent",
-        description: `${reqData.type} amendment requested`,
-        data: {
-          amendmentId: fullRequest.id,
-          amendmentType: reqData.type,
-          priority: reqData.priority,
-        },
-      })
-
-      // Persist and trigger storage event
-      setTimeout(() => {
-        const newState = {
-          updates,
-          documents,
-          amendmentRequests: [fullRequest, ...amendmentRequests],
-          transactionState,
-        }
-        savePersisted(newState)
-        window.dispatchEvent(
-          new StorageEvent("storage", {
-            key: STORAGE_KEY,
-            newValue: JSON.stringify(newState),
-          }),
-        )
-      }, 0)
-    },
-    [updates, documents, amendmentRequests, transactionState, sendUpdate],
-  )
-
-  const replyToAmendmentRequest = useCallback<RealTimeCtx["replyToAmendmentRequest"]>(
-    (id, replyData) => {
-      setAmendmentRequests((prev) => {
-        const updatedRequests = prev.map((req) => {
-          if (req.id === id) {
-            const updatedReq = {
-              ...req,
-              status: "replied" as const,
-              reply: {
-                ...replyData,
-                repliedAt: new Date(),
-                repliedBy: req.requestedTo,
-              },
-            }
-
-            // Send real-time update
-            sendUpdate({
-              type: "amendment_replied",
-              stage: req.stage,
-              role: req.requestedTo,
-              title: "Amendment Reply Sent",
-              description: `Reply sent for ${req.type} amendment request`,
-              data: {
-                amendmentId: id,
-                decision: replyData.decision,
-                originalRequestBy: req.requestedBy,
-              },
-            })
-
-            return updatedReq
-          }
-          return req
-        })
-
-        // Force persistence and cross-tab sync
-        setTimeout(() => {
-          const newState = { updates, documents, amendmentRequests: updatedRequests, transactionState }
-          savePersisted(newState)
-          window.dispatchEvent(
-            new StorageEvent("storage", {
-              key: STORAGE_KEY,
-              newValue: JSON.stringify(newState),
-            }),
-          )
-        }, 0)
-
-        return updatedRequests
-      })
-    },
-    [sendUpdate, updates, documents, transactionState],
-  )
-
-  const getDocumentsForRole = useCallback<RealTimeCtx["getDocumentsForRole"]>(
-    (role, stage) => documents.filter((d) => d.deliveredTo === role && d.stage === stage),
-    [documents],
-  )
-
-  const getAmendmentRequestsForRole = useCallback<RealTimeCtx["getAmendmentRequestsForRole"]>(
-    (role, stage) => amendmentRequests.filter((req) => req.requestedTo === role && req.stage === stage),
-    [amendmentRequests],
-  )
-
-  const downloadDocument = useCallback<RealTimeCtx["downloadDocument"]>(
-    async (id, role) => {
-      const doc = documents.find((d) => d.id === id)
-      if (!doc) return null
-
-      const blob = new Blob([`Dummy content for ${doc.name}`], {
-        type: "application/pdf",
-      })
-
-      setDocuments((prev) => {
-        const next = prev.map((d) =>
-          d.id === id ? { ...d, status: "downloaded", downloadCount: d.downloadCount + 1 } : d,
-        )
-        return next
-      })
-
-      sendUpdate({
-        type: "status_changed",
-        stage: doc.stage,
-        role,
-        title: "Document Downloaded",
-        description: `${doc.name} downloaded by ${role}`,
-      })
-
-      return blob
-    },
-    [documents, sendUpdate],
-  )
-
-  const markDocumentAsReviewed = useCallback<RealTimeCtx["markDocumentAsReviewed"]>((id) => {
-    setDocuments((prev) => prev.map((d) => (d.id === id ? { ...d, status: "reviewed" } : d)))
-  }, [])
-
-  const resetToDefault = useCallback<RealTimeCtx["resetToDefault"]>(() => {
-    // Reset all state to defaults
-    const defaultState = mergeWithDefaults(null)
-
-    setUpdates(defaultState.updates)
-    setDocuments(defaultState.documents)
-    setAmendmentRequests(defaultState.amendmentRequests)
-    setTransactionState(defaultState.transactionState)
-
-    // Clear all localStorage keys - comprehensive list
-    const keysToRemove = [
-      STORAGE_KEY,
-      "transaction_updates",
-      "completion_proposals",
-      "pte-demo-realtime-state",
-      "contract_issues",
-      "shared_documents",
-      "transaction_state",
-      "nutlip_updates",
-      "stage_completions",
-      "enquiry_responses",
-      "mortgage_applications",
-      "search_results",
-      "survey_reports",
-      "completion_dates",
-      "exchange_contracts",
-      "requisition_replies",
-      "transaction_fees",
-      "document_uploads",
-      "buyer_notifications",
-      "seller_notifications",
-      "conveyancer_updates",
-      "estate_agent_updates",
-      "stage_statuses",
-      "buyer-conveyancer-requisitions",
-      "buyer-sent-requisitions",
-      "seller-requisitions-data",
-      "seller-incoming-requisitions",
-      "seller-requisition-replies",
-      "buyer-requisition-drafts",
-      "completion-date-proposals",
-      "contract-exchange-data",
-      "mortgage-offer-data",
-      "search-survey-data",
-      "enquiry-data",
-      "draft-contract-data",
-      "conveyancer-data",
-      "proof-of-funds-data",
-      "offer-accepted-data",
-      "nutlip-fee-data",
-      "transaction-completion-data",
-    ]
-
-    // Clear localStorage
-    keysToRemove.forEach((key) => {
+  /* -------- cross-tab sync -------- */
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key !== STORAGE_KEY || !e.newValue || e.newValue === snapshot.current) return
       try {
-        localStorage.removeItem(key)
-      } catch (error) {
-        console.error(`Error removing ${key} from localStorage:`, error)
+        const parsed = reviveDates(JSON.parse(e.newValue) as PersistedState)
+        if (!deepEqual(parsed.documents, documents)) setDocuments(parsed.documents)
+        if (!deepEqual(parsed.amendmentRequests, amendmentRequests)) setAmendmentRequests(parsed.amendmentRequests)
+        if (!deepEqual(parsed.updates, updates)) setUpdates(parsed.updates)
+      } catch {
+        /* ignore bad payload */
       }
+    }
+    window.addEventListener("storage", onStorage)
+    return () => window.removeEventListener("storage", onStorage)
+  }, [documents, amendmentRequests, updates])
+
+  /* ---------------------------------------------------------------------- */
+  /*  Helper implementations                                                */
+  /* ---------------------------------------------------------------------- */
+
+  const getDocumentsForRole = (role: Role, stage: StageId) =>
+    documents.filter((d) => d.recipientRole === role && d.stage === stage)
+
+  const getAmendmentRequestsForRole = (role: Role, stage: StageId) =>
+    amendmentRequests.filter((r) => r.requestedTo === role && r.stage === stage)
+
+  const downloadDocument = async (id: string, asRole: Role) => {
+    const doc = documents.find((d) => d.id === id)
+    if (!doc) return null
+    await new Promise((r) => setTimeout(r, 500))
+    setDocuments((prev) => prev.map((d) => (d.id === id ? { ...d, status: "downloaded" as const } : d)))
+    sendUpdate({
+      stage: doc.stage,
+      role: asRole,
+      type: "document_downloaded",
+      title: "Document downloaded",
+      description: `${doc.name} downloaded by ${asRole}`,
     })
+    return new Blob([`Dummy content of ${doc.name}`], { type: "application/pdf" })
+  }
 
-    // Clear all localStorage items that start with common prefixes
-    const prefixesToClear = ["pte-", "nutlip-", "transaction-", "buyer-", "seller-", "estate-agent-", "conveyancer-"]
+  const markDocumentAsReviewed = (id: string) =>
+    setDocuments((prev) => prev.map((d) => (d.id === id ? { ...d, status: "reviewed" } : d)))
 
-    try {
-      const allKeys = Object.keys(localStorage)
-      allKeys.forEach((key) => {
-        if (prefixesToClear.some((prefix) => key.startsWith(prefix))) {
-          localStorage.removeItem(key)
+  const addAmendmentRequest = (req: Omit<AmendmentRequest, "id" | "status">) => {
+    const newReq: AmendmentRequest = { ...req, id: crypto.randomUUID(), status: "sent" }
+    setAmendmentRequests((prev) => [...prev, newReq])
+    sendUpdate({
+      stage: newReq.stage,
+      role: newReq.requestedBy,
+      type: "amendment_requested",
+      title: "Amendment requested",
+      description: `${newReq.type} amendment requested`,
+      data: { priority: newReq.priority },
+    })
+  }
+
+  const replyToAmendmentRequest: RealTimeCtx["replyToAmendmentRequest"] = (id, reply) => {
+    let stage: StageId | undefined
+    let responder: Role | undefined
+
+    setAmendmentRequests((prev) =>
+      prev.map((r) => {
+        if (r.id !== id) return r
+        stage = r.stage
+        responder = r.requestedTo
+        return {
+          ...r,
+          status: "replied",
+          reply: { ...reply, repliedAt: new Date() },
         }
-      })
-    } catch (error) {
-      console.error("Error clearing prefixed localStorage items:", error)
-    }
-
-    // Clear sessionStorage as well
-    try {
-      const sessionKeys = Object.keys(sessionStorage)
-      sessionKeys.forEach((key) => {
-        if (prefixesToClear.some((prefix) => key.startsWith(prefix))) {
-          sessionStorage.removeItem(key)
-        }
-      })
-    } catch (error) {
-      console.error("Error clearing sessionStorage:", error)
-    }
-
-    // Clear browser cache if possible (limited by browser security)
-    if ("caches" in window) {
-      caches
-        .keys()
-        .then((cacheNames) => {
-          cacheNames.forEach((cacheName) => {
-            if (cacheName.includes("nutlip") || cacheName.includes("pte")) {
-              caches.delete(cacheName)
-            }
-          })
-        })
-        .catch((error) => {
-          console.error("Error clearing cache:", error)
-        })
-    }
-
-    // Save the default state
-    savePersisted(defaultState)
-
-    // Trigger storage events to notify other tabs/components
-    setTimeout(() => {
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: STORAGE_KEY,
-          newValue: JSON.stringify(defaultState),
-          oldValue: null,
-        }),
-      )
-    }, 0)
-
-    // Dispatch custom event for complete reset
-    window.dispatchEvent(
-      new CustomEvent("platform-reset", {
-        detail: { timestamp: new Date().toISOString() },
       }),
     )
-  }, [])
 
-  const markAsRead = useCallback<RealTimeCtx["markAsRead"]>((id) => {
-    setUpdates((prev) => prev.map((u) => (u.id === id ? { ...u, read: true } : u)))
-  }, [])
+    if (stage && responder) {
+      sendUpdate({
+        stage,
+        role: responder,
+        type: "amendment_replied",
+        title: "Amendment reply sent",
+        description: "Reply sent for amendment request",
+        data: { amendmentId: id, decision: reply.decision },
+      })
+    }
+  }
 
-  /* ---------- context value --------------------------------------- */
-  const ctx: RealTimeCtx = {
-    updates,
+  const sendUpdate = (partial: Omit<Update, "id" | "createdAt" | "read">) => {
+    const full: Update = {
+      ...partial,
+      id: crypto.randomUUID(),
+      createdAt: new Date(),
+      read: false,
+    }
+    setUpdates((prev) => [full, ...prev.slice(0, 199)])
+  }
+
+  const markAsRead = (id: string) => setUpdates((prev) => prev.map((u) => (u.id === id ? { ...u, read: true } : u)))
+
+  /* ---------------------------------------------------------------------- */
+  /*  Provider value                                                        */
+  /* ---------------------------------------------------------------------- */
+
+  const value: RealTimeCtx = {
     documents,
     amendmentRequests,
-    transactionState,
-    sendUpdate,
-    addDocument,
-    addAmendmentRequest,
-    replyToAmendmentRequest,
+    updates,
     getDocumentsForRole,
     getAmendmentRequestsForRole,
     downloadDocument,
     markDocumentAsReviewed,
-    resetToDefault,
+    addAmendmentRequest,
+    replyToAmendmentRequest,
+    sendUpdate,
     markAsRead,
   }
 
-  return <RealTimeContext.Provider value={ctx}>{children}</RealTimeContext.Provider>
+  return <RealTimeContext.Provider value={value}>{children}</RealTimeContext.Provider>
 }
 
-/* ------------------------------------------------------------------ */
-/*  Hook                                                               */
-/* ------------------------------------------------------------------ */
+/* -------------------------------------------------------------------------- */
+/*  Hook                                                                      */
+/* -------------------------------------------------------------------------- */
 
 export function useRealTime() {
   const ctx = useContext(RealTimeContext)

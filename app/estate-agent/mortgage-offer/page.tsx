@@ -58,7 +58,7 @@ export default function EstateAgentMortgageOfferPage() {
       description="Monitor the mortgage offer process and receive notifications when completed"
     >
       <div className="space-y-6">
-        {/* Conveyancer & Buyer Stage Info */}
+        {/* Conveyancer Stage Info */}
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-center gap-3">
             <AlertTriangle className="h-5 w-5 text-blue-600" />

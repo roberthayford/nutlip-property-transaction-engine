@@ -89,14 +89,12 @@ export default function EstateAgentEnquiriesPage() {
               ) : (
                 <>
                   <div className="flex items-center justify-between p-4 border rounded-lg bg-green-50 border-green-200">
-                    <div className="flex items-center space-x-3">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <div>
-                        <h4 className="font-semibold text-green-900">Enquiries Stage Completed</h4>
-                        <p className="text-sm text-green-800">
-                          All pre-contract enquiries have been resolved by the conveyancers.
-                        </p>
-                      </div>
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <div>
+                      <h4 className="font-semibold text-green-900">Enquiries Stage Completed</h4>
+                      <p className="text-sm text-green-800">
+                        All pre-contract enquiries have been resolved by the conveyancers.
+                      </p>
                     </div>
                     <Badge className="bg-green-100 text-green-800">Completed</Badge>
                   </div>

@@ -94,7 +94,7 @@ export default function BuyerConveyancersPage() {
     if (conveyancer) {
       sendUpdate({
         type: "status_changed",
-        stage: "conveyancers",
+        stage: "add-conveyancer",
         role: "buyer",
         title: "Conveyancer Selected",
         description: `${conveyancer.name} from ${conveyancer.firm} has been selected`,
@@ -126,7 +126,7 @@ export default function BuyerConveyancersPage() {
 
     sendUpdate({
       type: "status_changed",
-      stage: "conveyancers",
+      stage: "add-conveyancer",
       role: "buyer",
       title: "Custom Conveyancer Added",
       description: `${customConveyancer.name} from ${customConveyancer.firm} has been added`,
@@ -156,7 +156,7 @@ export default function BuyerConveyancersPage() {
   }
 
   return (
-    <TransactionLayout currentStage="conveyancers" userRole="buyer">
+    <TransactionLayout currentStage="add-conveyancer" userRole="buyer">
       <div className="space-y-6">
         <div className="flex items-center space-x-3">
           <Scale className="h-8 w-8 text-primary" />

@@ -23,14 +23,69 @@ import {
   AlertCircle,
   ArrowRight,
   Send,
-  Reply,
-  CheckCircle2,
-  XCircle,
-  AlertOctagon,
   Bell,
   Sparkles,
 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
+import type { Role } from "@/contexts/real-time-context"
+
+// Enhanced status types for better tracking
+type ContractPreparedStatus = "not-started" | "in-progress" | "completed" | "needs-revision"
+type BuyerReviewStatus = "not-sent" | "sent" | "delivered" | "reviewing" | "completed" | "amendments-requested"
+type ClientApprovalStatus = "not-required" | "pending" | "approved" | "rejected"
+
+interface ContractIssue {
+  id: string
+  title: string
+  category: string
+  severity: "critical" | "major" | "minor"
+  contractSection: string
+  description: string
+  proposedSolution?: string
+  legalImplications?: string
+  status: "open" | "in-progress" | "resolved"
+  identifiedAt: Date
+  resolvedAt?: Date
+}
+
+const getPriorityColor = (priority: "low" | "medium" | "high") => {
+  switch (priority) {
+    case "high":
+      return "bg-red-100 text-red-800 border-red-300"
+    case "medium":
+      return "bg-amber-100 text-amber-800 border-amber-300"
+    case "low":
+      return "bg-green-100 text-green-800 border-green-300"
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-300"
+  }
+}
+
+const getReplyStatusColor = (decision: "accepted" | "rejected" | "counter-proposal") => {
+  switch (decision) {
+    case "accepted":
+      return "bg-green-100 text-green-800"
+    case "rejected":
+      return "bg-red-100 text-red-800"
+    case "counter-proposal":
+      return "bg-blue-100 text-blue-800"
+    default:
+      return "bg-gray-100 text-gray-800"
+  }
+}
+
+const getReplyStatusIcon = (decision: "accepted" | "rejected" | "counter-proposal") => {
+  switch (decision) {
+    case "accepted":
+      return <CheckCircle className="h-3 w-3" />
+    case "rejected":
+      return <AlertTriangle className="h-3 w-3" />
+    case "counter-proposal":
+      return <MessageSquare className="h-3 w-3" />
+    default:
+      return <Clock className="h-3 w-3" />
+  }
+}
 
 export default function BuyerConveyancerDraftContractPage() {
   const [amendments, setAmendments] = useState("")
@@ -147,7 +202,7 @@ export default function BuyerConveyancerDraftContractPage() {
             data: {
               amendmentId: req.id,
               decision: req.reply.decision,
-              replyMessage: req.reply.message,
+              originalRequestBy: req.requestedBy,
             },
           })
 
@@ -395,20 +450,6 @@ export default function BuyerConveyancerDraftContractPage() {
     }
   }
 
-  interface ContractIssue {
-    id: string
-    title: string
-    category: string
-    severity: "critical" | "major" | "minor"
-    contractSection: string
-    description: string
-    proposedSolution?: string
-    legalImplications?: string
-    status: "open" | "in-progress" | "resolved"
-    identifiedAt: Date
-    resolvedAt?: Date
-  }
-
   const handleAddIssue = async () => {
     if (!issueForm.title || !issueForm.category || !issueForm.description) {
       toast({
@@ -585,59 +626,12 @@ export default function BuyerConveyancerDraftContractPage() {
     setShowAmendmentModal(true)
   }
 
-  const getPriorityColor = (priority: "low" | "medium" | "high") => {
-    switch (priority) {
-      case "high":
-        return "bg-red-100 text-red-800 border-red-300"
-      case "medium":
-        return "bg-amber-100 text-amber-800 border-amber-300"
-      case "low":
-        return "bg-green-100 text-green-800 border-green-300"
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-300"
-    }
-  }
-
-  const getReplyStatusColor = (decision: "accepted" | "rejected" | "counter-proposal") => {
-    switch (decision) {
-      case "accepted":
-        return "bg-green-100 text-green-800 border-green-300"
-      case "rejected":
-        return "bg-red-100 text-red-800 border-red-300"
-      case "counter-proposal":
-        return "bg-blue-100 text-blue-800 border-blue-300"
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-300"
-    }
-  }
-
-  const getReplyStatusIcon = (decision: "accepted" | "rejected" | "counter-proposal") => {
-    switch (decision) {
-      case "accepted":
-        return <CheckCircle2 className="h-4 w-4" />
-      case "rejected":
-        return <XCircle className="h-4 w-4" />
-      case "counter-proposal":
-        return <AlertOctagon className="h-4 w-4" />
-      default:
-        return <Clock className="h-4 w-4" />
-    }
-  }
-
-  const handleRefreshReplies = async () => {
-    setRefreshingReplies(true)
-
-    // Force a re-check of the real-time context
-    setTimeout(() => {
-      window.dispatchEvent(new Event("storage"))
-      setRefreshingReplies(false)
-
-      toast({
-        title: "Refreshed",
-        description: "Checked for new amendment replies",
-      })
-    }, 1000)
-  }
+  const [currentUserRole, setCurrentUserRole] = useState<Role>("buyer-conveyancer")
+  const [currentUserName, setCurrentUserName] = useState<string>("Sarah J")
+  const [otherParticipant, setOtherParticipant] = useState<{ role: Role; name: string }>({
+    role: "seller-conveyancer",
+    name: "Alex M",
+  })
 
   return (
     <TransactionLayout currentStage="draft-contract" userRole="buyer-conveyancer">
@@ -666,19 +660,6 @@ export default function BuyerConveyancerDraftContractPage() {
                     Track the status of your amendment requests to the seller's conveyancer
                   </CardDescription>
                 </div>
-                <Button onClick={handleRefreshReplies} disabled={refreshingReplies} variant="outline" size="sm">
-                  {refreshingReplies ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Checking...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Refresh
-                    </>
-                  )}
-                </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -711,103 +692,9 @@ export default function BuyerConveyancerDraftContractPage() {
                           <Badge className={getReplyStatusColor(request.reply.decision)}>
                             <div className="flex items-center gap-1">
                               {getReplyStatusIcon(request.reply.decision)}
-                              {request.reply.decision.replace("-", " ")}
+                              {request.reply.decision.replace("-", " ").toUpperCase()}
                             </div>
                           </Badge>
-                        )}
-                        {request.reply && !notifiedReplies.current.has(request.id) && (
-                          <Badge className="bg-green-100 text-green-800 animate-pulse">
-                            <Bell className="h-3 w-3 mr-1" />
-                            <Sparkles className="h-3 w-3 mr-1" />
-                            NEW REPLY!
-                          </Badge>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Sent: {request.createdAt.toLocaleDateString()} at {request.createdAt.toLocaleTimeString()}
-                        </div>
-                        {request.deadline && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            Deadline: {new Date(request.deadline).toLocaleDateString()}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-3">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 mb-1">Your Request:</p>
-                          <p className="text-sm text-gray-700">{request.description}</p>
-                        </div>
-
-                        {request.proposedChange && (
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 mb-1">Proposed Solution:</p>
-                            <p className="text-sm text-gray-700">{request.proposedChange}</p>
-                          </div>
-                        )}
-
-                        {request.affectedClauses.length > 0 && (
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 mb-1">Affected Clauses:</p>
-                            <div className="flex flex-wrap gap-1">
-                              {request.affectedClauses.map((clause, index) => (
-                                <Badge key={index} variant="outline" className="text-xs">
-                                  {clause}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Reply Section */}
-                        {request.reply && (
-                          <div
-                            className={`border rounded-lg p-4 transition-all duration-300 ${
-                              request.reply.decision === "accepted"
-                                ? "bg-green-50 border-green-200 shadow-sm"
-                                : request.reply.decision === "rejected"
-                                  ? "bg-red-50 border-red-200 shadow-sm"
-                                  : "bg-blue-50 border-blue-200 shadow-sm"
-                            } ${
-                              !notifiedReplies.current.has(request.id) ? "ring-2 ring-opacity-50 animate-pulse" : ""
-                            }`}
-                          >
-                            <div className="flex items-start gap-2">
-                              <Reply className="h-4 w-4 text-gray-600 mt-0.5" />
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <p className="text-sm font-medium text-gray-900">Seller's Conveyancer Reply:</p>
-                                  <Badge className={getReplyStatusColor(request.reply.decision)}>
-                                    <div className="flex items-center gap-1">
-                                      {getReplyStatusIcon(request.reply.decision)}
-                                      {request.reply.decision.replace("-", " ").toUpperCase()}
-                                    </div>
-                                  </Badge>
-                                  {!notifiedReplies.current.has(request.id) && (
-                                    <Badge className="bg-green-100 text-green-800 animate-bounce">
-                                      <Sparkles className="h-3 w-3 mr-1" />
-                                      JUST RECEIVED
-                                    </Badge>
-                                  )}
-                                </div>
-                                <p className="text-sm text-gray-700 mb-2">{request.reply.message}</p>
-                                {request.reply.counterProposal && (
-                                  <div className="mt-2 p-3 bg-white rounded border border-blue-200">
-                                    <p className="text-sm font-medium text-gray-900 mb-1">Counter-proposal:</p>
-                                    <p className="text-sm text-gray-700">{request.reply.counterProposal}</p>
-                                  </div>
-                                )}
-                                <p className="text-xs text-gray-500 mt-2">
-                                  Replied on {request.reply.repliedAt.toLocaleDateString()} at{" "}
-                                  {request.reply.repliedAt.toLocaleTimeString()}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
                         )}
 
                         {/* Status Messages */}
@@ -1296,7 +1183,7 @@ export default function BuyerConveyancerDraftContractPage() {
           </div>
         )}
 
-        {/* Contract Issue Modal */}
+        {/* Issue Modal */}
         {showIssueModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -1359,7 +1246,7 @@ export default function BuyerConveyancerDraftContractPage() {
                       type="text"
                       value={issueForm.category}
                       onChange={(e) => setIssueForm({ ...issueForm, category: e.target.value })}
-                      placeholder="e.g., Price, Conditions, Dates, Legal"
+                      placeholder="e.g., Price, Terms, Conditions"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
@@ -1367,7 +1254,7 @@ export default function BuyerConveyancerDraftContractPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium">Severity</Label>
+                    <Label className="text-sm font-medium">Severity Level</Label>
                     <div className="flex gap-4">
                       {(["minor", "major", "critical"] as const).map((severity) => (
                         <label key={severity} className="flex items-center gap-2 cursor-pointer">
@@ -1437,7 +1324,7 @@ export default function BuyerConveyancerDraftContractPage() {
                     id="proposed-solution"
                     value={issueForm.proposedSolution}
                     onChange={(e) => setIssueForm({ ...issueForm, proposedSolution: e.target.value })}
-                    placeholder="How should this issue be resolved?"
+                    placeholder="How should this issue be resolved..."
                     rows={3}
                     className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -1451,47 +1338,11 @@ export default function BuyerConveyancerDraftContractPage() {
                     id="legal-implications"
                     value={issueForm.legalImplications}
                     onChange={(e) => setIssueForm({ ...issueForm, legalImplications: e.target.value })}
-                    placeholder="What are the potential legal consequences?"
-                    rows={2}
+                    placeholder="Potential legal consequences if not addressed..."
+                    rows={3}
                     className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
-
-                {editingIssue && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Status</Label>
-                    <div className="flex gap-4">
-                      {(["open", "in-progress", "resolved"] as const).map((status) => (
-                        <label key={status} className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="status"
-                            value={status}
-                            checked={issueForm.status === status}
-                            onChange={(e) =>
-                              setIssueForm({
-                                ...issueForm,
-                                status: e.target.value as "open" | "in-progress" | "resolved",
-                              })
-                            }
-                            className="text-blue-600"
-                          />
-                          <span
-                            className={`capitalize px-2 py-1 rounded text-sm font-medium ${
-                              status === "resolved"
-                                ? "bg-green-100 text-green-800"
-                                : status === "in-progress"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            {status.replace("-", " ")}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 <div className="flex justify-end gap-3 pt-6 border-t">
                   <Button
