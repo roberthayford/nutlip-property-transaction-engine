@@ -92,7 +92,7 @@ export default function SellerConveyancerDraftContractPage() {
   // Check for new amendment requests and show notifications
   useEffect(() => {
     const newRequests = receivedAmendmentRequests.filter(
-      (req) => req.status === "pending" && !notifiedAmendments.current.has(req.id),
+      (req) => req.status === "sent" && !notifiedAmendments.current.has(req.id),
     )
 
     if (newRequests.length) {
@@ -238,7 +238,7 @@ export default function SellerConveyancerDraftContractPage() {
 
     try {
       // Simulate sending process
-      await new Promise((resolve) => setTimeout(resolve, 3000))
+      await new Promise((resolve) => setTimeout(resolve, 2000))
 
       // Add documents to the real-time system
       for (const file of uploadedFiles) {
@@ -253,20 +253,6 @@ export default function SellerConveyancerDraftContractPage() {
           deadline: deadline || undefined,
         })
       }
-
-      // Send activity update
-      sendUpdate({
-        type: "document_uploaded",
-        stage: "draft-contract",
-        role: "seller-conveyancer",
-        title: "Draft Contract Sent",
-        description: `${uploadedFiles.length} contract document${uploadedFiles.length > 1 ? "s" : ""} sent to buyer's conveyancer`,
-        data: {
-          documentCount: uploadedFiles.length,
-          priority,
-          hasDeadline: !!deadline,
-        },
-      })
 
       // Update status
       setBuyerReviewStatus("sent")
@@ -283,7 +269,13 @@ export default function SellerConveyancerDraftContractPage() {
         title: "Documents Sent Successfully",
         description: "Draft contract documents have been sent to the buyer's conveyancer",
       })
+
+      // Force storage event to ensure cross-tab sync
+      setTimeout(() => {
+        window.dispatchEvent(new Event("storage"))
+      }, 100)
     } catch (error) {
+      console.error("Error in handleSendToBuyer:", error)
       setSendStatus("error")
       toast({
         title: "Send Failed",
@@ -359,8 +351,6 @@ export default function SellerConveyancerDraftContractPage() {
       setClientApprovalStatus("approved")
     }, 5000)
   }
-
-  const isFormValid = uploadedFiles.length > 0 && coverMessage.trim().length > 0
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -446,7 +436,7 @@ export default function SellerConveyancerDraftContractPage() {
                 <Badge variant="secondary" className="ml-2">
                   {receivedAmendmentRequests.length} request{receivedAmendmentRequests.length !== 1 ? "s" : ""}
                 </Badge>
-                {receivedAmendmentRequests.some((req) => req.status === "pending") && (
+                {receivedAmendmentRequests.some((req) => req.status === "sent") && (
                   <Badge className="bg-red-100 text-red-800 animate-pulse">
                     <Bell className="h-3 w-3 mr-1" />
                     Action Required
@@ -460,7 +450,7 @@ export default function SellerConveyancerDraftContractPage() {
                 <div
                   key={request.id}
                   className={`border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow ${
-                    request.status === "pending" ? "ring-2 ring-amber-200 bg-amber-50/20" : ""
+                    request.status === "sent" ? "ring-2 ring-amber-200 bg-amber-50/20" : ""
                   }`}
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -479,7 +469,7 @@ export default function SellerConveyancerDraftContractPage() {
                         >
                           {request.status}
                         </Badge>
-                        {request.status === "pending" && (
+                        {request.status === "sent" && (
                           <Badge className="bg-red-100 text-red-800 animate-pulse">
                             <Bell className="h-3 w-3 mr-1" />
                             Needs Reply
@@ -552,7 +542,7 @@ export default function SellerConveyancerDraftContractPage() {
                       </div>
                     </div>
 
-                    {request.status === "pending" && (
+                    {request.status === "sent" && (
                       <Button
                         onClick={() => {
                           setSelectedAmendment(request.id)

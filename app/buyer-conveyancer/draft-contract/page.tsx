@@ -25,6 +25,7 @@ import {
   Send,
   Bell,
   Sparkles,
+  Reply,
 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import type { Role } from "@/contexts/real-time-context"
@@ -696,10 +697,137 @@ export default function BuyerConveyancerDraftContractPage() {
                             </div>
                           </Badge>
                         )}
+                      </div>
 
-                        {/* Status Messages */}
-                        {!request.reply && (
-                          <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 p-3 rounded-lg">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          Sent: {request.createdAt.toLocaleDateString()} at {request.createdAt.toLocaleTimeString()}
+                        </div>
+                        {request.deadline && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            Deadline: {new Date(request.deadline).toLocaleDateString()}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 mb-1">Your Request:</p>
+                          <p className="text-sm text-gray-700">{request.description}</p>
+                        </div>
+
+                        {request.proposedChange && (
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 mb-1">Proposed Solution:</p>
+                            <p className="text-sm text-gray-700">{request.proposedChange}</p>
+                          </div>
+                        )}
+
+                        {request.affectedClauses.length > 0 && (
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 mb-1">Affected Clauses:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {request.affectedClauses.map((clause, index) => (
+                                <Badge key={index} variant="outline" className="text-xs">
+                                  {clause}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Reply Section - This is the key part that shows seller conveyancer replies */}
+                        {request.reply ? (
+                          <div
+                            className={`border rounded-lg p-4 ${
+                              request.reply.decision === "accepted"
+                                ? "bg-green-50 border-green-200"
+                                : request.reply.decision === "rejected"
+                                  ? "bg-red-50 border-red-200"
+                                  : "bg-blue-50 border-blue-200"
+                            }`}
+                          >
+                            <div className="flex items-start gap-2">
+                              <Reply
+                                className={`h-4 w-4 mt-0.5 ${
+                                  request.reply.decision === "accepted"
+                                    ? "text-green-600"
+                                    : request.reply.decision === "rejected"
+                                      ? "text-red-600"
+                                      : "text-blue-600"
+                                }`}
+                              />
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <p
+                                    className={`text-sm font-medium ${
+                                      request.reply.decision === "accepted"
+                                        ? "text-green-900"
+                                        : request.reply.decision === "rejected"
+                                          ? "text-red-900"
+                                          : "text-blue-900"
+                                    }`}
+                                  >
+                                    Seller's Conveyancer Reply: {request.reply.decision.replace("-", " ").toUpperCase()}
+                                  </p>
+                                  {request.reply.decision === "accepted" && (
+                                    <Badge className="bg-green-100 text-green-800">
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      Approved
+                                    </Badge>
+                                  )}
+                                  {request.reply.decision === "rejected" && (
+                                    <Badge className="bg-red-100 text-red-800">
+                                      <AlertTriangle className="h-3 w-3 mr-1" />
+                                      Declined
+                                    </Badge>
+                                  )}
+                                  {request.reply.decision === "counter-proposal" && (
+                                    <Badge className="bg-blue-100 text-blue-800">
+                                      <MessageSquare className="h-3 w-3 mr-1" />
+                                      Counter-offer
+                                    </Badge>
+                                  )}
+                                </div>
+
+                                <p
+                                  className={`text-sm mb-2 ${
+                                    request.reply.decision === "accepted"
+                                      ? "text-green-800"
+                                      : request.reply.decision === "rejected"
+                                        ? "text-red-800"
+                                        : "text-blue-800"
+                                  }`}
+                                >
+                                  {request.reply.message}
+                                </p>
+
+                                {request.reply.counterProposal && (
+                                  <div className="mt-3 p-3 bg-white border border-blue-200 rounded">
+                                    <p className="text-sm font-medium text-blue-900 mb-1">Counter-proposal:</p>
+                                    <p className="text-sm text-blue-800">{request.reply.counterProposal}</p>
+                                  </div>
+                                )}
+
+                                <p
+                                  className={`text-xs mt-2 ${
+                                    request.reply.decision === "accepted"
+                                      ? "text-green-600"
+                                      : request.reply.decision === "rejected"
+                                        ? "text-red-600"
+                                        : "text-blue-600"
+                                  }`}
+                                >
+                                  Replied on {request.reply.repliedAt.toLocaleDateString()} at{" "}
+                                  {request.reply.repliedAt.toLocaleTimeString()}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-200">
                             <Clock className="h-4 w-4" />
                             <span>Awaiting response from seller's conveyancer...</span>
                           </div>

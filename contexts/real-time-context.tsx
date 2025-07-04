@@ -26,7 +26,7 @@ export interface DocumentRecord {
   recipientRole: Role
   uploadedBy: Role
   uploadedAt: Date
-  priority?: "standard" | "urgent" | "high"
+  priority?: "standard" | "urgent" | "critical"
   status: "delivered" | "downloaded" | "reviewed"
   coverMessage?: string
   deadline?: string
@@ -44,6 +44,7 @@ export interface AmendmentRequest {
   deadline?: string
   affectedClauses: string[]
   status: "sent" | "acknowledged" | "replied"
+  createdAt: Date
   reply?: {
     decision: "accepted" | "rejected" | "counter-proposal"
     message: string
@@ -80,6 +81,7 @@ function reviveDates(raw: PersistedState): PersistedState {
   raw.documents.forEach((d) => (d.uploadedAt = new Date(d.uploadedAt)))
   raw.updates.forEach((u) => (u.createdAt = new Date(u.createdAt)))
   raw.amendmentRequests.forEach((r) => {
+    r.createdAt = new Date(r.createdAt)
     if (r.reply) r.reply.repliedAt = new Date(r.reply.repliedAt)
   })
   return raw
@@ -104,12 +106,15 @@ const deepEqual = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringi
 interface RealTimeCtx extends PersistedState {
   /* document helpers */
   getDocumentsForRole: (role: Role, stage: StageId) => DocumentRecord[]
+  addDocument: (
+    doc: Omit<DocumentRecord, "id" | "uploadedAt" | "status" | "recipientRole"> & { deliveredTo: Role },
+  ) => void
   downloadDocument: (id: string, asRole: Role) => Promise<Blob | null>
   markDocumentAsReviewed: (id: string) => void
 
   /* amendment helpers */
   getAmendmentRequestsForRole: (role: Role, stage: StageId) => AmendmentRequest[]
-  addAmendmentRequest: (req: Omit<AmendmentRequest, "id" | "status">) => void
+  addAmendmentRequest: (req: Omit<AmendmentRequest, "id" | "status" | "createdAt">) => void
   replyToAmendmentRequest: (id: string, reply: Omit<AmendmentRequest["reply"], "repliedAt">) => void
 
   /* update helpers */
@@ -165,6 +170,36 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
   const getDocumentsForRole = (role: Role, stage: StageId) =>
     documents.filter((d) => d.recipientRole === role && d.stage === stage)
 
+  const addDocument = (
+    docData: Omit<DocumentRecord, "id" | "uploadedAt" | "status" | "recipientRole"> & { deliveredTo: Role },
+  ) => {
+    const newDoc: DocumentRecord = {
+      id: crypto.randomUUID(),
+      name: docData.name,
+      size: docData.size,
+      stage: docData.stage,
+      recipientRole: docData.deliveredTo,
+      uploadedBy: docData.uploadedBy,
+      uploadedAt: new Date(),
+      priority: docData.priority || "standard",
+      status: "delivered",
+      coverMessage: docData.coverMessage,
+      deadline: docData.deadline,
+    }
+
+    setDocuments((prev) => [...prev, newDoc])
+
+    // Send update notification
+    sendUpdate({
+      stage: newDoc.stage,
+      role: newDoc.uploadedBy,
+      type: "document_uploaded",
+      title: "Document Sent",
+      description: `${newDoc.name} sent to ${newDoc.recipientRole.replace("-", " ")}`,
+      data: { documentId: newDoc.id, recipientRole: newDoc.recipientRole },
+    })
+  }
+
   const getAmendmentRequestsForRole = (role: Role, stage: StageId) =>
     amendmentRequests.filter((r) => r.requestedTo === role && r.stage === stage)
 
@@ -186,8 +221,13 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
   const markDocumentAsReviewed = (id: string) =>
     setDocuments((prev) => prev.map((d) => (d.id === id ? { ...d, status: "reviewed" } : d)))
 
-  const addAmendmentRequest = (req: Omit<AmendmentRequest, "id" | "status">) => {
-    const newReq: AmendmentRequest = { ...req, id: crypto.randomUUID(), status: "sent" }
+  const addAmendmentRequest = (req: Omit<AmendmentRequest, "id" | "status" | "createdAt">) => {
+    const newReq: AmendmentRequest = {
+      ...req,
+      id: crypto.randomUUID(),
+      status: "sent",
+      createdAt: new Date(),
+    }
     setAmendmentRequests((prev) => [...prev, newReq])
     sendUpdate({
       stage: newReq.stage,
@@ -249,6 +289,7 @@ export function RealTimeProvider({ children }: { children: ReactNode }) {
     amendmentRequests,
     updates,
     getDocumentsForRole,
+    addDocument,
     getAmendmentRequestsForRole,
     downloadDocument,
     markDocumentAsReviewed,
