@@ -68,21 +68,21 @@ export const transactionStages: TransactionStage[] = [
     title: "Offer Accepted",
     icon: HandHeart,
     description: "Initial offer acceptance and agreement",
-    allowedRoles: ["buyer", "estate-agent"], // Removed conveyancers
+    allowedRoles: ["buyer", "estate-agent", "buyer-conveyancer", "seller-conveyancer"],
   },
   {
     id: "proof-of-funds",
     title: "Proof of Funds",
     icon: CreditCard,
     description: "Verification of buyer financial capability",
-    allowedRoles: ["buyer", "estate-agent"], // Removed conveyancers
+    allowedRoles: ["buyer", "estate-agent", "buyer-conveyancer", "seller-conveyancer"],
   },
   {
     id: "add-conveyancer",
     title: "Add Conveyancer",
     icon: Users,
     description: "Legal representatives appointment",
-    allowedRoles: ["buyer", "estate-agent"], // Removed conveyancers
+    allowedRoles: ["buyer", "estate-agent", "buyer-conveyancer", "seller-conveyancer"],
   },
   {
     id: "draft-contract",

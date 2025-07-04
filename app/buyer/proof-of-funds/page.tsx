@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import TransactionLayout from "@/components/transaction-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -13,17 +13,7 @@ import { RealTimeActivityFeed } from "@/components/real-time-activity-feed"
 import { MessengerChat } from "@/components/messenger-chat"
 import { useRealTime } from "@/contexts/real-time-context"
 import { useToast } from "@/hooks/use-toast"
-import {
-  Upload,
-  FileText,
-  CheckCircle,
-  Clock,
-  AlertCircle,
-  DollarSign,
-  CreditCard,
-  Building,
-  Loader2,
-} from "lucide-react"
+import { Upload, FileText, CheckCircle, Clock, AlertCircle, Building, Loader2 } from "lucide-react"
 import Link from "next/link"
 
 interface UploadedDocument {
@@ -35,21 +25,74 @@ interface UploadedDocument {
   status: "pending" | "approved" | "rejected"
 }
 
+interface ProofOfFundsData {
+  status: "not-started" | "in-progress" | "submitted" | "verified"
+  documents: UploadedDocument[]
+  lastUpdated: string
+}
+
+// Custom Pound Sign Icon Component
+const PoundSignIcon = ({ className }: { className?: string }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M6 12h8" />
+    <path d="M6 16h10" />
+    <path d="M8 8c0-2.2 1.8-4 4-4s4 1.8 4 4v4c0 1.1-.9 2-2 2H8" />
+  </svg>
+)
+
 const REQUIRED_DOCUMENTS = [
   { type: "bank-statement", label: "Bank Statement", icon: Building },
   { type: "mortgage-agreement", label: "Mortgage Agreement in Principle", icon: FileText },
-  { type: "deposit-proof", label: "Proof of Deposit", icon: CreditCard },
-  { type: "income-proof", label: "Proof of Income", icon: DollarSign },
+  { type: "income-proof", label: "Proof of Income", icon: PoundSignIcon },
 ]
 
 export default function BuyerProofOfFundsPage() {
-  const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([])
+  const [proofOfFundsData, setProofOfFundsData] = useState<ProofOfFundsData>({
+    status: "not-started",
+    documents: [],
+    lastUpdated: new Date().toISOString(),
+  })
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>("")
   const [isUploading, setIsUploading] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { sendUpdate, addDocument } = useRealTime()
   const { toast } = useToast()
+
+  // Load data from localStorage on component mount
+  useEffect(() => {
+    const savedData = localStorage.getItem("proof-of-funds-shared")
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData)
+        // Convert date strings back to Date objects
+        const documentsWithDates = parsedData.documents.map((doc: any) => ({
+          ...doc,
+          uploadedAt: new Date(doc.uploadedAt),
+        }))
+        setProofOfFundsData({
+          ...parsedData,
+          documents: documentsWithDates,
+        })
+      } catch (error) {
+        console.error("Error loading proof of funds data:", error)
+      }
+    }
+  }, [])
+
+  // Save data to localStorage whenever it changes
+  const saveData = (data: ProofOfFundsData) => {
+    localStorage.setItem("proof-of-funds-shared", JSON.stringify(data))
+    setProofOfFundsData(data)
+  }
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files || files.length === 0) return
@@ -58,6 +101,17 @@ export default function BuyerProofOfFundsPage() {
       toast({
         title: "Document Type Required",
         description: "Please select a document type before uploading.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Check if document type already exists
+    const existingDoc = proofOfFundsData.documents.find((doc) => doc.type === selectedDocumentType)
+    if (existingDoc) {
+      toast({
+        title: "Document Already Uploaded",
+        description: "A document of this type has already been uploaded.",
         variant: "destructive",
       })
       return
@@ -83,7 +137,17 @@ export default function BuyerProofOfFundsPage() {
         status: "pending",
       }
 
-      setUploadedDocuments((prev) => [...prev, newDocument])
+      const updatedDocuments = [...proofOfFundsData.documents, newDocument]
+      const newStatus = updatedDocuments.length === REQUIRED_DOCUMENTS.length ? "submitted" : "in-progress"
+
+      const updatedData: ProofOfFundsData = {
+        ...proofOfFundsData,
+        documents: updatedDocuments,
+        status: newStatus,
+        lastUpdated: new Date().toISOString(),
+      }
+
+      saveData(updatedData)
 
       // Add to real-time system
       addDocument({
@@ -107,25 +171,6 @@ export default function BuyerProofOfFundsPage() {
           fileName: file.name,
         },
       })
-
-      // Simulate approval after a delay
-      setTimeout(() => {
-        setUploadedDocuments((prev) =>
-          prev.map((doc) => (doc.id === newDocument.id ? { ...doc, status: "approved" } : doc)),
-        )
-
-        sendUpdate({
-          type: "status_changed",
-          stage: "proof-of-funds",
-          role: "estate-agent",
-          title: "Document Approved",
-          description: `${REQUIRED_DOCUMENTS.find((d) => d.type === selectedDocumentType)?.label} has been approved`,
-          data: {
-            documentId: newDocument.id,
-            documentType: selectedDocumentType,
-          },
-        })
-      }, 3000)
 
       toast({
         title: "Document Uploaded",
@@ -161,7 +206,7 @@ export default function BuyerProofOfFundsPage() {
   }
 
   const getDocumentStatus = (type: string) => {
-    const doc = uploadedDocuments.find((d) => d.type === type)
+    const doc = proofOfFundsData.documents.find((d) => d.type === type)
     if (!doc) return "missing"
     return doc.status
   }
@@ -192,8 +237,12 @@ export default function BuyerProofOfFundsPage() {
     }
   }
 
-  const approvedCount = uploadedDocuments.filter((doc) => doc.status === "approved").length
+  const approvedCount = proofOfFundsData.documents.filter((doc) => doc.status === "approved").length
   const allDocumentsApproved = approvedCount === REQUIRED_DOCUMENTS.length
+  const getRemainingDocuments = () => {
+    const uploadedTypes = proofOfFundsData.documents.map((doc) => doc.type)
+    return REQUIRED_DOCUMENTS.filter((doc) => !uploadedTypes.includes(doc.type))
+  }
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes"
@@ -230,7 +279,7 @@ export default function BuyerProofOfFundsPage() {
                 <div className="space-y-4">
                   {REQUIRED_DOCUMENTS.map((docType) => {
                     const status = getDocumentStatus(docType.type)
-                    const doc = uploadedDocuments.find((d) => d.type === docType.type)
+                    const doc = proofOfFundsData.documents.find((d) => d.type === docType.type)
                     const IconComponent = docType.icon
 
                     return (
@@ -258,90 +307,110 @@ export default function BuyerProofOfFundsPage() {
             </Card>
 
             {/* Upload Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Upload Documents</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="document-type">Document Type</Label>
-                  <Select value={selectedDocumentType} onValueChange={setSelectedDocumentType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select document type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {REQUIRED_DOCUMENTS.map((docType) => (
-                        <SelectItem key={docType.type} value={docType.type}>
-                          {docType.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            {proofOfFundsData.status !== "submitted" && proofOfFundsData.status !== "verified" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Upload Documents</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="document-type">Document Type</Label>
+                    <Select value={selectedDocumentType} onValueChange={setSelectedDocumentType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select document type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getRemainingDocuments().map((docType) => (
+                          <SelectItem key={docType.type} value={docType.type}>
+                            {docType.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div
-                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                    isDragOver
-                      ? "border-primary bg-primary/5"
-                      : "border-muted-foreground/25 hover:border-muted-foreground/50"
-                  }`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  {isUploading ? (
-                    <div className="space-y-2">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-                      <p className="text-sm text-muted-foreground">Uploading document...</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground">
-                        Drag and drop your file here, or{" "}
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="text-primary hover:underline"
-                        >
-                          browse
-                        </button>
+                  <div
+                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                      isDragOver
+                        ? "border-primary bg-primary/5"
+                        : "border-muted-foreground/25 hover:border-muted-foreground/50"
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    {isUploading ? (
+                      <div className="space-y-2">
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                        <p className="text-sm text-muted-foreground">Uploading document...</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">
+                          Drag and drop your file here, or{" "}
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="text-primary hover:underline"
+                          >
+                            browse
+                          </button>
+                        </p>
+                        <p className="text-xs text-muted-foreground">Supports PDF, JPG, PNG files up to 10MB</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => handleFileSelect(e.target.files)}
+                  />
+
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={!selectedDocumentType || isUploading}
+                    className="w-full"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Choose File
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Status Messages */}
+            {proofOfFundsData.status === "submitted" && (
+              <Card className="border-yellow-200 bg-yellow-50">
+                <CardContent className="pt-6">
+                  <div className="flex items-center space-x-3">
+                    <Clock className="h-6 w-6 text-yellow-600" />
+                    <div>
+                      <h3 className="font-semibold text-yellow-900">Documents Under Review</h3>
+                      <p className="text-sm text-yellow-700">
+                        Your proof of funds documents have been submitted and are currently being reviewed by the estate
+                        agent.
                       </p>
-                      <p className="text-xs text-muted-foreground">Supports PDF, JPG, PNG files up to 10MB</p>
                     </div>
-                  )}
-                </div>
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  className="hidden"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={(e) => handleFileSelect(e.target.files)}
-                />
-
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={!selectedDocumentType || isUploading}
-                  className="w-full"
-                >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="mr-2 h-4 w-4" />
-                      Choose File
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Continue Button */}
-            {allDocumentsApproved && (
+            {allDocumentsApproved && proofOfFundsData.status === "verified" && (
               <Card className="border-green-200 bg-green-50">
                 <CardContent className="pt-6">
                   <div className="flex items-center space-x-3 mb-4">
@@ -351,10 +420,8 @@ export default function BuyerProofOfFundsPage() {
                       <p className="text-sm text-green-700">You can now proceed to the next stage</p>
                     </div>
                   </div>
-                  <Link href="/buyer/conveyancers">
-                    <Button className="w-full bg-green-600 hover:bg-green-700">
-                      Continue to Conveyancer Selection
-                    </Button>
+                  <Link href="/buyer/add-conveyancer">
+                    <Button className="w-full bg-green-600 hover:bg-green-700">Add Conveyancer</Button>
                   </Link>
                 </CardContent>
               </Card>
