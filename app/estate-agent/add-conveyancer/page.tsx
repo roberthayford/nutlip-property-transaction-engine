@@ -105,7 +105,7 @@ const mockConveyancers: ConveyancerProfile[] = [
 ]
 
 export default function EstateAgentConveyancersPage() {
-  const { updates } = useRealTime()
+  const { updates, sendUpdate, markAsRead } = useRealTime()
   const [conveyancersStatus, setConveyancersStatus] = useState<"awaiting" | "completed">("awaiting")
   const [conveyancersData, setConveyancersData] = useState<ConveyancersData>({})
   const [searchTerm, setSearchTerm] = useState("")
@@ -179,6 +179,28 @@ export default function EstateAgentConveyancersPage() {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500))
 
+      // Send the request through the real-time system
+      sendUpdate({
+        stage: "add-conveyancer",
+        role: "estate-agent",
+        type: "conveyancer_request",
+        title: `Conveyancer Request - ${requestType}`,
+        description: `Request sent to ${selectedConveyancer.name} to act as ${requestType}'s conveyancer`,
+        data: {
+          conveyancerId: selectedConveyancer.id,
+          conveyancerName: selectedConveyancer.name,
+          conveyancerFirm: selectedConveyancer.firm,
+          conveyancerEmail: selectedConveyancer.email,
+          conveyancerPhone: selectedConveyancer.phone,
+          conveyancerAddress: selectedConveyancer.address,
+          requestType: requestType, // "buyer" or "seller"
+          requestedBy: "estate-agent",
+          requestedTo: `${requestType}-conveyancer`,
+          status: "pending",
+          requestId: crypto.randomUUID(),
+        },
+      })
+
       // Add to requested conveyancers
       setRequestedConveyancers((prev) => new Set([...prev, selectedConveyancer.id]))
 
@@ -200,6 +222,31 @@ export default function EstateAgentConveyancersPage() {
       setRequestingConveyancer(null)
     }
   }
+
+  // Listen for conveyancer acceptances
+  useEffect(() => {
+    const acceptanceUpdate = updates.find(
+      (update) => update.stage === "add-conveyancer" && update.type === "conveyancer_accepted" && !update.read,
+    )
+
+    if (acceptanceUpdate) {
+      const data = acceptanceUpdate.data as any
+      if (data?.requestedBy === "estate-agent") {
+        toast({
+          title: "Conveyancer Accepted!",
+          description: `${data.conveyancerName} has accepted the appointment as ${data.requestType}'s conveyancer. Moving to Draft Contract stage.`,
+        })
+
+        // Mark as read
+        markAsRead(acceptanceUpdate.id)
+
+        // Auto-progress to draft contract stage after a short delay
+        setTimeout(() => {
+          window.location.href = "/estate-agent/draft-contract"
+        }, 2000)
+      }
+    }
+  }, [updates, markAsRead])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-GB", {

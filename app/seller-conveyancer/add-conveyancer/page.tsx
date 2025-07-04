@@ -4,193 +4,161 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { TransactionLayout } from "@/components/transaction-layout"
-import { Phone, Mail, MessageSquare, FileText, Users, Building, Calendar, Send } from "lucide-react"
+import TransactionLayout from "@/components/transaction-layout"
+import { useRealTime } from "@/contexts/real-time-context"
+import {
+  Phone,
+  Mail,
+  Building,
+  Calendar,
+  CheckCircle,
+  Clock,
+  User,
+  AlertCircle,
+  Bell,
+  MapPin,
+  FileText,
+} from "lucide-react"
+import Link from "next/link"
 
-interface ConveyancerInfo {
+interface ConveyancerRequest {
   id: string
-  name: string
-  firm: string
-  email: string
-  phone: string
-  role: "buyer" | "seller"
-  status: "active" | "pending" | "inactive"
-  lastContact: string
-  documentsShared: number
-  pendingActions: number
+  conveyancerId: string
+  conveyancerName: string
+  conveyancerFirm: string
+  conveyancerEmail: string
+  conveyancerPhone: string
+  conveyancerAddress: string
+  requestType: "buyer" | "seller"
+  requestedBy: string
+  requestedTo: string
+  status: "pending" | "accepted" | "declined"
+  requestId: string
+  createdAt: Date
 }
 
-interface CommunicationLog {
-  id: string
-  type: "email" | "phone" | "document"
-  subject: string
-  date: string
-  status: "sent" | "received" | "pending"
-  priority: "low" | "medium" | "high"
-}
-
-export default function SellerConveyancerConveyancersPage() {
+export default function SellerConveyancerAddConveyancerPage() {
   const { toast } = useToast()
-  const [conveyancers, setConveyancers] = useState<ConveyancerInfo[]>([])
-  const [communications, setCommunications] = useState<CommunicationLog[]>([])
-  const [newMessage, setNewMessage] = useState("")
-  const [selectedConveyancer, setSelectedConveyancer] = useState<string>("")
-  const [messageSubject, setMessageSubject] = useState("")
+  const { updates, sendUpdate, markAsRead } = useRealTime()
+  const [incomingRequests, setIncomingRequests] = useState<ConveyancerRequest[]>([])
+  const [acceptingRequest, setAcceptingRequest] = useState<string | null>(null)
+  const [hasAcceptedRequest, setHasAcceptedRequest] = useState(false)
 
+  // Listen for incoming conveyancer requests
   useEffect(() => {
-    // Load conveyancer data from localStorage
-    const savedConveyancers = localStorage.getItem("conveyancers")
-    if (savedConveyancers) {
-      setConveyancers(JSON.parse(savedConveyancers))
-    } else {
-      // Default conveyancer data
-      const defaultConveyancers: ConveyancerInfo[] = [
-        {
-          id: "1",
-          name: "Sarah Johnson",
-          firm: "Johnson & Associates Legal",
-          email: "sarah.johnson@johnsonlegal.co.uk",
-          phone: "+44 20 7123 4567",
-          role: "buyer",
-          status: "active",
-          lastContact: "2024-01-15",
-          documentsShared: 12,
-          pendingActions: 2,
-        },
-        {
-          id: "2",
-          name: "Michael Chen",
-          firm: "Chen Property Law",
-          email: "m.chen@chenproperty.co.uk",
-          phone: "+44 161 234 5678",
-          role: "buyer",
-          status: "active",
-          lastContact: "2024-01-14",
-          documentsShared: 8,
-          pendingActions: 1,
-        },
-      ]
-      setConveyancers(defaultConveyancers)
-      localStorage.setItem("conveyancers", JSON.stringify(defaultConveyancers))
-    }
+    const conveyancerRequests = updates
+      .filter(
+        (update) =>
+          update.stage === "add-conveyancer" &&
+          update.type === "conveyancer_request" &&
+          update.data &&
+          (update.data as any).requestedTo === "seller-conveyancer",
+      )
+      .map((update) => ({
+        id: update.id,
+        ...(update.data as any),
+        createdAt: update.createdAt,
+      })) as ConveyancerRequest[]
 
-    // Load communications data
-    const savedCommunications = localStorage.getItem("conveyancer-communications")
-    if (savedCommunications) {
-      setCommunications(JSON.parse(savedCommunications))
-    } else {
-      const defaultCommunications: CommunicationLog[] = [
-        {
-          id: "1",
-          type: "email",
-          subject: "Contract Draft Review",
-          date: "2024-01-15T10:30:00Z",
-          status: "sent",
-          priority: "high",
-        },
-        {
-          id: "2",
-          type: "document",
-          subject: "Property Information Form",
-          date: "2024-01-14T14:20:00Z",
-          status: "received",
-          priority: "medium",
-        },
-        {
-          id: "3",
-          type: "phone",
-          subject: "Completion Date Discussion",
-          date: "2024-01-13T16:45:00Z",
-          status: "sent",
-          priority: "medium",
-        },
-      ]
-      setCommunications(defaultCommunications)
-      localStorage.setItem("conveyancer-communications", JSON.stringify(defaultCommunications))
-    }
-  }, [])
+    setIncomingRequests(conveyancerRequests)
+  }, [updates])
 
-  const handleSendMessage = () => {
-    if (!selectedConveyancer || !messageSubject || !newMessage) {
+  // Check if we've already accepted a request
+  useEffect(() => {
+    const acceptedRequest = updates.find(
+      (update) =>
+        update.stage === "add-conveyancer" &&
+        update.type === "conveyancer_accepted" &&
+        update.role === "seller-conveyancer",
+    )
+
+    if (acceptedRequest) {
+      setHasAcceptedRequest(true)
+    }
+  }, [updates])
+
+  const handleAcceptRequest = async (request: ConveyancerRequest) => {
+    setAcceptingRequest(request.requestId)
+
+    try {
+      // Simulate processing time
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+
+      // Send acceptance update
+      sendUpdate({
+        stage: "add-conveyancer",
+        role: "seller-conveyancer",
+        type: "conveyancer_accepted",
+        title: "Conveyancer Appointment Accepted",
+        description: `Accepted appointment as ${request.requestType}'s conveyancer`,
+        data: {
+          ...request,
+          acceptedAt: new Date(),
+          status: "accepted",
+        },
+      })
+
+      // Mark the original request as read
+      markAsRead(request.id)
+
+      setHasAcceptedRequest(true)
+
       toast({
-        title: "Missing Information",
-        description: "Please select a conveyancer, add a subject, and write a message.",
+        title: "Request Accepted!",
+        description: `You have accepted the appointment as ${request.requestType}'s conveyancer. The transaction will now proceed to the Draft Contract stage.`,
+      })
+
+      // Auto-redirect to draft contract after a short delay
+      setTimeout(() => {
+        window.location.href = "/seller-conveyancer/draft-contract"
+      }, 2000)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to accept the request. Please try again.",
         variant: "destructive",
       })
-      return
-    }
-
-    const newCommunication: CommunicationLog = {
-      id: Date.now().toString(),
-      type: "email",
-      subject: messageSubject,
-      date: new Date().toISOString(),
-      status: "sent",
-      priority: "medium",
-    }
-
-    const updatedCommunications = [newCommunication, ...communications]
-    setCommunications(updatedCommunications)
-    localStorage.setItem("conveyancer-communications", JSON.stringify(updatedCommunications))
-
-    // Reset form
-    setNewMessage("")
-    setMessageSubject("")
-    setSelectedConveyancer("")
-
-    toast({
-      title: "Message Sent",
-      description: "Your message has been sent successfully.",
-    })
-  }
-
-  const handleCallConveyancer = (conveyancer: ConveyancerInfo) => {
-    toast({
-      title: "Calling Conveyancer",
-      description: `Initiating call to ${conveyancer.name} at ${conveyancer.phone}`,
-    })
-  }
-
-  const handleEmailConveyancer = (conveyancer: ConveyancerInfo) => {
-    setSelectedConveyancer(conveyancer.id)
-    toast({
-      title: "Email Selected",
-      description: `Ready to compose email to ${conveyancer.name}`,
-    })
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800"
-      case "pending":
-        return "bg-yellow-100 text-yellow-800"
-      case "inactive":
-        return "bg-gray-100 text-gray-800"
-      default:
-        return "bg-gray-100 text-gray-800"
+    } finally {
+      setAcceptingRequest(null)
     }
   }
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-100 text-red-800"
-      case "medium":
-        return "bg-yellow-100 text-yellow-800"
-      case "low":
-        return "bg-green-100 text-green-800"
-      default:
-        return "bg-gray-100 text-gray-800"
+  const handleDeclineRequest = async (request: ConveyancerRequest) => {
+    try {
+      // Send decline update
+      sendUpdate({
+        stage: "add-conveyancer",
+        role: "seller-conveyancer",
+        type: "conveyancer_declined",
+        title: "Conveyancer Appointment Declined",
+        description: `Declined appointment as ${request.requestType}'s conveyancer`,
+        data: {
+          ...request,
+          declinedAt: new Date(),
+          status: "declined",
+        },
+      })
+
+      // Mark the original request as read
+      markAsRead(request.id)
+
+      toast({
+        title: "Request Declined",
+        description: "You have declined the conveyancer appointment.",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to decline the request. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-GB", {
+  const formatDate = (dateString: string | Date) => {
+    const date = typeof dateString === "string" ? new Date(dateString) : dateString
+    return date.toLocaleDateString("en-GB", {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -199,222 +167,247 @@ export default function SellerConveyancerConveyancersPage() {
     })
   }
 
+  const pendingRequests = incomingRequests.filter(
+    (req) =>
+      !updates.some(
+        (update) => update.type === "conveyancer_accepted" && (update.data as any)?.requestId === req.requestId,
+      ) &&
+      !updates.some(
+        (update) => update.type === "conveyancer_declined" && (update.data as any)?.requestId === req.requestId,
+      ),
+  )
+
   return (
-    <TransactionLayout>
-      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+    <TransactionLayout currentStage="add-conveyancer" userRole="seller-conveyancer">
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Conveyancers</h1>
-            <p className="text-sm sm:text-base text-gray-600 mt-1">
-              Manage communication with other conveyancers in this transaction
-            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Conveyancer Appointments</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">Manage your conveyancer appointment requests</p>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Users className="h-4 w-4" />
-            <span>{conveyancers.length} Active Conveyancers</span>
+            <Bell className="h-4 w-4" />
+            <span>
+              {pendingRequests.length} Pending Request{pendingRequests.length !== 1 ? "s" : ""}
+            </span>
           </div>
         </div>
 
-        {/* Conveyancers Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          {conveyancers.map((conveyancer) => (
-            <Card key={conveyancer.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg sm:text-xl">{conveyancer.name}</CardTitle>
-                    <CardDescription className="flex items-center gap-1 mt-1">
-                      <Building className="h-3 w-3" />
-                      {conveyancer.firm}
-                    </CardDescription>
-                  </div>
-                  <div className="flex flex-col sm:items-end gap-2">
-                    <Badge className={`text-xs ${getStatusColor(conveyancer.status)}`}>
-                      {conveyancer.status.charAt(0).toUpperCase() + conveyancer.status.slice(1)}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      {conveyancer.role.charAt(0).toUpperCase() + conveyancer.role.slice(1)} Conveyancer
-                    </Badge>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Contact Information */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-gray-400" />
-                    <span className="break-all">{conveyancer.email}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4 text-gray-400" />
-                    <span>{conveyancer.phone}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4 text-gray-400" />
-                    <span>Last contact: {formatDate(conveyancer.lastContact)}</span>
-                  </div>
-                </div>
-
-                {/* Statistics */}
-                <div className="grid grid-cols-2 gap-4 py-3 border-t border-gray-100">
-                  <div className="text-center">
-                    <div className="text-lg sm:text-xl font-semibold text-blue-600">{conveyancer.documentsShared}</div>
-                    <div className="text-xs text-gray-500">Documents Shared</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg sm:text-xl font-semibold text-orange-600">{conveyancer.pendingActions}</div>
-                    <div className="text-xs text-gray-500">Pending Actions</div>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 text-xs sm:text-sm bg-transparent"
-                    onClick={() => handleCallConveyancer(conveyancer)}
-                  >
-                    <Phone className="h-3 w-3 mr-1" />
-                    Call
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 text-xs sm:text-sm bg-transparent"
-                    onClick={() => handleEmailConveyancer(conveyancer)}
-                  >
-                    <Mail className="h-3 w-3 mr-1" />
-                    Email
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1 text-xs sm:text-sm bg-transparent">
-                    <FileText className="h-3 w-3 mr-1" />
-                    Documents
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Communication Section */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
-          {/* Send Message */}
-          <Card>
+        {/* Status Card */}
+        {hasAcceptedRequest ? (
+          <Card className="border-2 border-green-200 bg-green-50">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                <Send className="h-5 w-5" />
-                Send Message
+              <CardTitle className="flex items-center gap-2 text-green-800">
+                <CheckCircle className="h-5 w-5" />
+                Appointment Confirmed
               </CardTitle>
-              <CardDescription>Communicate with other conveyancers in the transaction</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="conveyancer-select" className="text-sm font-medium">
-                  Select Conveyancer
-                </Label>
-                <select
-                  id="conveyancer-select"
-                  value={selectedConveyancer}
-                  onChange={(e) => setSelectedConveyancer(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Choose a conveyancer...</option>
-                  {conveyancers.map((conveyancer) => (
-                    <option key={conveyancer.id} value={conveyancer.id}>
-                      {conveyancer.name} - {conveyancer.firm}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="message-subject" className="text-sm font-medium">
-                  Subject
-                </Label>
-                <Input
-                  id="message-subject"
-                  value={messageSubject}
-                  onChange={(e) => setMessageSubject(e.target.value)}
-                  placeholder="Enter message subject..."
-                  className="text-sm"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="message-content" className="text-sm font-medium">
-                  Message
-                </Label>
-                <Textarea
-                  id="message-content"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type your message here..."
-                  rows={4}
-                  className="text-sm resize-none"
-                />
-              </div>
-
-              <Button
-                onClick={handleSendMessage}
-                className="w-full sm:w-auto"
-                disabled={!selectedConveyancer || !messageSubject || !newMessage}
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Send Message
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Recent Communications */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                <MessageSquare className="h-5 w-5" />
-                Recent Communications
-              </CardTitle>
-              <CardDescription>Latest messages and document exchanges</CardDescription>
+              <CardDescription>
+                You have successfully accepted a conveyancer appointment for this transaction.
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {communications.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                    <p className="text-sm">No communications yet</p>
-                  </div>
-                ) : (
-                  communications.slice(0, 5).map((comm) => (
-                    <div key={comm.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-shrink-0 mt-1">
-                        {comm.type === "email" && <Mail className="h-4 w-4 text-blue-500" />}
-                        {comm.type === "phone" && <Phone className="h-4 w-4 text-green-500" />}
-                        {comm.type === "document" && <FileText className="h-4 w-4 text-purple-500" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                          <p className="text-sm font-medium text-gray-900 truncate">{comm.subject}</p>
-                          <div className="flex items-center gap-2">
-                            <Badge className={`text-xs ${getPriorityColor(comm.priority)}`}>{comm.priority}</Badge>
-                            <Badge variant="outline" className="text-xs">
-                              {comm.status}
-                            </Badge>
-                          </div>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">{formatDate(comm.date)}</p>
-                      </div>
-                    </div>
-                  ))
-                )}
+              <div className="flex justify-center">
+                <Link href="/seller-conveyancer/draft-contract">
+                  <Button size="lg" className="px-8 py-3">
+                    <FileText className="h-5 w-5 mr-2" />
+                    Continue to Draft Contract
+                  </Button>
+                </Link>
               </div>
-              {communications.length > 5 && (
-                <Button variant="outline" size="sm" className="w-full mt-4 bg-transparent">
-                  View All Communications
-                </Button>
-              )}
             </CardContent>
           </Card>
-        </div>
+        ) : pendingRequests.length === 0 ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Waiting for Appointment Requests
+              </CardTitle>
+              <CardDescription>No conveyancer appointment requests have been received yet.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-gray-500">
+                <User className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <p className="text-sm">
+                  When estate agents or clients request your services as a conveyancer, the requests will appear here
+                  for you to accept or decline.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-2 border-blue-200 bg-blue-50/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-blue-800">
+                <Bell className="h-5 w-5" />
+                Incoming Appointment Requests
+                <Badge className="bg-red-100 text-red-800 animate-pulse">{pendingRequests.length} New</Badge>
+              </CardTitle>
+              <CardDescription>Review and respond to conveyancer appointment requests</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {pendingRequests.map((request) => (
+                <div
+                  key={request.requestId}
+                  className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">Conveyancer Appointment Request</h3>
+                        <Badge className="bg-orange-100 text-orange-800">
+                          {request.requestType.charAt(0).toUpperCase() + request.requestType.slice(1)}'s Conveyancer
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          From: {request.requestedBy.replace("-", " ")}
+                        </Badge>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm">
+                            <User className="h-4 w-4 text-gray-400" />
+                            <span className="font-medium">Your Details:</span>
+                          </div>
+                          <div className="ml-6 space-y-1 text-sm text-gray-600">
+                            <div>{request.conveyancerName}</div>
+                            <div className="flex items-center gap-1">
+                              <Building className="h-3 w-3" />
+                              {request.conveyancerFirm}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Mail className="h-3 w-3" />
+                              {request.conveyancerEmail}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Phone className="h-3 w-3" />
+                              {request.conveyancerPhone}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {request.conveyancerAddress}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Calendar className="h-4 w-4 text-gray-400" />
+                            <span className="font-medium">Request Details:</span>
+                          </div>
+                          <div className="ml-6 space-y-1 text-sm text-gray-600">
+                            <div>Received: {formatDate(request.createdAt)}</div>
+                            <div>
+                              Role: {request.requestType.charAt(0).toUpperCase() + request.requestType.slice(1)}'s
+                              Conveyancer
+                            </div>
+                            <div>Requested by: {request.requestedBy.replace("-", " ")}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5" />
+                          <div className="text-sm text-blue-700">
+                            <p className="font-medium mb-1">Appointment Request</p>
+                            <p>
+                              You have been requested to act as the {request.requestType}'s conveyancer for this
+                              property transaction. Accepting this request will add you to the transaction and allow you
+                              to proceed with the legal work.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-4 border-t">
+                    <Button variant="outline" onClick={() => handleDeclineRequest(request)} className="px-6">
+                      Decline
+                    </Button>
+                    <Button
+                      onClick={() => handleAcceptRequest(request)}
+                      disabled={acceptingRequest === request.requestId}
+                      className="px-6 bg-green-600 hover:bg-green-700"
+                    >
+                      {acceptingRequest === request.requestId ? (
+                        <>
+                          <Clock className="h-4 w-4 mr-2 animate-spin" />
+                          Accepting...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Accept Appointment
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Information Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              About Conveyancer Appointments
+            </CardTitle>
+            <CardDescription>Understanding the conveyancer appointment process</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <h4 className="font-medium text-gray-900">Your Responsibilities</h4>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Review and respond to appointment requests promptly</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Ensure you have capacity to handle the transaction</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Confirm your contact details are accurate</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Begin legal work once appointment is confirmed</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="font-medium text-gray-900">Next Steps</h4>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Accept the conveyancer appointment request</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-4 h-4 border-2 border-gray-300 rounded mt-0.5 flex-shrink-0"></div>
+                    <span>Proceed to Draft Contract stage</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-4 h-4 border-2 border-gray-300 rounded mt-0.5 flex-shrink-0"></div>
+                    <span>Begin legal due diligence and contract preparation</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-4 h-4 border-2 border-gray-300 rounded mt-0.5 flex-shrink-0"></div>
+                    <span>Coordinate with other parties in the transaction</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </TransactionLayout>
   )

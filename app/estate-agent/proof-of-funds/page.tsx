@@ -8,7 +8,19 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { TransactionLayout } from "@/components/transaction-layout"
-import { FileText, CheckCircle, Clock, AlertTriangle, Download, Eye, MessageSquare, Phone, Mail } from "lucide-react"
+import {
+  FileText,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  Download,
+  Eye,
+  MessageSquare,
+  Phone,
+  Mail,
+  UserPlus,
+} from "lucide-react"
+import Link from "next/link"
 
 interface UploadedDocument {
   id: string
@@ -213,6 +225,9 @@ export default function EstateAgentProofOfFundsPage() {
     return DOCUMENT_TYPE_LABELS[type] || type
   }
 
+  // Check if funds are verified to enable the Add Conveyancer button
+  const canProceedToAddConveyancer = proofOfFundsData.status === "verified"
+
   return (
     <TransactionLayout currentStage="proof-of-funds" userRole="estate-agent">
       <div className="space-y-6">
@@ -384,6 +399,32 @@ export default function EstateAgentProofOfFundsPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Add Conveyancer Button */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Next Step</CardTitle>
+            <CardDescription>
+              {canProceedToAddConveyancer
+                ? "Funds have been verified. You can now proceed to add conveyancers to the transaction."
+                : "Complete the proof of funds verification to proceed to the next stage."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/estate-agent/add-conveyancer">
+              <Button
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={!canProceedToAddConveyancer}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Conveyancer
+              </Button>
+            </Link>
+            {!canProceedToAddConveyancer && (
+              <p className="text-sm text-gray-500 mt-2 text-center">Please verify all documents before proceeding</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </TransactionLayout>
   )
