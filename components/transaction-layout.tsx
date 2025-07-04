@@ -185,6 +185,19 @@ const getUserName = (userRole: UserRole): string => {
 // Roles that can access the professional messenger chat (conveyancers only)
 const PROFESSIONAL_CHAT_ENABLED_ROLES: UserRole[] = ["buyer-conveyancer", "seller-conveyancer"]
 
+// Stages where estate agents can access the professional messenger chat (from Draft Contract onwards)
+const ESTATE_AGENT_PROFESSIONAL_CHAT_STAGES = [
+  "draft-contract",
+  "search-survey",
+  "enquiries",
+  "mortgage-offer",
+  "completion-date",
+  "contract-exchange",
+  "nutlip-transaction-fee",
+  "replies-to-requisitions",
+  "completion",
+]
+
 // Roles that can access the buyer-estate agent chat
 const BUYER_ESTATE_AGENT_CHAT_ROLES: UserRole[] = ["buyer", "estate-agent"]
 
@@ -226,7 +239,9 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
   }
 
   // Check if current role can access professional messenger chat
-  const canUseProfessionalChat = PROFESSIONAL_CHAT_ENABLED_ROLES.includes(role)
+  const canUseProfessionalChat =
+    PROFESSIONAL_CHAT_ENABLED_ROLES.includes(role) ||
+    (role === "estate-agent" && ESTATE_AGENT_PROFESSIONAL_CHAT_STAGES.includes(currentStageId))
 
   // Check if current role can access buyer-estate agent chat
   const canUseBuyerEstateAgentChat = BUYER_ESTATE_AGENT_CHAT_ROLES.includes(role)
@@ -488,7 +503,7 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
       {/* Main content */}
       <main className="container mx-auto px-4 py-6 md:py-8">{children}</main>
 
-      {/* Professional Messenger Chat - Only for conveyancers */}
+      {/* Professional Messenger Chat - For conveyancers and estate agents (from Draft Contract onwards) */}
       {canUseProfessionalChat && <MessengerChat currentUserRole={role} currentUserName={getUserName(role)} />}
 
       {/* Buyer-Estate Agent Chat - Only for buyer and estate agent in specific stages */}
