@@ -24,7 +24,6 @@ import {
   Building2,
   CreditCard,
   UserPlus,
-  RotateCcw,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -82,16 +81,14 @@ const REQUIRED_DOCUMENTS = [
   },
 ]
 
-const DEFAULT_STATE: ProofOfFundsData = {
-  status: "not-started",
-  documents: [],
-  notes: "",
-  lastUpdated: new Date().toISOString(),
-}
-
 export default function BuyerProofOfFundsPage() {
   const { toast } = useToast()
-  const [proofOfFundsData, setProofOfFundsData] = useState<ProofOfFundsData>(DEFAULT_STATE)
+  const [proofOfFundsData, setProofOfFundsData] = useState<ProofOfFundsData>({
+    status: "not-started",
+    documents: [],
+    notes: "",
+    lastUpdated: new Date().toISOString(),
+  })
 
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>("")
   const [isUploading, setIsUploading] = useState(false)
@@ -135,29 +132,6 @@ export default function BuyerProofOfFundsPage() {
   const saveData = (data: ProofOfFundsData) => {
     localStorage.setItem("proof-of-funds-shared", JSON.stringify(data))
     setProofOfFundsData(data)
-  }
-
-  const handleResetDemo = () => {
-    // Clear localStorage
-    localStorage.removeItem("proof-of-funds-shared")
-
-    // Reset state to default
-    setProofOfFundsData(DEFAULT_STATE)
-    setSelectedDocumentType("")
-
-    // Force a storage event to sync across tabs
-    window.dispatchEvent(
-      new StorageEvent("storage", {
-        key: "proof-of-funds-shared",
-        newValue: null,
-        oldValue: localStorage.getItem("proof-of-funds-shared"),
-      }),
-    )
-
-    toast({
-      title: "Demo Reset",
-      description: "All documents have been cleared and the demo has been reset to default state.",
-    })
   }
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -299,24 +273,13 @@ export default function BuyerProofOfFundsPage() {
             <h1 className="text-3xl font-bold text-gray-900">Proof of Funds</h1>
             <p className="text-gray-600 mt-1">Upload your financial documents to verify your ability to purchase</p>
           </div>
-          <div className="flex items-center gap-3">
-            <Button
-              onClick={handleResetDemo}
-              variant="outline"
-              size="sm"
-              className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 bg-transparent"
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Reset Demo
-            </Button>
-            <Badge className={`${getStatusColor(proofOfFundsData.status)} flex items-center gap-2`}>
-              {getStatusIcon(proofOfFundsData.status)}
-              {proofOfFundsData.status === "not-started" && "Not Started"}
-              {proofOfFundsData.status === "in-progress" && "In Progress"}
-              {proofOfFundsData.status === "submitted" && "Under Review"}
-              {proofOfFundsData.status === "verified" && "Verified"}
-            </Badge>
-          </div>
+          <Badge className={`${getStatusColor(proofOfFundsData.status)} flex items-center gap-2`}>
+            {getStatusIcon(proofOfFundsData.status)}
+            {proofOfFundsData.status === "not-started" && "Not Started"}
+            {proofOfFundsData.status === "in-progress" && "In Progress"}
+            {proofOfFundsData.status === "submitted" && "Under Review"}
+            {proofOfFundsData.status === "verified" && "Verified"}
+          </Badge>
         </div>
 
         {/* Progress Overview */}
