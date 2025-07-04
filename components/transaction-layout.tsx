@@ -41,6 +41,7 @@ import { RealTimeProvider, useRealTime } from "@/contexts/real-time-context"
 import { RealTimeIndicator } from "@/components/real-time-indicator"
 import { StageStatusIndicator } from "@/components/stage-status-indicator"
 import { MessengerChat } from "@/components/messenger-chat"
+import { BuyerEstateAgentChat } from "@/components/buyer-estate-agent-chat"
 import { toast } from "@/hooks/use-toast"
 
 /* -------------------------------------------------------------------------- */
@@ -67,21 +68,21 @@ export const transactionStages: TransactionStage[] = [
     title: "Offer Accepted",
     icon: HandHeart,
     description: "Initial offer acceptance and agreement",
-    allowedRoles: ["buyer", "estate-agent", "buyer-conveyancer", "seller-conveyancer"],
+    allowedRoles: ["buyer", "estate-agent"], // Removed conveyancers
   },
   {
     id: "proof-of-funds",
     title: "Proof of Funds",
     icon: CreditCard,
     description: "Verification of buyer financial capability",
-    allowedRoles: ["buyer", "estate-agent", "buyer-conveyancer", "seller-conveyancer"],
+    allowedRoles: ["buyer", "estate-agent"], // Removed conveyancers
   },
   {
     id: "add-conveyancer",
     title: "Add Conveyancer",
     icon: Users,
     description: "Legal representatives appointment",
-    allowedRoles: ["buyer", "estate-agent", "buyer-conveyancer", "seller-conveyancer"],
+    allowedRoles: ["buyer", "estate-agent"], // Removed conveyancers
   },
   {
     id: "draft-contract",
@@ -181,8 +182,11 @@ const getUserName = (userRole: UserRole): string => {
   }
 }
 
-// Roles that can access the messenger chat (excluding buyer)
-const CHAT_ENABLED_ROLES: UserRole[] = ["estate-agent", "buyer-conveyancer", "seller-conveyancer"]
+// Roles that can access the professional messenger chat (conveyancers only)
+const PROFESSIONAL_CHAT_ENABLED_ROLES: UserRole[] = ["buyer-conveyancer", "seller-conveyancer"]
+
+// Roles that can access the buyer-estate agent chat
+const BUYER_ESTATE_AGENT_CHAT_ROLES: UserRole[] = ["buyer", "estate-agent"]
 
 /* -------------------------------------------------------------------------- */
 /*                              Layout component                              */
@@ -221,8 +225,11 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
     return `/${role}/${stageId}`
   }
 
-  // Check if current role can access messenger chat
-  const canUseChat = CHAT_ENABLED_ROLES.includes(role)
+  // Check if current role can access professional messenger chat
+  const canUseProfessionalChat = PROFESSIONAL_CHAT_ENABLED_ROLES.includes(role)
+
+  // Check if current role can access buyer-estate agent chat
+  const canUseBuyerEstateAgentChat = BUYER_ESTATE_AGENT_CHAT_ROLES.includes(role)
 
   /* ------------------------------------------------------- */
   /*                    Reset functionality                  */
@@ -481,8 +488,17 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
       {/* Main content */}
       <main className="container mx-auto px-4 py-6 md:py-8">{children}</main>
 
-      {/* Messenger Chat - Only for estate agent and conveyancers, NOT for buyer */}
-      {canUseChat && <MessengerChat currentUserRole={role} currentUserName={getUserName(role)} />}
+      {/* Professional Messenger Chat - Only for conveyancers */}
+      {canUseProfessionalChat && <MessengerChat currentUserRole={role} currentUserName={getUserName(role)} />}
+
+      {/* Buyer-Estate Agent Chat - Only for buyer and estate agent in specific stages */}
+      {canUseBuyerEstateAgentChat && (
+        <BuyerEstateAgentChat
+          currentUserRole={role as "buyer" | "estate-agent"}
+          currentUserName={getUserName(role)}
+          currentStage={currentStageId}
+        />
+      )}
     </div>
   )
 }
