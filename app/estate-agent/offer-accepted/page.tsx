@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { HandHeart, Users, Home, CheckCircle, Clock } from "lucide-react"
+import { MessengerChat } from "@/components/messenger-chat"
 import Link from "next/link"
 
 export default function EstateAgentOfferAcceptedPage() {
@@ -113,7 +114,7 @@ export default function EstateAgentOfferAcceptedPage() {
                   <Link href="/estate-agent/proof-of-funds">
                     <Button className="w-full bg-green-600 hover:bg-green-700">Review Proof of Funds</Button>
                   </Link>
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full bg-transparent">
                     Contact Buyer
                   </Button>
                 </div>
@@ -122,6 +123,16 @@ export default function EstateAgentOfferAcceptedPage() {
           </Card>
         </div>
       </div>
+
+      {/* Messenger Chat */}
+      <MessengerChat
+        currentUserRole="estate-agent"
+        currentUserName="Sarah Johnson"
+        otherParticipant={{
+          role: "buyer",
+          name: "John Smith",
+        }}
+      />
     </TransactionLayout>
   )
 }

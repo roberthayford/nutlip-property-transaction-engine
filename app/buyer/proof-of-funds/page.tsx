@@ -2,100 +2,134 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import TransactionLayout from "@/components/transaction-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { CreditCard, Upload, CheckCircle, AlertCircle, FileText, Loader2 } from "lucide-react"
-import { useRealTime } from "@/contexts/real-time-context"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RealTimeActivityFeed } from "@/components/real-time-activity-feed"
-import { useRouter } from "next/navigation"
+import { MessengerChat } from "@/components/messenger-chat"
+import { useRealTime } from "@/contexts/real-time-context"
 import { useToast } from "@/hooks/use-toast"
+import {
+  Upload,
+  FileText,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  DollarSign,
+  CreditCard,
+  Building,
+  Loader2,
+} from "lucide-react"
+import Link from "next/link"
 
-interface Document {
+interface UploadedDocument {
   id: string
   name: string
   type: string
-  status: "uploaded" | "pending" | "approved" | "rejected"
-  uploadDate: string
+  size: number
+  uploadedAt: Date
+  status: "pending" | "approved" | "rejected"
 }
 
-export default function BuyerProofOfFundsPage() {
-  const { sendUpdate } = useRealTime()
-  const router = useRouter()
-  const { toast } = useToast()
+const REQUIRED_DOCUMENTS = [
+  { type: "bank-statement", label: "Bank Statement", icon: Building },
+  { type: "mortgage-agreement", label: "Mortgage Agreement in Principle", icon: FileText },
+  { type: "deposit-proof", label: "Proof of Deposit", icon: CreditCard },
+  { type: "income-proof", label: "Proof of Income", icon: DollarSign },
+]
 
-  const [selectedDocumentType, setSelectedDocumentType] = useState("")
+export default function BuyerProofOfFundsPage() {
+  const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([])
+  const [selectedDocumentType, setSelectedDocumentType] = useState<string>("")
   const [isUploading, setIsUploading] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
-  const [documents, setDocuments] = useState<Document[]>([
-    {
-      id: "1",
-      name: "Bank Statement - January 2024",
-      type: "Bank Statement",
-      status: "approved",
-      uploadDate: "2024-01-15",
-    },
-    {
-      id: "2",
-      name: "Mortgage Agreement in Principle",
-      type: "Mortgage AIP",
-      status: "approved",
-      uploadDate: "2024-01-10",
-    },
-    {
-      id: "3",
-      name: "Proof of Deposit Source",
-      type: "Deposit Proof",
-      status: "pending",
-      uploadDate: "2024-01-20",
-    },
-  ])
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { sendUpdate, addDocument } = useRealTime()
+  const { toast } = useToast()
 
-  const allDocumentsApproved = documents.every((doc) => doc.status === "approved")
-  const requiredDocuments = ["Bank Statement", "Mortgage AIP", "Deposit Proof"]
-  const uploadedTypes = documents.map((doc) => doc.type)
-  const missingDocuments = requiredDocuments.filter((type) => !uploadedTypes.includes(type))
+  const handleFileSelect = (files: FileList | null) => {
+    if (!files || files.length === 0) return
 
-  const handleFileUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0 || !selectedDocumentType) {
+    if (!selectedDocumentType) {
       toast({
-        title: "Upload Error",
-        description: "Please select a document type and choose files to upload.",
+        title: "Document Type Required",
+        description: "Please select a document type before uploading.",
         variant: "destructive",
       })
       return
     }
 
+    const file = files[0]
+    uploadDocument(file)
+  }
+
+  const uploadDocument = async (file: File) => {
     setIsUploading(true)
 
     try {
-      // Simulate file upload
+      // Simulate upload delay
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      const newDocument: Document = {
-        id: Date.now().toString(),
-        name: files[0].name,
+      const newDocument: UploadedDocument = {
+        id: crypto.randomUUID(),
+        name: file.name,
         type: selectedDocumentType,
+        size: file.size,
+        uploadedAt: new Date(),
         status: "pending",
-        uploadDate: new Date().toISOString().split("T")[0],
       }
 
-      setDocuments((prev) => [...prev, newDocument])
+      setUploadedDocuments((prev) => [...prev, newDocument])
 
+      // Add to real-time system
+      addDocument({
+        name: file.name,
+        stage: "proof-of-funds",
+        uploadedBy: "buyer",
+        deliveredTo: "estate-agent",
+        size: file.size,
+        priority: "standard",
+      })
+
+      // Send update
       sendUpdate({
         type: "document_uploaded",
         stage: "proof-of-funds",
         role: "buyer",
         title: "Document Uploaded",
-        description: `${selectedDocumentType} uploaded for review`,
+        description: `${REQUIRED_DOCUMENTS.find((d) => d.type === selectedDocumentType)?.label} uploaded`,
+        data: {
+          documentType: selectedDocumentType,
+          fileName: file.name,
+        },
       })
 
+      // Simulate approval after a delay
+      setTimeout(() => {
+        setUploadedDocuments((prev) =>
+          prev.map((doc) => (doc.id === newDocument.id ? { ...doc, status: "approved" } : doc)),
+        )
+
+        sendUpdate({
+          type: "status_changed",
+          stage: "proof-of-funds",
+          role: "estate-agent",
+          title: "Document Approved",
+          description: `${REQUIRED_DOCUMENTS.find((d) => d.type === selectedDocumentType)?.label} has been approved`,
+          data: {
+            documentId: newDocument.id,
+            documentType: selectedDocumentType,
+          },
+        })
+      }, 3000)
+
       toast({
-        title: "Upload Successful",
-        description: `${selectedDocumentType} has been uploaded and is being reviewed.`,
+        title: "Document Uploaded",
+        description: `${file.name} has been uploaded successfully.`,
       })
 
       setSelectedDocumentType("")
@@ -123,240 +157,226 @@ export default function BuyerProofOfFundsPage() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragOver(false)
-    handleFileUpload(e.dataTransfer.files)
+    handleFileSelect(e.dataTransfer.files)
   }
 
-  const handleContinue = () => {
-    sendUpdate({
-      type: "stage_completed",
-      stage: "proof-of-funds",
-      role: "buyer",
-      title: "Proof of Funds Approved",
-      description: "All documents approved, proceeding to conveyancer selection",
-    })
-
-    toast({
-      title: "Documents Approved!",
-      description: "Proceeding to conveyancer selection.",
-    })
-
-    router.push("/buyer/conveyancers")
+  const getDocumentStatus = (type: string) => {
+    const doc = uploadedDocuments.find((d) => d.type === type)
+    if (!doc) return "missing"
+    return doc.status
   }
 
-  const getStatusBadge = (status: Document["status"]) => {
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "approved":
+        return <CheckCircle className="h-4 w-4 text-green-600" />
+      case "pending":
+        return <Clock className="h-4 w-4 text-yellow-600" />
+      case "rejected":
+        return <AlertCircle className="h-4 w-4 text-red-600" />
+      default:
+        return <Upload className="h-4 w-4 text-gray-400" />
+    }
+  }
+
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
         return <Badge className="bg-green-100 text-green-800">Approved</Badge>
       case "pending":
-        return <Badge className="bg-amber-100 text-amber-800">Under Review</Badge>
+        return <Badge className="bg-yellow-100 text-yellow-800">Pending Review</Badge>
       case "rejected":
         return <Badge className="bg-red-100 text-red-800">Rejected</Badge>
       default:
-        return <Badge className="bg-gray-100 text-gray-800">Uploaded</Badge>
+        return <Badge variant="outline">Not Uploaded</Badge>
     }
   }
 
-  const getStatusIcon = (status: Document["status"]) => {
-    switch (status) {
-      case "approved":
-        return <CheckCircle className="h-5 w-5 text-green-600" />
-      case "pending":
-        return <AlertCircle className="h-5 w-5 text-amber-600" />
-      case "rejected":
-        return <AlertCircle className="h-5 w-5 text-red-600" />
-      default:
-        return <FileText className="h-5 w-5 text-gray-600" />
-    }
+  const approvedCount = uploadedDocuments.filter((doc) => doc.status === "approved").length
+  const allDocumentsApproved = approvedCount === REQUIRED_DOCUMENTS.length
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes"
+    const k = 1024
+    const sizes = ["Bytes", "KB", "MB", "GB"]
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
   }
 
   return (
     <TransactionLayout currentStage="proof-of-funds" userRole="buyer">
       <div className="space-y-6">
         <div className="flex items-center space-x-3">
-          <CreditCard className="h-8 w-8 text-primary" />
+          <FileText className="h-8 w-8 text-primary" />
           <div>
             <h1 className="text-3xl font-bold">Proof of Funds</h1>
-            <p className="text-muted-foreground">Verify your financial capability to complete the purchase.</p>
+            <p className="text-muted-foreground">Upload documents to verify your financial capability</p>
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                Uploaded Documents
-                <Badge variant="outline">
-                  {documents.length} of {requiredDocuments.length}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                {documents.map((doc) => (
-                  <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      {getStatusIcon(doc.status)}
-                      <div>
-                        <div className="font-medium">{doc.name}</div>
-                        <div className="text-sm text-muted-foreground">Uploaded {doc.uploadDate}</div>
-                      </div>
-                    </div>
-                    {getStatusBadge(doc.status)}
-                  </div>
-                ))}
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            {/* Progress Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Document Upload Progress</span>
+                  <Badge variant={allDocumentsApproved ? "default" : "secondary"}>
+                    {approvedCount}/{REQUIRED_DOCUMENTS.length} Approved
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {REQUIRED_DOCUMENTS.map((docType) => {
+                    const status = getDocumentStatus(docType.type)
+                    const doc = uploadedDocuments.find((d) => d.type === docType.type)
+                    const IconComponent = docType.icon
 
-                {missingDocuments.length > 0 && (
-                  <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <h4 className="font-medium text-amber-800 mb-2">Missing Documents:</h4>
-                    <ul className="text-sm text-amber-700 space-y-1">
-                      {missingDocuments.map((doc, index) => (
-                        <li key={index}>• {doc}</li>
+                    return (
+                      <div key={docType.type} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <IconComponent className="h-5 w-5 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">{docType.label}</p>
+                            {doc && (
+                              <p className="text-sm text-muted-foreground">
+                                {doc.name} ({formatFileSize(doc.size)})
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {getStatusIcon(status)}
+                          {getStatusBadge(status)}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Upload Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Upload Documents</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="document-type">Document Type</Label>
+                  <Select value={selectedDocumentType} onValueChange={setSelectedDocumentType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select document type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {REQUIRED_DOCUMENTS.map((docType) => (
+                        <SelectItem key={docType.type} value={docType.type}>
+                          {docType.label}
+                        </SelectItem>
                       ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Upload Documents</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="document-type">Document Type</Label>
-                <select
-                  id="document-type"
-                  className="w-full p-2 border rounded-md"
-                  value={selectedDocumentType}
-                  onChange={(e) => setSelectedDocumentType(e.target.value)}
+                <div
+                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                    isDragOver
+                      ? "border-primary bg-primary/5"
+                      : "border-muted-foreground/25 hover:border-muted-foreground/50"
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
                 >
-                  <option value="">Select document type</option>
-                  <option value="Bank Statement">Bank Statement</option>
-                  <option value="Mortgage AIP">Mortgage Agreement in Principle</option>
-                  <option value="Deposit Proof">Proof of Deposit Source</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              <div
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                  isDragOver ? "border-primary bg-primary/5" : "border-muted"
-                }`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
-                {isUploading ? (
-                  <div className="flex flex-col items-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-                    <p className="text-muted-foreground">Uploading document...</p>
-                  </div>
-                ) : (
-                  <>
-                    <Upload className="h-8 w-8 mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-muted-foreground mb-2">Drag and drop files here, or click to browse</p>
-                    <input
-                      type="file"
-                      id="file-upload"
-                      className="hidden"
-                      onChange={(e) => handleFileUpload(e.target.files)}
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={() => document.getElementById("file-upload")?.click()}
-                      disabled={!selectedDocumentType}
-                    >
-                      Choose Files
-                    </Button>
-                  </>
-                )}
-              </div>
-
-              <Button
-                className="w-full"
-                onClick={() => document.getElementById("file-upload")?.click()}
-                disabled={isUploading || !selectedDocumentType}
-              >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Uploading...
-                  </>
-                ) : (
-                  "Upload Document"
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <RealTimeActivityFeed />
-
-          <Card className="md:col-span-3">
-            <CardHeader>
-              <CardTitle>Financial Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-primary">£450,000</div>
-                  <div className="text-sm text-muted-foreground">Purchase Price</div>
-                </div>
-                <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">£45,000</div>
-                  <div className="text-sm text-muted-foreground">Deposit Required</div>
-                </div>
-                <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">£405,000</div>
-                  <div className="text-sm text-muted-foreground">Mortgage Required</div>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-4 border-t">
-                {allDocumentsApproved ? (
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
-                    <div className="flex items-center space-x-3">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <div>
-                        <h4 className="font-semibold text-green-800">Documents Approved</h4>
-                        <p className="text-sm text-green-700">
-                          All your documents have been reviewed and approved. You can now proceed to select
-                          conveyancers.
-                        </p>
-                      </div>
+                  {isUploading ? (
+                    <div className="space-y-2">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                      <p className="text-sm text-muted-foreground">Uploading document...</p>
                     </div>
-                  </div>
-                ) : (
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-4">
-                    <div className="flex items-center space-x-3">
-                      <AlertCircle className="h-5 w-5 text-amber-600" />
-                      <div>
-                        <h4 className="font-semibold text-amber-800">Awaiting Document Review</h4>
-                        <p className="text-sm text-amber-700">
-                          Your documents are being reviewed. You'll be notified once they're approved.
-                        </p>
-                      </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        Drag and drop your file here, or{" "}
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-primary hover:underline"
+                        >
+                          browse
+                        </button>
+                      </p>
+                      <p className="text-xs text-muted-foreground">Supports PDF, JPG, PNG files up to 10MB</p>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
-                <Button className="w-full" onClick={handleContinue} disabled={!allDocumentsApproved}>
-                  {allDocumentsApproved ? (
-                    "Continue to Conveyancers"
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) => handleFileSelect(e.target.files)}
+                />
+
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={!selectedDocumentType || isUploading}
+                  className="w-full"
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Uploading...
+                    </>
                   ) : (
                     <>
-                      Continue to Conveyancers
-                      <span className="ml-2 text-xs">(Awaiting document approval)</span>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Choose File
                     </>
                   )}
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            {/* Continue Button */}
+            {allDocumentsApproved && (
+              <Card className="border-green-200 bg-green-50">
+                <CardContent className="pt-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <CheckCircle className="h-6 w-6 text-green-600" />
+                    <div>
+                      <h3 className="font-semibold text-green-900">All Documents Approved</h3>
+                      <p className="text-sm text-green-700">You can now proceed to the next stage</p>
+                    </div>
+                  </div>
+                  <Link href="/buyer/conveyancers">
+                    <Button className="w-full bg-green-600 hover:bg-green-700">
+                      Continue to Conveyancer Selection
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Activity Feed */}
+          <div className="space-y-6">
+            <RealTimeActivityFeed />
+          </div>
         </div>
       </div>
+
+      {/* Messenger Chat */}
+      <MessengerChat
+        currentUserRole="buyer"
+        currentUserName="John Smith"
+        otherParticipant={{
+          role: "estate-agent",
+          name: "Sarah Johnson",
+        }}
+      />
     </TransactionLayout>
   )
 }

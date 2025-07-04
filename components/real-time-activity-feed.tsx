@@ -1,61 +1,71 @@
 "use client"
 
-import { useRealTime } from "@/contexts/real-time-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { Activity, Clock, User, FileText, CheckCircle, AlertCircle } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { useRealTime } from "@/contexts/real-time-context"
+import { FileText, CheckCircle, Clock, AlertCircle, Upload, MessageSquare, Calendar } from "lucide-react"
 
-interface ActivityUpdate {
-  id: string
-  type: "document" | "status" | "message" | "system"
-  title: string
-  description: string
-  timestamp: Date | string
-  user?: string
-  status?: "success" | "warning" | "error" | "info"
-}
-
-function formatTimestamp(timestamp: Date | string | undefined): string {
+function formatTimestamp(timestamp: string | Date | undefined): string {
   if (!timestamp) return "-"
 
   try {
     const date = typeof timestamp === "string" ? new Date(timestamp) : timestamp
-    if (!(date instanceof Date) || isNaN(date.getTime())) {
-      return "-"
-    }
-    return date.toLocaleTimeString()
+    if (isNaN(date.getTime())) return "-"
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   } catch {
     return "-"
   }
 }
 
-function getActivityIcon(type: string, status?: string) {
+function getActivityIcon(type: string) {
   switch (type) {
-    case "document":
-      return <FileText className="h-4 w-4" />
-    case "status":
-      if (status === "success") return <CheckCircle className="h-4 w-4 text-green-600" />
-      if (status === "error") return <AlertCircle className="h-4 w-4 text-red-600" />
-      return <Activity className="h-4 w-4" />
-    case "message":
-      return <User className="h-4 w-4" />
+    case "document_uploaded":
+      return <Upload className="h-4 w-4 text-blue-600" />
+    case "status_changed":
+      return <CheckCircle className="h-4 w-4 text-green-600" />
+    case "stage_completed":
+      return <CheckCircle className="h-4 w-4 text-green-600" />
+    case "completion_date_confirmed":
+      return <Calendar className="h-4 w-4 text-green-600" />
+    case "completion_date_rejected":
+      return <AlertCircle className="h-4 w-4 text-red-600" />
+    case "completion_date_proposed":
+      return <Clock className="h-4 w-4 text-yellow-600" />
+    case "contract_exchanged":
+      return <FileText className="h-4 w-4 text-purple-600" />
+    case "amendment_requested":
+      return <MessageSquare className="h-4 w-4 text-orange-600" />
+    case "amendment_replied":
+      return <MessageSquare className="h-4 w-4 text-blue-600" />
     default:
-      return <Activity className="h-4 w-4" />
+      return <Clock className="h-4 w-4 text-gray-600" />
   }
 }
 
-function getStatusBadge(status?: string) {
-  if (!status) return null
-
-  const variants = {
-    success: "bg-green-100 text-green-800",
-    warning: "bg-yellow-100 text-yellow-800",
-    error: "bg-red-100 text-red-800",
-    info: "bg-blue-100 text-blue-800",
+function getActivityBadge(type: string) {
+  switch (type) {
+    case "document_uploaded":
+      return <Badge className="bg-blue-100 text-blue-800">Document</Badge>
+    case "status_changed":
+      return <Badge className="bg-green-100 text-green-800">Status</Badge>
+    case "stage_completed":
+      return <Badge className="bg-green-100 text-green-800">Completed</Badge>
+    case "completion_date_confirmed":
+      return <Badge className="bg-green-100 text-green-800">Confirmed</Badge>
+    case "completion_date_rejected":
+      return <Badge className="bg-red-100 text-red-800">Rejected</Badge>
+    case "completion_date_proposed":
+      return <Badge className="bg-yellow-100 text-yellow-800">Proposed</Badge>
+    case "contract_exchanged":
+      return <Badge className="bg-purple-100 text-purple-800">Exchange</Badge>
+    case "amendment_requested":
+      return <Badge className="bg-orange-100 text-orange-800">Amendment</Badge>
+    case "amendment_replied":
+      return <Badge className="bg-blue-100 text-blue-800">Reply</Badge>
+    default:
+      return <Badge variant="outline">Update</Badge>
   }
-
-  return <Badge className={variants[status as keyof typeof variants] || variants.info}>{status}</Badge>
 }
 
 export function RealTimeActivityFeed() {
@@ -65,35 +75,32 @@ export function RealTimeActivityFeed() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
-          <Activity className="h-5 w-5" />
+          <Clock className="h-5 w-5" />
           <span>Recent Activity</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-64">
+        <ScrollArea className="h-96">
           {updates.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
-              <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>No recent activity</p>
+              <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">No recent activity</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {updates.map((update: ActivityUpdate) => (
-                <div key={update.id} className="flex items-start space-x-3 p-3 rounded-lg bg-muted/50">
-                  <div className="flex-shrink-0 mt-0.5">{getActivityIcon(update.type, update.status)}</div>
+            <div className="space-y-4">
+              {updates.map((update) => (
+                <div key={update.id} className="flex items-start space-x-3 p-3 rounded-lg border">
+                  <div className="flex-shrink-0 mt-0.5">{getActivityIcon(update.type)}</div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium truncate">{update.title}</h4>
-                      <div className="flex items-center space-x-2">
-                        {getStatusBadge(update.status)}
-                        <span className="text-xs text-muted-foreground flex items-center">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {formatTimestamp(update.timestamp)}
-                        </span>
-                      </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-sm font-medium truncate">{update.title}</p>
+                      {getActivityBadge(update.type)}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">{update.description}</p>
-                    {update.user && <p className="text-xs text-muted-foreground mt-1">by {update.user}</p>}
+                    <p className="text-sm text-muted-foreground mb-2">{update.description}</p>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="capitalize">{update.role.replace("-", " ")}</span>
+                      <span>{formatTimestamp(update.createdAt)}</span>
+                    </div>
                   </div>
                 </div>
               ))}

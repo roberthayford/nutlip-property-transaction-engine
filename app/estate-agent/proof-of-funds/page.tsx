@@ -4,408 +4,335 @@ import { useState } from "react"
 import TransactionLayout from "@/components/transaction-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
+import { RealTimeActivityFeed } from "@/components/real-time-activity-feed"
+import { MessengerChat } from "@/components/messenger-chat"
+import { useRealTime } from "@/contexts/real-time-context"
+import { useToast } from "@/hooks/use-toast"
 import {
-  CreditCard,
-  CheckCircle,
-  AlertCircle,
-  Eye,
-  Download,
-  X,
-  Check,
-  Home,
-  PoundSterling,
   FileText,
-  Calendar,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  Download,
+  Eye,
+  ThumbsUp,
+  ThumbsDown,
+  Building,
+  CreditCard,
+  DollarSign,
 } from "lucide-react"
 import Link from "next/link"
-import { useRealTime } from "@/contexts/real-time-context"
+
+interface Document {
+  id: string
+  name: string
+  type: string
+  size: number
+  uploadedAt: Date
+  status: "pending" | "approved" | "rejected"
+  uploadedBy: string
+}
+
+const BUYER_DOCUMENTS: Document[] = [
+  {
+    id: "1",
+    name: "Bank Statement - January 2024.pdf",
+    type: "Bank Statement",
+    size: 2048576,
+    uploadedAt: new Date("2024-01-15"),
+    status: "approved",
+    uploadedBy: "John Smith",
+  },
+  {
+    id: "2",
+    name: "Mortgage Agreement in Principle.pdf",
+    type: "Mortgage AIP",
+    size: 1536000,
+    uploadedAt: new Date("2024-01-10"),
+    status: "approved",
+    uploadedBy: "John Smith",
+  },
+  {
+    id: "3",
+    name: "Proof of Deposit Source.pdf",
+    type: "Deposit Proof",
+    size: 1024000,
+    uploadedAt: new Date("2024-01-20"),
+    status: "pending",
+    uploadedBy: "John Smith",
+  },
+  {
+    id: "4",
+    name: "Payslips - Last 3 Months.pdf",
+    type: "Income Proof",
+    size: 2560000,
+    uploadedAt: new Date("2024-01-18"),
+    status: "pending",
+    uploadedBy: "John Smith",
+  },
+]
 
 export default function EstateAgentProofOfFundsPage() {
+  const [documents, setDocuments] = useState<Document[]>(BUYER_DOCUMENTS)
+  const [selectedDocument, setSelectedDocument] = useState<string | null>(null)
   const { sendUpdate } = useRealTime()
-  const [documentsStatus, setDocumentsStatus] = useState<"pending" | "accepted" | "declined">("pending")
-  const [declineReason, setDeclineReason] = useState("")
-  const [showDeclineForm, setShowDeclineForm] = useState(false)
+  const { toast } = useToast()
 
-  const documents = [
-    {
-      id: "bank-statements",
-      name: "Bank Statements (3 months)",
-      status: "uploaded",
-      uploadDate: "2024-03-10",
-      fileName: "bank_statements_jan_mar_2024.pdf",
-      size: "2.4 MB",
-    },
-    {
-      id: "mortgage-aip",
-      name: "Mortgage Agreement in Principle",
-      status: "uploaded",
-      uploadDate: "2024-03-12",
-      fileName: "mortgage_aip_first_national.pdf",
-      size: "1.2 MB",
-    },
-    {
-      id: "deposit-source",
-      name: "Proof of Deposit Source",
-      status: "uploaded",
-      uploadDate: "2024-03-11",
-      fileName: "savings_account_statement.pdf",
-      size: "1.8 MB",
-    },
-  ]
+  const handleApproveDocument = (documentId: string) => {
+    const document = documents.find((doc) => doc.id === documentId)
+    if (!document) return
 
-  const handleAcceptDocuments = () => {
-    setDocumentsStatus("accepted")
-    setShowDeclineForm(false)
-    setDeclineReason("")
+    setDocuments((prev) => prev.map((doc) => (doc.id === documentId ? { ...doc, status: "approved" } : doc)))
 
     sendUpdate({
       type: "status_changed",
       stage: "proof-of-funds",
       role: "estate-agent",
-      title: "Proof of Funds Approved",
-      description: "Estate agent has approved all buyer documentation",
+      title: "Document Approved",
+      description: `${document.name} has been approved`,
+      data: {
+        documentId,
+        documentName: document.name,
+        action: "approved",
+      },
+    })
+
+    toast({
+      title: "Document Approved",
+      description: `${document.name} has been approved successfully.`,
     })
   }
 
-  const handleDeclineDocuments = () => {
-    if (declineReason.trim()) {
-      setDocumentsStatus("declined")
-      setShowDeclineForm(false)
+  const handleRejectDocument = (documentId: string) => {
+    const document = documents.find((doc) => doc.id === documentId)
+    if (!document) return
 
-      sendUpdate({
-        type: "status_changed",
-        stage: "proof-of-funds",
-        role: "estate-agent",
-        title: "Documents Declined",
-        description: `Documents declined: ${declineReason}`,
-      })
-    } else {
-      setShowDeclineForm(true)
+    setDocuments((prev) => prev.map((doc) => (doc.id === documentId ? { ...doc, status: "rejected" } : doc)))
+
+    sendUpdate({
+      type: "status_changed",
+      stage: "proof-of-funds",
+      role: "estate-agent",
+      title: "Document Rejected",
+      description: `${document.name} has been rejected`,
+      data: {
+        documentId,
+        documentName: document.name,
+        action: "rejected",
+      },
+    })
+
+    toast({
+      title: "Document Rejected",
+      description: `${document.name} has been rejected. The buyer will be notified.`,
+      variant: "destructive",
+    })
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes"
+    const k = 1024
+    const sizes = ["Bytes", "KB", "MB", "GB"]
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+  }
+
+  const getStatusIcon = (status: Document["status"]) => {
+    switch (status) {
+      case "approved":
+        return <CheckCircle className="h-5 w-5 text-green-600" />
+      case "pending":
+        return <Clock className="h-5 w-5 text-amber-600" />
+      case "rejected":
+        return <AlertCircle className="h-5 w-5 text-red-600" />
     }
   }
 
-  const handleCancelDecline = () => {
-    setShowDeclineForm(false)
-    setDeclineReason("")
+  const getStatusBadge = (status: Document["status"]) => {
+    switch (status) {
+      case "approved":
+        return <Badge className="bg-green-100 text-green-800">Approved</Badge>
+      case "pending":
+        return <Badge className="bg-amber-100 text-amber-800">Pending Review</Badge>
+      case "rejected":
+        return <Badge className="bg-red-100 text-red-800">Rejected</Badge>
+    }
   }
 
-  const canProceed = documentsStatus === "accepted"
+  const getDocumentIcon = (type: string) => {
+    switch (type) {
+      case "Bank Statement":
+        return <Building className="h-5 w-5 text-blue-600" />
+      case "Mortgage AIP":
+        return <FileText className="h-5 w-5 text-green-600" />
+      case "Deposit Proof":
+        return <CreditCard className="h-5 w-5 text-purple-600" />
+      case "Income Proof":
+        return <DollarSign className="h-5 w-5 text-orange-600" />
+      default:
+        return <FileText className="h-5 w-5 text-gray-600" />
+    }
+  }
+
+  const approvedCount = documents.filter((doc) => doc.status === "approved").length
+  const pendingCount = documents.filter((doc) => doc.status === "pending").length
+  const rejectedCount = documents.filter((doc) => doc.status === "rejected").length
+  const allDocumentsReviewed = pendingCount === 0
 
   return (
     <TransactionLayout currentStage="proof-of-funds" userRole="estate-agent">
       <div className="space-y-6">
         <div className="flex items-center space-x-3">
-          <CreditCard className="h-8 w-8 text-primary" />
+          <FileText className="h-8 w-8 text-primary" />
           <div>
-            <h1 className="text-3xl font-bold">Proof of Funds Review</h1>
-            <p className="text-muted-foreground">Review and approve the buyer's financial documentation to proceed.</p>
+            <h1 className="text-3xl font-bold">Review Proof of Funds</h1>
+            <p className="text-muted-foreground">Review and approve the buyer's financial documents</p>
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Home className="h-5 w-5" />
-                <span>Property Details</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h3 className="font-semibold">123 Example Street</h3>
-                <p className="text-muted-foreground">London, SW1A 1AA</p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <Badge variant="secondary">3 Bed</Badge>
-                <Badge variant="secondary">2 Bath</Badge>
-                <Badge variant="secondary">Garden</Badge>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            {/* Summary Cards */}
+            <div className="grid gap-4 md:grid-cols-4">
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-green-600">{approvedCount}</div>
+                  <div className="text-sm text-muted-foreground">Approved</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-amber-600">{pendingCount}</div>
+                  <div className="text-sm text-muted-foreground">Pending</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-red-600">{rejectedCount}</div>
+                  <div className="text-sm text-muted-foreground">Rejected</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-primary">{documents.length}</div>
+                  <div className="text-sm text-muted-foreground">Total</div>
+                </CardContent>
+              </Card>
+            </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <PoundSterling className="h-5 w-5" />
-                <span>Offer Details</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span>Accepted Offer Amount:</span>
-                <span className="font-semibold">£450,000</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Nutlip Transaction Fee (0.5%):</span>
-                <span className="font-semibold">£2,250</span>
-              </div>
-              <div className="flex justify-between border-t pt-2">
-                <span className="font-medium">Balance to Seller:</span>
-                <span className="font-bold text-green-600">£447,750</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>Document Review Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {documentsStatus === "accepted" && (
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <CheckCircle className="h-6 w-6 text-green-600" />
-                      <div>
-                        <h4 className="font-semibold text-green-800">Documents Accepted</h4>
-                        <p className="text-sm text-green-700">
-                          You have accepted all buyer documentation. The transaction can proceed to the conveyancers
-                          stage.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {documentsStatus === "declined" && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <X className="h-6 w-6 text-red-600" />
-                      <div>
-                        <h4 className="font-semibold text-red-800">Documents Declined</h4>
-                        <p className="text-sm text-red-700">
-                          You have declined the buyer documentation. The buyer will need to resubmit.
-                        </p>
-                        {declineReason && (
-                          <div className="mt-2 p-2 bg-red-100 rounded text-sm">
-                            <strong>Reason:</strong> {declineReason}
+            {/* Documents List */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Buyer Documents</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {documents.map((document) => (
+                    <div
+                      key={document.id}
+                      className={`p-4 border rounded-lg transition-all ${
+                        selectedDocument === document.id ? "border-primary bg-primary/5" : "hover:shadow-sm"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start space-x-3 flex-1">
+                          {getDocumentIcon(document.type)}
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <h4 className="font-medium">{document.name}</h4>
+                              {getStatusIcon(document.status)}
+                            </div>
+                            <div className="text-sm text-muted-foreground space-y-1">
+                              <p>Type: {document.type}</p>
+                              <p>Size: {formatFileSize(document.size)}</p>
+                              <p>Uploaded: {document.uploadedAt.toLocaleDateString()}</p>
+                              <p>By: {document.uploadedBy}</p>
+                            </div>
                           </div>
+                        </div>
+                        <div className="flex items-center space-x-2">{getStatusBadge(document.status)}</div>
+                      </div>
+
+                      <div className="flex items-center space-x-2 mt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedDocument(document.id)}
+                          className="flex items-center space-x-1"
+                        >
+                          <Eye className="h-4 w-4" />
+                          <span>View</span>
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex items-center space-x-1 bg-transparent">
+                          <Download className="h-4 w-4" />
+                          <span>Download</span>
+                        </Button>
+                        {document.status === "pending" && (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => handleApproveDocument(document.id)}
+                              className="bg-green-600 hover:bg-green-700 text-white flex items-center space-x-1"
+                            >
+                              <ThumbsUp className="h-4 w-4" />
+                              <span>Approve</span>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleRejectDocument(document.id)}
+                              className="flex items-center space-x-1"
+                            >
+                              <ThumbsDown className="h-4 w-4" />
+                              <span>Reject</span>
+                            </Button>
+                          </>
                         )}
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {documentsStatus === "pending" && (
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <AlertCircle className="h-6 w-6 text-amber-600" />
-                      <div>
-                        <h4 className="font-semibold text-amber-800">Review Required</h4>
-                        <p className="text-sm text-amber-700">
-                          Please review all submitted documents and make a decision to proceed.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <FileText className="h-5 w-5" />
-                <span>Submitted Documents</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {documents.map((document) => (
-                  <div
-                    key={document.id}
-                    className={`p-4 border rounded-lg ${
-                      documentsStatus === "accepted"
-                        ? "bg-green-50 border-green-200"
-                        : documentsStatus === "declined"
-                          ? "bg-red-50 border-red-200"
-                          : "bg-white"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          {documentsStatus === "accepted" ? (
-                            <CheckCircle className="h-5 w-5 text-green-600" />
-                          ) : documentsStatus === "declined" ? (
-                            <X className="h-5 w-5 text-red-600" />
-                          ) : (
-                            <AlertCircle className="h-5 w-5 text-amber-600" />
-                          )}
-                          <span className="font-medium">{document.name}</span>
-                          {documentsStatus === "accepted" ? (
-                            <Badge className="bg-green-100 text-green-800">Accepted</Badge>
-                          ) : documentsStatus === "declined" ? (
-                            <Badge className="bg-red-100 text-red-800">Declined</Badge>
-                          ) : (
-                            <Badge className="bg-amber-100 text-amber-800">Pending Review</Badge>
-                          )}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          <p>File: {document.fileName}</p>
-                          <p>
-                            Size: {document.size} • Uploaded: {document.uploadDate}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex space-x-2 ml-4">
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {documentsStatus === "pending" && (
-            <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle>Review Decision</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {!showDeclineForm ? (
-                  <div className="flex space-x-4">
-                    <Button
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                      onClick={handleAcceptDocuments}
-                      size="lg"
-                    >
-                      <Check className="h-5 w-5 mr-2" />
-                      Accept All Documents
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1 border-red-300 text-red-700 hover:bg-red-50 bg-transparent"
-                      onClick={handleDeclineDocuments}
-                      size="lg"
-                    >
-                      <X className="h-5 w-5 mr-2" />
-                      Decline Documents
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="decline-reason">Reason for Declining (Required)</Label>
-                      <Textarea
-                        id="decline-reason"
-                        placeholder="Please provide a detailed reason for declining the documents..."
-                        value={declineReason}
-                        onChange={(e) => setDeclineReason(e.target.value)}
-                        className="min-h-[100px]"
-                      />
-                    </div>
-                    <div className="flex space-x-3">
-                      <Button
-                        className="flex-1 bg-red-600 hover:bg-red-700"
-                        onClick={handleDeclineDocuments}
-                        disabled={!declineReason.trim()}
-                      >
-                        Confirm Decline
-                      </Button>
-                      <Button variant="outline" className="flex-1 bg-transparent" onClick={handleCancelDecline}>
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                  ))}
+                </div>
               </CardContent>
             </Card>
-          )}
 
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5" />
-                <span>Next Steps</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {canProceed ? (
-                <div className="space-y-4">
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <CheckCircle className="h-6 w-6 text-green-600" />
-                      <div>
-                        <h4 className="font-semibold text-green-800">Ready to Proceed</h4>
-                        <p className="text-sm text-green-700">
-                          All documents have been approved. The transaction can now move to the conveyancers stage.
-                        </p>
-                      </div>
+            {/* Continue Button */}
+            {allDocumentsReviewed && approvedCount > 0 && (
+              <Card className="border-green-200 bg-green-50">
+                <CardContent className="pt-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <CheckCircle className="h-6 w-6 text-green-600" />
+                    <div>
+                      <h3 className="font-semibold text-green-900">Documents Reviewed</h3>
+                      <p className="text-sm text-green-700">
+                        All documents have been reviewed. The buyer can proceed to conveyancer selection.
+                      </p>
                     </div>
                   </div>
                   <Link href="/estate-agent/conveyancers">
-                    <Button className="w-full" size="lg">
-                      <CheckCircle className="h-5 w-5 mr-2" />
-                      Continue to Conveyancers
-                    </Button>
+                    <Button className="w-full bg-green-600 hover:bg-green-700">Continue to Conveyancer Stage</Button>
                   </Link>
-                </div>
-              ) : documentsStatus === "declined" ? (
-                <div className="space-y-4">
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <X className="h-6 w-6 text-red-600" />
-                      <div>
-                        <h4 className="font-semibold text-red-800">Documents Declined</h4>
-                        <p className="text-sm text-red-700">
-                          The buyer will be notified to resubmit their documentation.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <Button className="w-full" disabled size="lg">
-                    Continue to Conveyancers
-                    <span className="ml-2 text-xs">(Awaiting document resubmission)</span>
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="space-y-4">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
-                      <div>
-                        <h4 className="font-semibold">Review Documents</h4>
-                        <p className="text-muted-foreground text-sm">
-                          Carefully review all submitted proof of funds documentation
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-2 h-2 bg-muted rounded-full mt-2"></div>
-                      <div>
-                        <h4 className="font-semibold">Make Decision</h4>
-                        <p className="text-muted-foreground text-sm">Accept or decline the documentation</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-2 h-2 bg-muted rounded-full mt-2"></div>
-                      <div>
-                        <h4 className="font-semibold">Proceed to Conveyancers</h4>
-                        <p className="text-muted-foreground text-sm">Move to the next stage once approved</p>
-                      </div>
-                    </div>
-                  </div>
-                  <Button className="w-full" disabled size="lg">
-                    Continue to Conveyancers
-                    <span className="ml-2 text-xs">(Review documents first)</span>
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Activity Feed */}
+          <div className="space-y-6">
+            <RealTimeActivityFeed />
+          </div>
         </div>
       </div>
+
+      {/* Messenger Chat */}
+      <MessengerChat
+        currentUserRole="estate-agent"
+        currentUserName="Sarah Johnson"
+        otherParticipant={{
+          role: "buyer",
+          name: "John Smith",
+        }}
+      />
     </TransactionLayout>
   )
 }
