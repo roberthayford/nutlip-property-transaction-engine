@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CreditCard, Upload, CheckCircle, AlertCircle, FileText, RotateCcw } from "lucide-react"
+import { CreditCard, Upload, CheckCircle, AlertCircle, FileText, RotateCcw, Send } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 
 interface DocumentStatus {
@@ -25,6 +25,7 @@ interface DocumentStatus {
 interface ProofOfFundsState {
   documents: DocumentStatus[]
   overallStatus: "not-started" | "in-progress" | "completed" | "approved"
+  sentToEstateAgent: boolean
 }
 
 const DEFAULT_STATE: ProofOfFundsState = {
@@ -34,15 +35,18 @@ const DEFAULT_STATE: ProofOfFundsState = {
     { type: "mortgage-agreement", label: "Mortgage Agreement in Principle", status: "not-uploaded" },
   ],
   overallStatus: "not-started",
+  sentToEstateAgent: false,
 }
 
 const STORAGE_KEY = "nutlip-buyer-proof-of-funds"
+const SHARED_STORAGE_KEY = "proof-of-funds-shared"
 
 export default function BuyerProofOfFundsPage() {
   const [state, setState] = useState<ProofOfFundsState>(DEFAULT_STATE)
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>("")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [isSending, setIsSending] = useState(false)
 
   // Load state from localStorage on mount
   useEffect(() => {
@@ -59,8 +63,6 @@ export default function BuyerProofOfFundsPage() {
   // Save state to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-    // Trigger storage event for cross-tab sync
-    window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY, newValue: JSON.stringify(state) }))
   }, [state])
 
   // Listen for storage changes from other tabs
@@ -68,7 +70,11 @@ export default function BuyerProofOfFundsPage() {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY && e.newValue) {
         try {
-          setState(JSON.parse(e.newValue))
+          const incoming = JSON.parse(e.newValue) as ProofOfFundsState
+          // avoid infinite loop: only update if different
+          if (JSON.stringify(incoming) !== JSON.stringify(state)) {
+            setState(incoming)
+          }
         } catch (error) {
           console.error("Error parsing storage event:", error)
         }
@@ -77,19 +83,17 @@ export default function BuyerProofOfFundsPage() {
 
     window.addEventListener("storage", handleStorageChange)
     return () => window.removeEventListener("storage", handleStorageChange)
-  }, [])
+  }, [state])
 
   const handleResetDemo = () => {
     // Clear localStorage
     localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(SHARED_STORAGE_KEY)
 
     // Reset component state
     setState(DEFAULT_STATE)
     setSelectedDocumentType("")
     setSelectedFile(null)
-
-    // Force storage event for cross-tab sync
-    window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY, newValue: JSON.stringify(DEFAULT_STATE) }))
 
     toast({
       title: "Demo Reset Complete",
@@ -137,6 +141,7 @@ export default function BuyerProofOfFundsPage() {
         uploadedCount === 0 ? "not-started" : uploadedCount === updatedDocuments.length ? "completed" : "in-progress"
 
       return {
+        ...prev,
         documents: updatedDocuments,
         overallStatus,
       }
@@ -149,6 +154,55 @@ export default function BuyerProofOfFundsPage() {
     toast({
       title: "Upload Successful",
       description: `${selectedFile.name} has been uploaded successfully.`,
+    })
+  }
+
+  const handleSendToEstateAgent = async () => {
+    if (state.documents.filter((doc) => doc.status === "uploaded").length === 0) {
+      toast({
+        title: "No Documents to Send",
+        description: "Please upload at least one document before sending to the estate agent.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsSending(true)
+
+    // Simulate sending delay
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+
+    // Prepare data for estate agent
+    const estateAgentData = {
+      status: "submitted",
+      documents: state.documents
+        .filter((doc) => doc.status === "uploaded")
+        .map((doc) => ({
+          id: crypto.randomUUID(),
+          name: doc.fileName || `${doc.label}.pdf`,
+          type: doc.type,
+          size: Math.floor(Math.random() * 1000000) + 100000, // Random file size
+          uploadedAt: new Date(doc.uploadedAt || new Date()),
+          status: "pending",
+        })),
+      notes: "",
+      lastUpdated: new Date().toISOString(),
+    }
+
+    // Save to shared storage for estate agent
+    localStorage.setItem(SHARED_STORAGE_KEY, JSON.stringify(estateAgentData))
+
+    // Update buyer state
+    setState((prev) => ({
+      ...prev,
+      sentToEstateAgent: true,
+    }))
+
+    setIsSending(false)
+
+    toast({
+      title: "Documents Sent Successfully",
+      description: "Your proof of funds documents have been sent to the estate agent for review.",
     })
   }
 
@@ -183,6 +237,7 @@ export default function BuyerProofOfFundsPage() {
   const progressPercentage = (uploadedCount / totalCount) * 100
 
   const availableDocumentTypes = state.documents.filter((doc) => doc.status === "not-uploaded")
+  const hasUploadedDocuments = state.documents.some((doc) => doc.status === "uploaded")
 
   return (
     <TransactionLayout currentStage="proof-of-funds" userRole="buyer">
@@ -314,6 +369,51 @@ export default function BuyerProofOfFundsPage() {
           </Card>
         </div>
 
+        {/* Send to Estate Agent Section */}
+        {hasUploadedDocuments && (
+          <Card className="border-blue-200 bg-blue-50">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Send className="h-5 w-5 text-blue-600" />
+                <span>Send Documents for Review</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!state.sentToEstateAgent ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-blue-700">
+                    You have uploaded {uploadedCount} document{uploadedCount !== 1 ? "s" : ""}. Send them to your estate
+                    agent for review and approval.
+                  </p>
+                  <Button
+                    onClick={handleSendToEstateAgent}
+                    disabled={isSending}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                  >
+                    {isSending ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Sending Documents...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Send Documents to Estate Agent
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                  <p className="text-green-800 font-medium">Documents Sent Successfully!</p>
+                  <p className="text-green-600 text-sm">Your estate agent will review and approve your documents.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle>Next Steps</CardTitle>
@@ -325,7 +425,9 @@ export default function BuyerProofOfFundsPage() {
                   <CheckCircle className="h-5 w-5 text-blue-600" />
                   <span className="font-medium">Estate Agent Review</span>
                 </div>
-                <Badge className="bg-blue-100 text-blue-800">Pending</Badge>
+                <Badge className={state.sentToEstateAgent ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-800"}>
+                  {state.sentToEstateAgent ? "Submitted" : "Pending"}
+                </Badge>
               </div>
 
               <div className="flex items-center justify-between p-3 border rounded-lg">
@@ -341,7 +443,7 @@ export default function BuyerProofOfFundsPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 Once all documents are uploaded and approved, you can proceed to select your conveyancer.
               </p>
-              <Button disabled={state.overallStatus !== "completed"} className="w-full bg-green-600 hover:bg-green-700">
+              <Button disabled={!state.sentToEstateAgent} className="w-full bg-green-600 hover:bg-green-700">
                 Continue to Add Conveyancer
               </Button>
             </div>
