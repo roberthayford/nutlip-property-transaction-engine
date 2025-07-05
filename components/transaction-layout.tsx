@@ -251,15 +251,44 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
   /* ------------------------------------------------------- */
   const { sendUpdate } = useRealTime()
 
-  const handleReset = () => {
+  const clearBrowserCache = async () => {
+    try {
+      // Clear service worker caches if available
+      if ("caches" in window) {
+        const cacheNames = await caches.keys()
+        await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)))
+      }
+    } catch (error) {
+      console.error("Error clearing caches:", error)
+    }
+  }
+
+  const clearBrowserHistory = () => {
+    try {
+      // Clear browser history by replacing current state
+      if (window.history && window.history.replaceState) {
+        // Replace current history entry
+        window.history.replaceState(null, "", window.location.pathname)
+
+        // Clear any stored history state
+        if (window.history.state) {
+          window.history.replaceState(null, "", window.location.pathname)
+        }
+      }
+    } catch (error) {
+      console.error("Error clearing history:", error)
+    }
+  }
+
+  const handleReset = async () => {
     // Show loading state
     toast({
       title: "Resetting Demo...",
-      description: "Clearing all data and resetting to default state.",
+      description: "Clearing all data, cache, and history. This may take a moment.",
     })
 
-    // Clear all localStorage items
     try {
+      // Clear all localStorage items related to property transaction engine
       const allKeys = Object.keys(localStorage)
       allKeys.forEach((key) => {
         if (
@@ -270,13 +299,14 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
           key.includes("seller") ||
           key.includes("conveyancer") ||
           key.includes("estate-agent") ||
-          key.includes("chat")
+          key.includes("chat") ||
+          key.includes("proof-of-funds")
         ) {
           localStorage.removeItem(key)
         }
       })
 
-      // Clear sessionStorage
+      // Clear sessionStorage related to property transaction engine
       const sessionKeys = Object.keys(sessionStorage)
       sessionKeys.forEach((key) => {
         if (
@@ -287,11 +317,43 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
           key.includes("seller") ||
           key.includes("conveyancer") ||
           key.includes("estate-agent") ||
-          key.includes("chat")
+          key.includes("chat") ||
+          key.includes("proof-of-funds")
         ) {
           sessionStorage.removeItem(key)
         }
       })
+
+      // Clear browser cache
+      await clearBrowserCache()
+
+      // Clear browser history
+      clearBrowserHistory()
+
+      // Clear any IndexedDB databases related to the property transaction engine
+      if ("indexedDB" in window) {
+        try {
+          // List of potential database names to clear
+          const dbNames = ["nutlip-db", "property-transaction-db", "pte-db"]
+          for (const dbName of dbNames) {
+            indexedDB.deleteDatabase(dbName)
+          }
+        } catch (error) {
+          console.error("Error clearing IndexedDB:", error)
+        }
+      }
+
+      // Clear any cookies related to the property transaction engine
+      if (document.cookie) {
+        const cookies = document.cookie.split(";")
+        cookies.forEach((cookie) => {
+          const eqPos = cookie.indexOf("=")
+          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim()
+          if (name.includes("nutlip") || name.includes("pte") || name.includes("transaction")) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
+          }
+        })
+      }
     } catch (error) {
       console.error("Error during cleanup:", error)
     }
@@ -301,7 +363,7 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
       toast({
         title: "Demo Reset Complete",
         description:
-          "All transaction data, cache, and storage have been cleared. The platform has been reset to default state.",
+          "All Property Transaction Engine data, cache, history, and storage have been cleared. The platform has been reset to default state.",
       })
     }, 500)
 
@@ -366,18 +428,18 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Reset Demo to Default</AlertDialogTitle>
+                          <AlertDialogTitle>Reset Property Transaction Engine</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This will reset the entire platform to its default state. All transaction progress,
-                            documents, proposals, updates, and stage completions will be cleared. The demo will return
-                            to the initial "Proof of Funds" stage with all other stages set to pending. This action
-                            cannot be undone.
+                            This will completely reset the Property Transaction Engine to its default state. All
+                            transaction progress, documents, proposals, updates, stage completions, browser cache, and
+                            history will be cleared. The demo will return to the initial state with all stages set to
+                            pending. This action cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction onClick={handleReset} className="bg-red-600 hover:bg-red-700">
-                            Reset to Default
+                            Reset Everything
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
@@ -417,17 +479,18 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Reset Demo to Default</AlertDialogTitle>
+                      <AlertDialogTitle>Reset Property Transaction Engine</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This will reset the entire platform to its default state. All transaction progress, documents,
-                        proposals, updates, and stage completions will be cleared. The demo will return to the initial
-                        "Proof of Funds" stage with all other stages set to pending. This action cannot be undone.
+                        This will completely reset the Property Transaction Engine to its default state. All transaction
+                        progress, documents, proposals, updates, stage completions, browser cache, and history will be
+                        cleared. The demo will return to the initial state with all stages set to pending. This action
+                        cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction onClick={handleReset} className="bg-red-600 hover:bg-red-700">
-                        Reset to Default
+                        Reset Everything
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
