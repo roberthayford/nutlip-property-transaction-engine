@@ -3,124 +3,75 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import TransactionLayout from "@/components/transaction-layout"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Progress } from "@/components/ui/progress"
-import { useToast } from "@/hooks/use-toast"
-import { TransactionLayout } from "@/components/transaction-layout"
-import {
-  FileText,
-  Upload,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  X,
-  Eye,
-  Download,
-  Building2,
-  CreditCard,
-  UserPlus,
-} from "lucide-react"
-import Link from "next/link"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { CreditCard, Upload, CheckCircle, AlertCircle, FileText, RotateCcw } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
 
-// Custom Pound Sign Icon Component
-const PoundSignIcon = ({ className }: { className?: string }) => (
-  <svg
-    className={className}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M6 11h8" />
-    <path d="M6 15h8" />
-    <path d="M16 4v8a4 4 0 0 1-8 0V4" />
-  </svg>
-)
-
-interface UploadedDocument {
-  id: string
-  name: string
+interface DocumentStatus {
   type: string
-  size: number
-  uploadedAt: Date
-  status: "pending" | "approved" | "rejected"
+  label: string
+  status: "not-uploaded" | "uploaded" | "approved" | "rejected"
+  uploadedAt?: string
+  fileName?: string
 }
 
-interface ProofOfFundsData {
-  status: "not-started" | "in-progress" | "submitted" | "verified"
-  documents: UploadedDocument[]
-  notes: string
-  lastUpdated: string
+interface ProofOfFundsState {
+  documents: DocumentStatus[]
+  overallStatus: "not-started" | "in-progress" | "completed" | "approved"
 }
 
-const REQUIRED_DOCUMENTS = [
-  {
-    id: "bank-statement",
-    name: "Bank Statement",
-    icon: Building2,
-    description: "Recent bank statement showing available funds",
-  },
-  {
-    id: "mortgage-agreement",
-    name: "Mortgage Agreement in Principle",
-    icon: CreditCard,
-    description: "Pre-approved mortgage agreement from your lender",
-  },
-  {
-    id: "income-proof",
-    name: "Proof of Income",
-    icon: PoundSignIcon,
-    description: "Salary slips, tax returns, or employment letter",
-  },
-]
+const DEFAULT_STATE: ProofOfFundsState = {
+  documents: [
+    { type: "bank-statement", label: "Bank Statement", status: "not-uploaded" },
+    { type: "proof-of-income", label: "Proof of Income", status: "not-uploaded" },
+    { type: "mortgage-agreement", label: "Mortgage Agreement in Principle", status: "not-uploaded" },
+  ],
+  overallStatus: "not-started",
+}
+
+const STORAGE_KEY = "nutlip-buyer-proof-of-funds"
 
 export default function BuyerProofOfFundsPage() {
-  const { toast } = useToast()
-  const [proofOfFundsData, setProofOfFundsData] = useState<ProofOfFundsData>({
-    status: "not-started",
-    documents: [],
-    notes: "",
-    lastUpdated: new Date().toISOString(),
-  })
-
+  const [state, setState] = useState<ProofOfFundsState>(DEFAULT_STATE)
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>("")
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
 
-  // Load data from shared localStorage on component mount
+  // Load state from localStorage on mount
   useEffect(() => {
-    const loadData = () => {
-      const savedData = localStorage.getItem("proof-of-funds-shared")
-      if (savedData) {
-        try {
-          const parsedData = JSON.parse(savedData)
-          // Convert date strings back to Date objects
-          const documentsWithDates = parsedData.documents.map((doc: any) => ({
-            ...doc,
-            uploadedAt: new Date(doc.uploadedAt),
-          }))
-          setProofOfFundsData({
-            ...parsedData,
-            documents: documentsWithDates,
-          })
-        } catch (error) {
-          console.error("Error loading proof of funds data:", error)
-        }
+    const savedState = localStorage.getItem(STORAGE_KEY)
+    if (savedState) {
+      try {
+        setState(JSON.parse(savedState))
+      } catch (error) {
+        console.error("Error loading saved state:", error)
       }
     }
+  }, [])
 
-    loadData()
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    // Trigger storage event for cross-tab sync
+    window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY, newValue: JSON.stringify(state) }))
+  }, [state])
 
-    // Listen for storage changes to sync across tabs
+  // Listen for storage changes from other tabs
+  useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "proof-of-funds-shared") {
-        loadData()
+      if (e.key === STORAGE_KEY && e.newValue) {
+        try {
+          setState(JSON.parse(e.newValue))
+        } catch (error) {
+          console.error("Error parsing storage event:", error)
+        }
       }
     }
 
@@ -128,22 +79,36 @@ export default function BuyerProofOfFundsPage() {
     return () => window.removeEventListener("storage", handleStorageChange)
   }, [])
 
-  // Save data to shared localStorage
-  const saveData = (data: ProofOfFundsData) => {
-    localStorage.setItem("proof-of-funds-shared", JSON.stringify(data))
-    setProofOfFundsData(data)
+  const handleResetDemo = () => {
+    // Clear localStorage
+    localStorage.removeItem(STORAGE_KEY)
+
+    // Reset component state
+    setState(DEFAULT_STATE)
+    setSelectedDocumentType("")
+    setSelectedFile(null)
+
+    // Force storage event for cross-tab sync
+    window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY, newValue: JSON.stringify(DEFAULT_STATE) }))
+
+    toast({
+      title: "Demo Reset Complete",
+      description: "All documents have been cleared and the page has been reset to default state.",
+    })
   }
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (!file || !selectedDocumentType) return
+    if (file) {
+      setSelectedFile(file)
+    }
+  }
 
-    // Check if document type already exists
-    const existingDoc = proofOfFundsData.documents.find((doc) => doc.type === selectedDocumentType)
-    if (existingDoc) {
+  const handleUpload = async () => {
+    if (!selectedFile || !selectedDocumentType) {
       toast({
-        title: "Document Already Uploaded",
-        description: "A document of this type has already been uploaded. Please remove it first to upload a new one.",
+        title: "Error",
+        description: "Please select a document type and file to upload.",
         variant: "destructive",
       })
       return
@@ -154,332 +119,234 @@ export default function BuyerProofOfFundsPage() {
     // Simulate upload delay
     await new Promise((resolve) => setTimeout(resolve, 2000))
 
-    const newDocument: UploadedDocument = {
-      id: Date.now().toString(),
-      name: file.name,
-      type: selectedDocumentType,
-      size: file.size,
-      uploadedAt: new Date(),
-      status: "pending",
-    }
+    // Update document status
+    setState((prev) => {
+      const updatedDocuments = prev.documents.map((doc) =>
+        doc.type === selectedDocumentType
+          ? {
+              ...doc,
+              status: "uploaded" as const,
+              uploadedAt: new Date().toISOString(),
+              fileName: selectedFile.name,
+            }
+          : doc,
+      )
 
-    const updatedDocuments = [...proofOfFundsData.documents, newDocument]
-    const newStatus = updatedDocuments.length === REQUIRED_DOCUMENTS.length ? "submitted" : "in-progress"
+      const uploadedCount = updatedDocuments.filter((doc) => doc.status !== "not-uploaded").length
+      const overallStatus =
+        uploadedCount === 0 ? "not-started" : uploadedCount === updatedDocuments.length ? "completed" : "in-progress"
 
-    const updatedData = {
-      ...proofOfFundsData,
-      documents: updatedDocuments,
-      status: newStatus,
-      lastUpdated: new Date().toISOString(),
-    }
+      return {
+        documents: updatedDocuments,
+        overallStatus,
+      }
+    })
 
-    saveData(updatedData)
+    setSelectedFile(null)
     setSelectedDocumentType("")
     setIsUploading(false)
 
-    // Reset file input
-    event.target.value = ""
-
     toast({
-      title: "Document Uploaded",
-      description: `${file.name} has been uploaded successfully and is pending review.`,
+      title: "Upload Successful",
+      description: `${selectedFile.name} has been uploaded successfully.`,
     })
   }
 
-  const handleRemoveDocument = (documentId: string) => {
-    const updatedDocuments = proofOfFundsData.documents.filter((doc) => doc.id !== documentId)
-    const newStatus = updatedDocuments.length === 0 ? "not-started" : "in-progress"
-
-    const updatedData = {
-      ...proofOfFundsData,
-      documents: updatedDocuments,
-      status: newStatus,
-      lastUpdated: new Date().toISOString(),
-    }
-
-    saveData(updatedData)
-
-    toast({
-      title: "Document Removed",
-      description: "The document has been removed from your submission.",
-    })
-  }
-
-  const getDocumentStatus = (documentType: string) => {
-    const document = proofOfFundsData.documents.find((doc) => doc.type === documentType)
-    return document?.status || "not-uploaded"
-  }
-
-  const getStatusColor = (status: string) => {
+  const getStatusIcon = (status: DocumentStatus["status"]) => {
     switch (status) {
+      case "uploaded":
+        return <CheckCircle className="h-4 w-4 text-green-600" />
       case "approved":
-        return "bg-green-100 text-green-800"
-      case "pending":
-        return "bg-yellow-100 text-yellow-800"
+        return <CheckCircle className="h-4 w-4 text-green-600" />
       case "rejected":
-        return "bg-red-100 text-red-800"
+        return <AlertCircle className="h-4 w-4 text-red-600" />
       default:
-        return "bg-gray-100 text-gray-800"
+        return <AlertCircle className="h-4 w-4 text-gray-400" />
     }
   }
 
-  const getStatusIcon = (status: string) => {
+  const getStatusBadge = (status: DocumentStatus["status"]) => {
     switch (status) {
+      case "uploaded":
+        return <Badge className="bg-blue-100 text-blue-800">Uploaded</Badge>
       case "approved":
-        return <CheckCircle className="h-4 w-4" />
-      case "pending":
-        return <Clock className="h-4 w-4" />
+        return <Badge className="bg-green-100 text-green-800">Approved</Badge>
       case "rejected":
-        return <AlertTriangle className="h-4 w-4" />
+        return <Badge className="bg-red-100 text-red-800">Rejected</Badge>
       default:
-        return <Upload className="h-4 w-4" />
+        return <Badge variant="outline">Required</Badge>
     }
   }
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes"
-    const k = 1024
-    const sizes = ["Bytes", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
-  }
+  const uploadedCount = state.documents.filter((doc) => doc.status !== "not-uploaded").length
+  const totalCount = state.documents.length
+  const progressPercentage = (uploadedCount / totalCount) * 100
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
-
-  const uploadedCount = proofOfFundsData.documents.length
-  const totalRequired = REQUIRED_DOCUMENTS.length
-  const progressPercentage = (uploadedCount / totalRequired) * 100
-
-  const availableDocumentTypes = REQUIRED_DOCUMENTS.filter(
-    (docType) => !proofOfFundsData.documents.some((doc) => doc.type === docType.id),
-  )
-
-  const canProceed = proofOfFundsData.status === "verified"
+  const availableDocumentTypes = state.documents.filter((doc) => doc.status === "not-uploaded")
 
   return (
     <TransactionLayout currentStage="proof-of-funds" userRole="buyer">
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Proof of Funds</h1>
-            <p className="text-gray-600 mt-1">Upload your financial documents to verify your ability to purchase</p>
+          <div className="flex items-center space-x-3">
+            <CreditCard className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">Proof of Funds - Buyer View</h1>
+              <p className="text-muted-foreground">Upload required financial documents for verification.</p>
+            </div>
           </div>
-          <Badge className={`${getStatusColor(proofOfFundsData.status)} flex items-center gap-2`}>
-            {getStatusIcon(proofOfFundsData.status)}
-            {proofOfFundsData.status === "not-started" && "Not Started"}
-            {proofOfFundsData.status === "in-progress" && "In Progress"}
-            {proofOfFundsData.status === "submitted" && "Under Review"}
-            {proofOfFundsData.status === "verified" && "Verified"}
-          </Badge>
+          <div className="flex items-center space-x-3">
+            <Badge
+              className={`${
+                state.overallStatus === "completed"
+                  ? "bg-green-100 text-green-800"
+                  : state.overallStatus === "in-progress"
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-gray-100 text-gray-800"
+              }`}
+            >
+              {state.overallStatus === "completed"
+                ? "All Documents Uploaded"
+                : state.overallStatus === "in-progress"
+                  ? "In Progress"
+                  : "Not Started"}
+            </Badge>
+            <Button
+              onClick={handleResetDemo}
+              variant="outline"
+              size="sm"
+              className="flex items-center space-x-2 text-red-600 border-red-200 hover:bg-red-50 bg-transparent"
+            >
+              <RotateCcw className="h-4 w-4" />
+              <span>Reset Demo</span>
+            </Button>
+          </div>
         </div>
 
-        {/* Progress Overview */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Upload Progress</CardTitle>
-            <CardDescription>
-              {uploadedCount} of {totalRequired} required documents uploaded
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <Progress value={progressPercentage} className="w-full" />
-              <div className="text-sm text-gray-600">
-                {proofOfFundsData.status === "verified"
-                  ? "All documents have been verified. You can proceed to the next stage."
-                  : proofOfFundsData.status === "submitted"
-                    ? "All documents uploaded and under review by the estate agent."
-                    : `${totalRequired - uploadedCount} more document${totalRequired - uploadedCount !== 1 ? "s" : ""} required.`}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Document Upload Progress */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Document Upload Progress</CardTitle>
-            <CardDescription>Track the status of your required documents</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {REQUIRED_DOCUMENTS.map((docType) => {
-                const status = getDocumentStatus(docType.id)
-                const IconComponent = docType.icon
-                return (
-                  <div key={docType.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <IconComponent className="h-5 w-5 text-gray-400" />
-                      <div>
-                        <div className="font-medium">{docType.name}</div>
-                        <div className="text-sm text-gray-500">{docType.description}</div>
-                      </div>
-                    </div>
-                    <Badge className={getStatusColor(status)}>
-                      {getStatusIcon(status)}
-                      {status === "not-uploaded" ? "Required" : status}
-                    </Badge>
-                  </div>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Upload New Document */}
-        {availableDocumentTypes.length > 0 && (
+        <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Upload Document</CardTitle>
-              <CardDescription>Select a document type and upload your file</CardDescription>
+              <CardTitle className="flex items-center space-x-2">
+                <FileText className="h-5 w-5" />
+                <span>Document Upload Progress</span>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="document-type">Document Type</Label>
-                  <Select value={selectedDocumentType} onValueChange={setSelectedDocumentType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select document type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableDocumentTypes.map((docType) => (
-                        <SelectItem key={docType.id} value={docType.id}>
-                          {docType.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Overall Progress</span>
+                  <span>
+                    {uploadedCount} of {totalCount} documents
+                  </span>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="file-upload">Choose File</Label>
-                  <Input
-                    id="file-upload"
-                    type="file"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                    onChange={handleFileUpload}
-                    disabled={!selectedDocumentType || isUploading}
-                  />
-                </div>
+                <Progress value={progressPercentage} className="w-full" />
               </div>
-              {isUploading && (
-                <div className="flex items-center space-x-2 text-blue-600">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                  <span className="text-sm">Uploading document...</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
 
-        {/* Uploaded Documents */}
-        {proofOfFundsData.documents.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Uploaded Documents</CardTitle>
-              <CardDescription>Manage your uploaded documents</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {proofOfFundsData.documents.map((document) => (
-                  <div key={document.id} className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-3">
+                {state.documents.map((doc) => (
+                  <div key={doc.type} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center space-x-3">
-                      <FileText className="h-5 w-5 text-gray-400" />
+                      {getStatusIcon(doc.status)}
                       <div>
-                        <div className="font-medium">{document.name}</div>
-                        <div className="text-sm text-gray-500">
-                          {formatFileSize(document.size)} • Uploaded {formatDate(document.uploadedAt)}
-                        </div>
+                        <div className="font-medium text-sm">{doc.label}</div>
+                        {doc.fileName && <div className="text-xs text-muted-foreground">{doc.fileName}</div>}
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <Badge className={getStatusColor(document.status)}>
-                        {getStatusIcon(document.status)}
-                        {document.status}
-                      </Badge>
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Download className="h-4 w-4 mr-1" />
-                          Download
-                        </Button>
-                        {document.status !== "approved" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleRemoveDocument(document.id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <X className="h-4 w-4 mr-1" />
-                            Remove
-                          </Button>
-                        )}
-                      </div>
-                    </div>
+                    {getStatusBadge(doc.status)}
                   </div>
                 ))}
               </div>
             </CardContent>
           </Card>
-        )}
 
-        {/* Continue Button */}
-        {canProceed && (
           <Card>
-            <CardContent className="pt-6">
-              <Link href="/buyer/add-conveyancer">
-                <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Add Conveyancer
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Status Messages */}
-        {proofOfFundsData.status === "submitted" && (
-          <Card className="border-blue-200 bg-blue-50">
-            <CardContent className="pt-6">
-              <div className="flex items-center space-x-3">
-                <Clock className="h-6 w-6 text-blue-600" />
-                <div>
-                  <h3 className="font-semibold text-blue-900">Under Review</h3>
-                  <p className="text-sm text-blue-700">
-                    Your documents are being reviewed by the estate agent. You'll be notified once they're approved.
-                  </p>
-                </div>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Upload className="h-5 w-5" />
+                <span>Upload Document</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="document-type">Document Type</Label>
+                <Select value={selectedDocumentType} onValueChange={setSelectedDocumentType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select document type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableDocumentTypes.map((doc) => (
+                      <SelectItem key={doc.type} value={doc.type}>
+                        {doc.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </CardContent>
-          </Card>
-        )}
 
-        {proofOfFundsData.status === "verified" && (
-          <Card className="border-green-200 bg-green-50">
-            <CardContent className="pt-6">
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-                <div>
-                  <h3 className="font-semibold text-green-900">Documents Verified</h3>
-                  <p className="text-sm text-green-700">
-                    All your documents have been approved. You can now proceed to the next stage of the transaction.
-                  </p>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="file-upload">Select File</Label>
+                <Input
+                  id="file-upload"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  onChange={handleFileSelect}
+                  disabled={!selectedDocumentType}
+                />
+                {selectedFile && <p className="text-sm text-muted-foreground">Selected: {selectedFile.name}</p>}
               </div>
+
+              <Button
+                onClick={handleUpload}
+                disabled={!selectedFile || !selectedDocumentType || isUploading}
+                className="w-full"
+              >
+                {isUploading ? "Uploading..." : "Upload Document"}
+              </Button>
+
+              {availableDocumentTypes.length === 0 && (
+                <div className="text-center p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                  <p className="text-green-800 font-medium">All documents uploaded!</p>
+                  <p className="text-green-600 text-sm">Your proof of funds is ready for review.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
-        )}
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Next Steps</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="h-5 w-5 text-blue-600" />
+                  <span className="font-medium">Estate Agent Review</span>
+                </div>
+                <Badge className="bg-blue-100 text-blue-800">Pending</Badge>
+              </div>
+
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <AlertCircle className="h-5 w-5 text-muted-foreground" />
+                  <span className="font-medium">Add Conveyancer</span>
+                </div>
+                <Badge variant="outline">Next Step</Badge>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t">
+              <p className="text-sm text-muted-foreground mb-4">
+                Once all documents are uploaded and approved, you can proceed to select your conveyancer.
+              </p>
+              <Button disabled={state.overallStatus !== "completed"} className="w-full bg-green-600 hover:bg-green-700">
+                Continue to Add Conveyancer
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </TransactionLayout>
   )

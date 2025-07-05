@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { HandHeart, Users, Home, CheckCircle, Clock } from "lucide-react"
-import { MessengerChat } from "@/components/messenger-chat"
 import Link from "next/link"
 
 export default function EstateAgentOfferAcceptedPage() {
@@ -123,16 +122,6 @@ export default function EstateAgentOfferAcceptedPage() {
           </Card>
         </div>
       </div>
-
-      {/* Messenger Chat */}
-      <MessengerChat
-        currentUserRole="estate-agent"
-        currentUserName="Sarah Johnson"
-        otherParticipant={{
-          role: "buyer",
-          name: "John Smith",
-        }}
-      />
     </TransactionLayout>
   )
 }
