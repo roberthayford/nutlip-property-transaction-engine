@@ -89,11 +89,22 @@ const config: Config = {
   				to: {
   					height: '0'
   				}
+  			},
+  			'confetti-fall': {
+  				'0%': {
+  					transform: 'translateY(-100vh) rotate(0deg)',
+  					animationTimingFunction: 'ease-out'
+  				},
+  				'100%': {
+  					transform: 'translateY(100vh) rotate(360deg)',
+  					animationTimingFunction: 'ease-in'
+  				}
   			}
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+  			'confetti-fall': 'confetti-fall 1s ease-out forwards',
   		}
   	}
   },
