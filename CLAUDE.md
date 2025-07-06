@@ -203,3 +203,7 @@ The application is fully functional as a demo/prototype of a property transactio
 ## Branding Considerations
 
 - **Brand Logo**: Nutlip brand logo should be "nutlip_logo.webp" which is located in public folder
+
+## Localization and Language
+
+- **Always use British UK English format for application frontend copy text**
