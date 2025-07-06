@@ -25,32 +25,33 @@ export function EnhancedTransactionProgress({
 
   return (
     <div className="border-b bg-muted/30">
-      <div className="container mx-auto px-4 py-4 md:py-6">
-        {/* Progress bar container with relative positioning */}
-        <div className="relative mb-2">
+      <div className="container mx-auto px-4 py-4">
+        {/* Progress bar container */}
+        <div className="relative mb-3">
           {/* Background progress track */}
-          <div className="absolute h-1 bg-gray-200 left-0 right-0 top-1/2 -translate-y-1/2 rounded-full"></div>
+          <div className="absolute h-1.5 bg-gray-200 left-0 right-0 top-1/2 -translate-y-1/2 rounded-full"></div>
           
           {/* Active progress indicator */}
           <div 
-            className="absolute h-1 bg-green-500 left-0 top-1/2 -translate-y-1/2 rounded-full transition-all duration-500 ease-in-out"
+            className="absolute h-1.5 bg-green-500 left-0 top-1/2 -translate-y-1/2 rounded-full transition-all duration-500 ease-in-out"
             style={{ width: `${progressPercentage}%` }} 
           ></div>
         </div>
 
         {/* Transaction stages */}
-        <div className="flex items-center justify-start space-x-1 md:space-x-2 overflow-x-auto pb-2 relative">
+        <div className="flex items-start justify-between w-full">
           {stages.map((stage, i) => {
             const Icon = stage.icon
             const isActive = i === currentStageIndex
             const isCompleted = i < currentStageIndex
             const isAllowed = canAccessStage(stage)
+            const isLast = i === stages.length - 1
 
             return (
-              <div key={stage.id} className="flex items-center space-x-1 md:space-x-2 min-w-0">
+              <div key={stage.id} className="relative flex flex-col items-center flex-1">
                 <Link
                   href={stageUrl(stage)}
-                  className={`flex flex-col items-center space-y-1 md:space-y-2 p-2 md:p-3 rounded-lg transition-colors min-w-[80px] md:min-w-[120px] relative ${
+                  className={`group relative flex flex-col items-center w-full p-2 rounded-lg transition-colors ${
                     isActive
                       ? "bg-primary text-primary-foreground"
                       : isCompleted
@@ -61,21 +62,20 @@ export function EnhancedTransactionProgress({
                   }`}
                   onClick={(e) => !isAllowed && e.preventDefault()}
                 >
-                  <Icon className="h-4 w-4 md:h-6 md:w-6" />
-                  <span className="text-xs font-medium text-center leading-tight">{stage.title}</span>
+                  <div className="flex items-center justify-center w-8 h-8 mb-1.5 rounded-full bg-white/80 group-hover:bg-white/90 transition-colors">
+                    <Icon className={`h-4 w-4 ${isActive ? 'text-primary' : isCompleted ? 'text-green-600' : 'text-muted-foreground'}`} />
+                  </div>
+                  <span className="text-xs font-medium text-center leading-tight px-1">{stage.title}</span>
                   <StageStatusIndicator stageId={stage.id} className="absolute -top-1 -right-1" />
-                  {isCompleted && <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-600" />}
+                  {isCompleted && (
+                    <CheckCircle className="absolute -top-1 -right-1 h-4 w-4 text-green-600 bg-white rounded-full" />
+                  )}
                 </Link>
 
-                {/* Connecting line between stages */}
-                {i < stages.length - 1 && (
-                  <div 
-                    className={`h-0.5 w-4 md:w-8 transition-colors duration-300 ${
-                      isCompleted ? "bg-green-500" : "bg-gray-200"
-                    }`} 
-                    aria-hidden="true"
-                  />
-                )}
+                {/* Stage indicator dot */}
+                <div className={`absolute -bottom-3 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full ${
+                  isCompleted ? 'bg-green-500' : isActive ? 'bg-primary' : 'bg-gray-200'
+                }`} />
               </div>
             )
           })}
