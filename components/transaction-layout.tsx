@@ -394,13 +394,16 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 md:space-x-4">
-              <Link href="/" className="group flex items-center space-x-2 transition-transform duration-300 hover:scale-105">
-                <div className="relative overflow-hidden rounded-lg p-0.5 bg-gradient-to-r from-[#4299E1] to-[#003366]">
-                  <img src="/nutlip_logo.webp" alt="Nutlip" className="h-10 md:h-10 relative z-10 bg-white p-1 rounded-md" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-blue-200">Property Transaction Engine</span>
-                </div>
+            <div className="flex items-center space-x-2 md:space-x-4">
+    <Link href="/" className="group flex items-center space-x-2 transition-transform duration-300 hover:scale-105">
+        <div className="relative overflow-hidden rounded-lg p-0.5 bg-gradient-to-r from-[#4299E1] to-[#003366]">
+            <img src="/nutlip_logo.webp" alt="Nutlip" className="h-10 md:h-10 relative z-10 bg-white p-1 rounded-md" />
+        </div>
+        <div className="flex flex-col">
+            <span className="text-xs text-blue-200">Property Transaction Engine</span>
+        </div>
+    </Link>
+</div>
               </Link>
               <Badge
                 className={`ml-2 text-xs md:text-sm font-medium px-3 py-1.5 rounded-full border-2 border-white/20
