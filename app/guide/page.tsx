@@ -134,16 +134,7 @@ export default function GuidePage() {
               {/* Quick Start Tab */}
               <TabsContent value="quick-start" className="space-y-6 animate-in fade-in-50 duration-500">
                 <div className="text-center mb-8">
-                  <div className="mb-4">
-                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#003366] to-[#002244] text-white rounded-full shadow-lg">
-                      <Star className="h-6 w-6" />
-                      <span className="font-semibold">Quick Start Guide</span>
-                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                        ~10 min
-                      </Badge>
-                    </div>
-                  </div>
-                  <h2 className="text-3xl font-bold text-[#003366] mb-4">🚀 Get Started with Nutlip</h2>
+                  <h2 className="text-3xl font-bold text-[#003366] mb-4">🚀 Quick Start Guide</h2>
                   <p className="text-lg text-gray-700 max-w-2xl mx-auto">
                     Master the essential features of the Nutlip Property Transaction Engine in just 30 minutes
                   </p>
@@ -236,16 +227,7 @@ export default function GuidePage() {
               {/* Buyer Tab */}
               <TabsContent value="buyer" className="space-y-6 animate-in fade-in-50 duration-500">
                 <div className="text-center mb-8">
-                  <div className="mb-4">
-                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#4299E1] to-[#3182CE] text-white rounded-full shadow-lg">
-                      <User className="h-6 w-6" />
-                      <span className="font-semibold">Buyer Guide</span>
-                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                        ~15 min
-                      </Badge>
-                    </div>
-                  </div>
-                  <h2 className="text-3xl font-bold text-[#003366] mb-4">🏠 Buyer Guide</h2>
+                  <h2 className="text-3xl font-bold text-[#003366] mb-4">👤 Buyer Guide</h2>
                   <p className="text-lg text-gray-700 max-w-2xl mx-auto">
                     Navigate your property purchase journey with confidence
                   </p>
@@ -458,15 +440,6 @@ export default function GuidePage() {
               {/* Other tab contents would follow the same pattern */}
               <TabsContent value="estate-agent" className="space-y-6 animate-in fade-in-50 duration-500">
                 <div className="text-center mb-8">
-                  <div className="mb-4">
-                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#10B981] to-[#059669] text-white rounded-full shadow-lg">
-                      <Building className="h-6 w-6" />
-                      <span className="font-semibold">Estate Agent Guide</span>
-                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                        ~12 min
-                      </Badge>
-                    </div>
-                  </div>
                   <h2 className="text-3xl font-bold text-[#003366] mb-4">🏢 Estate Agent Guide</h2>
                   <p className="text-lg text-gray-700 max-w-2xl mx-auto">
                     Manage multiple transactions efficiently and professionally
@@ -677,15 +650,6 @@ export default function GuidePage() {
 
               <TabsContent value="buyer-conveyancer" className="space-y-6 animate-in fade-in-50 duration-500">
                 <div className="text-center mb-8">
-                  <div className="mb-4">
-                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-[#F0F2F5] text-[#4B5563] rounded-lg border border-gray-200">
-                      <Scale className="h-6 w-6" />
-                      <span className="font-semibold">Buyer Conveyancer Guide</span>
-                      <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700 border-gray-200">
-                        ~18 min
-                      </div>
-                    </div>
-                  </div>
                   <h2 className="text-3xl font-bold text-[#003366] mb-4">⚖️ Buyer Conveyancer Guide</h2>
                   <p className="text-lg text-gray-700 max-w-2xl mx-auto">
                     Professional legal guidance for property purchase transactions
@@ -918,15 +882,6 @@ export default function GuidePage() {
 
               <TabsContent value="seller-conveyancer" className="space-y-6 animate-in fade-in-50 duration-500">
                 <div className="text-center mb-8">
-                  <div className="mb-4">
-                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-[#F0F2F5] text-[#4B5563] rounded-lg border border-gray-200">
-                      <Scale className="h-6 w-6" />
-                      <span className="font-semibold">Seller Conveyancer Guide</span>
-                      <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700 border-gray-200">
-                        ~15 min
-                      </div>
-                    </div>
-                  </div>
                   <h2 className="text-3xl font-bold text-[#003366] mb-4">⚖️ Seller Conveyancer Guide</h2>
                   <p className="text-lg text-gray-700 max-w-2xl mx-auto">
                     Professional legal guidance for property sale transactions
@@ -1159,15 +1114,6 @@ export default function GuidePage() {
 
               <TabsContent value="common-features" className="space-y-6 animate-in fade-in-50 duration-500">
                 <div className="text-center mb-8">
-                  <div className="mb-4">
-                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-[#F0F2F5] text-[#4B5563] rounded-lg border border-gray-200">
-                      <BookOpen className="h-6 w-6" />
-                      <span className="font-semibold">Common Features</span>
-                      <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700 border-gray-200">
-                        ~8 min
-                      </div>
-                    </div>
-                  </div>
                   <h2 className="text-3xl font-bold text-[#003366] mb-4">🔧 Common Features</h2>
                   <p className="text-lg text-gray-700 max-w-2xl mx-auto">
                     Essential tools and features available to all platform users
