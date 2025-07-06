@@ -73,59 +73,53 @@ export default function GuidePage() {
         <div className="container mx-auto px-4 py-4">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             {/* Enhanced Tab Navigation */}
-            <TabsList className="grid grid-cols-2 lg:grid-cols-6 w-full h-auto p-1 bg-gray-50/50 backdrop-blur-sm rounded-xl">
+            <TabsList className="grid grid-cols-2 lg:grid-cols-6 w-full h-auto p-2 bg-white shadow-sm rounded-lg">
               <TabsTrigger 
                 value="quick-start" 
-                className="flex items-center gap-2 py-4 px-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#003366] data-[state=active]:to-[#002244] data-[state=active]:text-white transition-all duration-300"
+                className="flex items-center gap-2 py-3 px-3 data-[state=active]:bg-gray-100 data-[state=active]:text-gray-800 hover:bg-gray-50 transition-all duration-200 rounded-md"
               >
                 <Star className="h-4 w-4" />
                 <span className="hidden sm:inline font-medium">Quick Start</span>
-                <Badge variant="secondary" className="hidden lg:inline-flex text-xs">10min</Badge>
               </TabsTrigger>
               
               <TabsTrigger 
                 value="buyer" 
-                className="flex items-center gap-2 py-4 px-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#4299E1] data-[state=active]:to-[#3182CE] data-[state=active]:text-white transition-all duration-300"
+                className="flex items-center gap-2 py-3 px-3 data-[state=active]:bg-gray-100 data-[state=active]:text-gray-800 hover:bg-gray-50 transition-all duration-200 rounded-md"
               >
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline font-medium">Buyer</span>
-                <Badge variant="secondary" className="hidden lg:inline-flex text-xs">15min</Badge>
               </TabsTrigger>
               
               <TabsTrigger 
                 value="estate-agent" 
-                className="flex items-center gap-2 py-4 px-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#10B981] data-[state=active]:to-[#059669] data-[state=active]:text-white transition-all duration-300"
+                className="flex items-center gap-2 py-3 px-3 data-[state=active]:bg-gray-100 data-[state=active]:text-gray-800 hover:bg-gray-50 transition-all duration-200 rounded-md"
               >
                 <Building className="h-4 w-4" />
                 <span className="hidden sm:inline font-medium">Estate Agent</span>
-                <Badge variant="secondary" className="hidden lg:inline-flex text-xs">12min</Badge>
               </TabsTrigger>
               
               <TabsTrigger 
                 value="buyer-conveyancer" 
-                className="flex items-center gap-2 py-4 px-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#8B5CF6] data-[state=active]:to-[#7C3AED] data-[state=active]:text-white transition-all duration-300"
+                className="flex items-center gap-2 py-3 px-3 data-[state=active]:bg-gray-100 data-[state=active]:text-gray-800 hover:bg-gray-50 transition-all duration-200 rounded-md"
               >
                 <Scale className="h-4 w-4" />
                 <span className="hidden sm:inline font-medium">Buyer Conveyancer</span>
-                <Badge variant="secondary" className="hidden lg:inline-flex text-xs">18min</Badge>
               </TabsTrigger>
               
               <TabsTrigger 
                 value="seller-conveyancer" 
-                className="flex items-center gap-2 py-4 px-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#F59E0B] data-[state=active]:to-[#D97706] data-[state=active]:text-white transition-all duration-300"
+                className="flex items-center gap-2 py-3 px-3 data-[state=active]:bg-gray-100 data-[state=active]:text-gray-800 hover:bg-gray-50 transition-all duration-200 rounded-md"
               >
                 <Users className="h-4 w-4" />
                 <span className="hidden sm:inline font-medium">Seller Conveyancer</span>
-                <Badge variant="secondary" className="hidden lg:inline-flex text-xs">16min</Badge>
               </TabsTrigger>
               
               <TabsTrigger 
                 value="common-features" 
-                className="flex items-center gap-2 py-4 px-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#6B7280] data-[state=active]:to-[#4B5563] data-[state=active]:text-white transition-all duration-300"
+                className="flex items-center gap-2 py-3 px-3 data-[state=active]:bg-gray-100 data-[state=active]:text-gray-800 hover:bg-gray-50 transition-all duration-200 rounded-md"
               >
                 <BookOpen className="h-4 w-4" />
                 <span className="hidden sm:inline font-medium">Common Features</span>
-                <Badge variant="secondary" className="hidden lg:inline-flex text-xs">8min</Badge>
               </TabsTrigger>
             </TabsList>
 
