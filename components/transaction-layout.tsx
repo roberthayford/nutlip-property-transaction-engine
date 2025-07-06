@@ -42,6 +42,7 @@ import { RealTimeIndicator } from "@/components/real-time-indicator"
 import { StageStatusIndicator } from "@/components/stage-status-indicator"
 import { MessengerChat } from "@/components/messenger-chat"
 import { BuyerEstateAgentChat } from "@/components/buyer-estate-agent-chat"
+import { EnhancedTransactionProgress } from "@/components/enhanced-transaction-progress"
 import { toast } from "@/hooks/use-toast"
 
 /* -------------------------------------------------------------------------- */
@@ -389,8 +390,9 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 md:space-x-4">
-              <Link href="/" className="flex items-center">
+              <Link href="/" className="flex items-center space-x-2">
                 <img src="/nutlip_logo.webp" alt="Nutlip" className="h-8 md:h-10" />
+                <span className="text-xl md:text-2xl font-bold text-primary">Nutlip</span>
               </Link>
               <Badge variant="secondary" className="hidden sm:inline-flex">
                 Property Transaction Engine
@@ -522,46 +524,13 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
         </div>
       </header>
 
-      {/* Progress bar */}
-      <div className="border-b bg-muted/30">
-        <div className="container mx-auto px-4 py-4 md:py-6">
-          <div className="flex items-center justify-start space-x-1 md:space-x-2 overflow-x-auto pb-2">
-            {transactionStages.map((stage, i) => {
-              const Icon = stage.icon
-              const isActive = i === currentStageIndex
-              const isCompleted = i < currentStageIndex
-              const isAllowed = canAccessStage(stage)
-
-              return (
-                <div key={stage.id} className="flex items-center space-x-1 md:space-x-2 min-w-0">
-                  <Link
-                    href={stageUrl(stage)}
-                    className={`flex flex-col items-center space-y-1 md:space-y-2 p-2 md:p-3 rounded-lg transition-colors min-w-[80px] md:min-w-[120px] relative ${
-                      isActive
-                        ? "bg-primary text-primary-foreground"
-                        : isCompleted
-                          ? "bg-green-100 text-green-700 hover:bg-green-200"
-                          : isAllowed
-                            ? "hover:bg-accent"
-                            : "opacity-50 cursor-not-allowed"
-                    }`}
-                    onClick={(e) => !isAllowed && e.preventDefault()}
-                  >
-                    <Icon className="h-4 w-4 md:h-6 md:w-6" />
-                    <span className="text-xs font-medium text-center leading-tight">{stage.title}</span>
-                    <StageStatusIndicator stageId={stage.id} className="absolute -top-1 -right-1" />
-                    {isCompleted && <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-600" />}
-                  </Link>
-
-                  {i < transactionStages.length - 1 && (
-                    <div className={`h-px w-4 md:w-8 ${isCompleted ? "bg-green-400" : "bg-border"}`} />
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </div>
+      {/* Enhanced Progress bar */}
+      <EnhancedTransactionProgress 
+        stages={transactionStages}
+        currentStageIndex={currentStageIndex}
+        canAccessStage={canAccessStage}
+        stageUrl={stageUrl}
+      />
 
       {/* Main content */}
       <main className="container mx-auto px-4 py-6 md:py-8">{children}</main>
