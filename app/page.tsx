@@ -27,6 +27,9 @@ export default function HomePage() {
           <p className="text-lg text-gray-700 max-w-3xl mx-auto mt-6">
             Nutlip brings together buyers, sellers, estate agents, and conveyancers in a single, powerful platform that transforms weeks of confusion into a smooth, transparent journey.
           </p>
+          <p className="text-lg text-gray-700 max-w-3xl mx-auto mt-4 italic font-medium">
+            Think of Rightmove — but with the engine to complete the sale. That's Nutlip.
+          </p>
         </div>
 
         {/* Stakeholder Benefits */}
