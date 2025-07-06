@@ -678,12 +678,12 @@ export default function GuidePage() {
               <TabsContent value="buyer-conveyancer" className="space-y-6 animate-in fade-in-50 duration-500">
                 <div className="text-center mb-8">
                   <div className="mb-4">
-                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#8B5CF6] to-[#7C3AED] text-white rounded-full shadow-lg">
+                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-[#F0F2F5] text-[#4B5563] rounded-lg border border-gray-200">
                       <Scale className="h-6 w-6" />
                       <span className="font-semibold">Buyer Conveyancer Guide</span>
-                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                      <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700 border-gray-200">
                         ~18 min
-                      </Badge>
+                      </div>
                     </div>
                   </div>
                   <h2 className="text-3xl font-bold text-[#003366] mb-4">⚖️ Buyer Conveyancer Guide</h2>
@@ -919,12 +919,12 @@ export default function GuidePage() {
               <TabsContent value="seller-conveyancer" className="space-y-6 animate-in fade-in-50 duration-500">
                 <div className="text-center mb-8">
                   <div className="mb-4">
-                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white rounded-full shadow-lg">
+                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-[#F0F2F5] text-[#4B5563] rounded-lg border border-gray-200">
                       <Scale className="h-6 w-6" />
                       <span className="font-semibold">Seller Conveyancer Guide</span>
-                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                      <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700 border-gray-200">
                         ~15 min
-                      </Badge>
+                      </div>
                     </div>
                   </div>
                   <h2 className="text-3xl font-bold text-[#003366] mb-4">⚖️ Seller Conveyancer Guide</h2>
@@ -1160,12 +1160,12 @@ export default function GuidePage() {
               <TabsContent value="common-features" className="space-y-6 animate-in fade-in-50 duration-500">
                 <div className="text-center mb-8">
                   <div className="mb-4">
-                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#6B7280] to-[#4B5563] text-white rounded-full shadow-lg">
+                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-[#F0F2F5] text-[#4B5563] rounded-lg border border-gray-200">
                       <BookOpen className="h-6 w-6" />
                       <span className="font-semibold">Common Features</span>
-                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                      <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700 border-gray-200">
                         ~8 min
-                      </Badge>
+                      </div>
                     </div>
                   </div>
                   <h2 className="text-3xl font-bold text-[#003366] mb-4">🔧 Common Features</h2>
