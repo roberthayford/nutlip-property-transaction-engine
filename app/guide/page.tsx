@@ -61,7 +61,6 @@ export default function GuidePage() {
                   height={48} 
                   className="h-auto"
                 />
-                <h1 className="text-2xl font-bold text-[#003366]">User Guide</h1>
               </div>
             </div>
           </div>
