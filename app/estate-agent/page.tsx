@@ -1492,7 +1492,7 @@ export default function EstateAgentDashboard() {
       case "low":
         return "bg-green-100 text-green-800"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-grey-100 text-grey-800"
     }
   }
 
@@ -1517,7 +1517,7 @@ export default function EstateAgentDashboard() {
       case "declined":
         return "bg-red-100 text-red-800"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-grey-100 text-grey-800"
     }
   }
 
@@ -1530,7 +1530,7 @@ export default function EstateAgentDashboard() {
       case "tentative":
         return "bg-blue-100 text-blue-800"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-grey-100 text-grey-800"
     }
   }
 
@@ -1541,9 +1541,9 @@ export default function EstateAgentDashboard() {
       case "under-offer":
         return "bg-blue-100 text-blue-800"
       case "sold":
-        return "bg-gray-100 text-gray-800"
+        return "bg-grey-100 text-grey-800"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-grey-100 text-grey-800"
     }
   }
 

@@ -284,13 +284,13 @@ export default function SellerConveyancerSearchSurveyPage() {
       case "ordered":
         return <ShoppingCart className="h-4 w-4 text-blue-600" />
       default:
-        return <Clock className="h-4 w-4 text-gray-400" />
+        return <Clock className="h-4 w-4 text-grey-400" />
     }
   }
 
   const getStatusBadge = (status: SearchStatus["status"]) => {
     const configs = {
-      pending: { label: "Pending", className: "bg-gray-100 text-gray-800" },
+      pending: { label: "Pending", className: "bg-grey-100 text-grey-800" },
       ordered: { label: "Ordered", className: "bg-blue-100 text-blue-800" },
       completed: { label: "Completed", className: "bg-green-100 text-green-800" },
     }
@@ -400,10 +400,10 @@ export default function SellerConveyancerSearchSurveyPage() {
               </div>
 
               {/* PENDING */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-gray-600">{pendingSearches}</div>
-                <div className="text-sm text-gray-700 font-medium">Pending</div>
-                <div className="text-xs text-gray-600 mt-1">
+              <div className="bg-grey-50 border border-grey-200 rounded-lg p-4 text-center">
+                <div className="text-3xl font-bold text-grey-600">{pendingSearches}</div>
+                <div className="text-sm text-grey-700 font-medium">Pending</div>
+                <div className="text-xs text-grey-600 mt-1">
                   {totalSearches > 0 ? Math.round((pendingSearches / totalSearches) * 100) : 0}% of total
                 </div>
               </div>
@@ -541,7 +541,7 @@ export default function SellerConveyancerSearchSurveyPage() {
             )}
 
             {/* Progress Status Indicator */}
-            <div className="flex items-center justify-center p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-center p-4 bg-grey-50 rounded-lg">
               <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4 text-blue-500" />
                 <span className="text-sm font-medium">
@@ -615,25 +615,25 @@ export default function SellerConveyancerSearchSurveyPage() {
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
               <div
-                className={`p-3 rounded-lg transition-all duration-300 ${completedSearches > 0 ? "bg-green-100 border-2 border-green-300" : "bg-gray-50"}`}
+                className={`p-3 rounded-lg transition-all duration-300 ${completedSearches > 0 ? "bg-green-100 border-2 border-green-300" : "bg-grey-50"}`}
               >
                 <div className="text-2xl font-bold text-green-600">{completedSearches}</div>
                 <div className="text-xs text-green-700">COMPLETED</div>
               </div>
               <div
-                className={`p-3 rounded-lg transition-all duration-300 ${orderedSearches > 0 ? "bg-blue-100 border-2 border-blue-300" : "bg-gray-50"}`}
+                className={`p-3 rounded-lg transition-all duration-300 ${orderedSearches > 0 ? "bg-blue-100 border-2 border-blue-300" : "bg-grey-50"}`}
               >
                 <div className="text-2xl font-bold text-blue-600">{orderedSearches}</div>
                 <div className="text-xs text-blue-700">ORDERED</div>
               </div>
               <div
-                className={`p-3 rounded-lg transition-all duration-300 ${pendingSearches > 0 ? "bg-gray-100 border-2 border-gray-300" : "bg-gray-50"}`}
+                className={`p-3 rounded-lg transition-all duration-300 ${pendingSearches > 0 ? "bg-grey-100 border-2 border-grey-300" : "bg-grey-50"}`}
               >
-                <div className="text-2xl font-bold text-gray-600">{pendingSearches}</div>
-                <div className="text-xs text-gray-700">PENDING</div>
+                <div className="text-2xl font-bold text-grey-600">{pendingSearches}</div>
+                <div className="text-xs text-grey-700">PENDING</div>
               </div>
               <div
-                className={`p-3 rounded-lg transition-all duration-300 ${additionalSearches > 0 ? "bg-purple-100 border-2 border-purple-300" : "bg-gray-50"}`}
+                className={`p-3 rounded-lg transition-all duration-300 ${additionalSearches > 0 ? "bg-purple-100 border-2 border-purple-300" : "bg-grey-50"}`}
               >
                 <div className="text-2xl font-bold text-purple-600">{additionalSearches}</div>
                 <div className="text-xs text-purple-700">ADDITIONAL</div>
@@ -651,7 +651,7 @@ export default function SellerConveyancerSearchSurveyPage() {
                 .filter((update) => update.stage === "search-survey" && update.role === "buyer-conveyancer")
                 .slice(0, 10)
                 .map((update) => (
-                  <div key={update.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded text-xs">
+                  <div key={update.id} className="flex items-center gap-2 p-2 bg-grey-50 rounded text-xs">
                     <div className="flex-shrink-0">
                       {update.data?.action === "add" ? (
                         <Plus className="h-3 w-3 text-purple-600" />

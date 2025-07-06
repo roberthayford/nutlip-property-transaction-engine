@@ -51,7 +51,7 @@ export default function SellerConveyancerTransactionPage() {
                         ? "Completion in Progress"
                         : "Ready for Completion"}
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-600">
                     {completionStatus === "completed"
                       ? "All tasks completed successfully"
                       : completionStatus === "in-progress"
@@ -133,10 +133,10 @@ export default function SellerConveyancerTransactionPage() {
                       <Clock className="h-4 w-4 text-yellow-600" />
                     )}
                     <div>
-                      <span className={`text-sm ${task.completed ? "text-gray-900" : "text-gray-600"}`}>
+                      <span className={`text-sm ${task.completed ? "text-grey-900" : "text-grey-600"}`}>
                         {task.task}
                       </span>
-                      <div className="text-xs text-gray-500">{task.time}</div>
+                      <div className="text-xs text-grey-500">{task.time}</div>
                     </div>
                   </div>
                   {!task.completed && (
@@ -321,25 +321,25 @@ export default function SellerConveyancerTransactionPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-3 border rounded-lg">
                 <div className="font-medium">Buyer's Conveyancer</div>
-                <div className="text-sm text-gray-600">Smith & Partners</div>
+                <div className="text-sm text-grey-600">Smith & Partners</div>
                 <div className="text-sm">020 7123 4567</div>
               </div>
 
               <div className="p-3 border rounded-lg">
                 <div className="font-medium">Estate Agent</div>
-                <div className="text-sm text-gray-600">Premier Properties</div>
+                <div className="text-sm text-grey-600">Premier Properties</div>
                 <div className="text-sm">020 7987 6543</div>
               </div>
 
               <div className="p-3 border rounded-lg">
                 <div className="font-medium">Client</div>
-                <div className="text-sm text-gray-600">Mr & Mrs Johnson</div>
+                <div className="text-sm text-grey-600">Mr & Mrs Johnson</div>
                 <div className="text-sm">07123 456789</div>
               </div>
 
               <div className="p-3 border rounded-lg">
                 <div className="font-medium">Nutlip Support</div>
-                <div className="text-sm text-gray-600">Platform Support</div>
+                <div className="text-sm text-grey-600">Platform Support</div>
                 <div className="text-sm">0800 123 4567</div>
               </div>
             </div>

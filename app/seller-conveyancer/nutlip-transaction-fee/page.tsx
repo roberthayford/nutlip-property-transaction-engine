@@ -160,7 +160,7 @@ export default function SellerConveyancerNutlipTransactionFeePage() {
                   <div className="flex items-center justify-between p-4 border rounded-lg bg-blue-50 border-blue-200">
                     <div>
                       <div className="font-medium">Confirmation Required</div>
-                      <div className="text-sm text-gray-600">Click to confirm payment and proceed to next stage</div>
+                      <div className="text-sm text-grey-600">Click to confirm payment and proceed to next stage</div>
                     </div>
                     <Button onClick={handleConfirmPayment} className="bg-green-600 hover:bg-green-700">
                       Confirm Payment Received
@@ -174,7 +174,7 @@ export default function SellerConveyancerNutlipTransactionFeePage() {
                       <Clock className="h-5 w-5 text-yellow-600 animate-spin" />
                       <div>
                         <div className="font-medium">Confirming Payment...</div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-grey-600">
                           Processing confirmation and updating transaction status
                         </div>
                       </div>
@@ -189,7 +189,7 @@ export default function SellerConveyancerNutlipTransactionFeePage() {
                       <CheckCircle className="h-5 w-5 text-green-600" />
                       <div>
                         <div className="font-medium">Payment Confirmed</div>
-                        <div className="text-sm text-gray-600">Moving to Replies to Requisitions stage...</div>
+                        <div className="text-sm text-grey-600">Moving to Replies to Requisitions stage...</div>
                       </div>
                     </div>
                     <Badge className="bg-green-600">Confirmed</Badge>
@@ -212,7 +212,7 @@ export default function SellerConveyancerNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">Digital Transaction Management</div>
-                    <div className="text-sm text-gray-600">End-to-end transaction coordination platform</div>
+                    <div className="text-sm text-grey-600">End-to-end transaction coordination platform</div>
                   </div>
                   <span className="font-bold">£{(calculatedFee * 0.6).toLocaleString()}</span>
                 </div>
@@ -220,7 +220,7 @@ export default function SellerConveyancerNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">Document Management System</div>
-                    <div className="text-sm text-gray-600">Secure document storage and sharing</div>
+                    <div className="text-sm text-grey-600">Secure document storage and sharing</div>
                   </div>
                   <span className="font-bold">£{(calculatedFee * 0.2).toLocaleString()}</span>
                 </div>
@@ -228,7 +228,7 @@ export default function SellerConveyancerNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">Communication & Notifications</div>
-                    <div className="text-sm text-gray-600">Multi-party messaging and real-time updates</div>
+                    <div className="text-sm text-grey-600">Multi-party messaging and real-time updates</div>
                   </div>
                   <span className="font-bold">£{(calculatedFee * 0.15).toLocaleString()}</span>
                 </div>
@@ -236,7 +236,7 @@ export default function SellerConveyancerNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">Compliance & Support</div>
-                    <div className="text-sm text-gray-600">Regulatory compliance and customer support</div>
+                    <div className="text-sm text-grey-600">Regulatory compliance and customer support</div>
                   </div>
                   <span className="font-bold">£{(calculatedFee * 0.05).toLocaleString()}</span>
                 </div>
@@ -246,7 +246,7 @@ export default function SellerConveyancerNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">Subtotal (Excl. VAT)</div>
-                    <div className="text-sm text-gray-600">Base platform fee</div>
+                    <div className="text-sm text-grey-600">Base platform fee</div>
                   </div>
                   <span className="font-bold">£{calculatedFee.toLocaleString()}</span>
                 </div>
@@ -254,7 +254,7 @@ export default function SellerConveyancerNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">VAT (20%)</div>
-                    <div className="text-sm text-gray-600">Value Added Tax</div>
+                    <div className="text-sm text-grey-600">Value Added Tax</div>
                   </div>
                   <span className="font-bold">£{vatAmount.toLocaleString()}</span>
                 </div>
@@ -262,7 +262,7 @@ export default function SellerConveyancerNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 bg-purple-50 border border-purple-200 rounded-lg">
                   <div>
                     <div className="font-bold">Total Fee (Inc. VAT)</div>
-                    <div className="text-sm text-gray-600">Paid by buyer's conveyancer</div>
+                    <div className="text-sm text-grey-600">Paid by buyer's conveyancer</div>
                   </div>
                   <span className="text-xl font-bold text-purple-900">£{totalFeeIncVat.toLocaleString()}</span>
                 </div>
@@ -365,7 +365,7 @@ export default function SellerConveyancerNutlipTransactionFeePage() {
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                 <div>
                   <div className="font-medium text-sm">Email Notification</div>
-                  <div className="text-sm text-gray-600">Immediate email when payment is completed</div>
+                  <div className="text-sm text-grey-600">Immediate email when payment is completed</div>
                 </div>
               </div>
 
@@ -373,7 +373,7 @@ export default function SellerConveyancerNutlipTransactionFeePage() {
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <div>
                   <div className="font-medium text-sm">Platform Update</div>
-                  <div className="text-sm text-gray-600">Real-time status update on this page</div>
+                  <div className="text-sm text-grey-600">Real-time status update on this page</div>
                 </div>
               </div>
 
@@ -381,7 +381,7 @@ export default function SellerConveyancerNutlipTransactionFeePage() {
                 <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                 <div>
                   <div className="font-medium text-sm">Transaction Progress</div>
-                  <div className="text-sm text-gray-600">Automatic progression to next stage</div>
+                  <div className="text-sm text-grey-600">Automatic progression to next stage</div>
                 </div>
               </div>
             </div>

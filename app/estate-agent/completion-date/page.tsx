@@ -86,7 +86,7 @@ export default function EstateAgentCompletionDatePage() {
             <Users className="h-5 w-5 text-blue-600" />
             <div>
               <div className="font-medium">Conveyancer Coordination Stage</div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-grey-600">
                 This stage is handled by the buyer and seller conveyancers. You will be notified when they agree on a
                 completion date.
               </div>
@@ -109,7 +109,7 @@ export default function EstateAgentCompletionDatePage() {
                 <Clock className="h-5 w-5 text-amber-600" />
                 <div className="flex-1">
                   <div className="font-medium">Awaiting Date Agreement</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-600">
                     The conveyancers are coordinating to agree on a completion date. You will be notified automatically
                     when agreed.
                   </div>
@@ -126,7 +126,7 @@ export default function EstateAgentCompletionDatePage() {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div className="flex-1">
                     <div className="font-medium">Completion Date Agreed</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-grey-600">
                       The conveyancers have agreed on a completion date and the transaction can proceed.
                     </div>
                   </div>
@@ -136,9 +136,9 @@ export default function EstateAgentCompletionDatePage() {
                 </div>
 
                 {/* Completion Date Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-grey-50 rounded-lg">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Agreed Date</p>
+                    <p className="text-sm font-medium text-grey-600">Agreed Date</p>
                     <p className="font-semibold">
                       {completionData.agreedDate
                         ? formatCompletionDate(completionData.agreedDate)
@@ -146,7 +146,7 @@ export default function EstateAgentCompletionDatePage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Confirmed By</p>
+                    <p className="text-sm font-medium text-grey-600">Confirmed By</p>
                     <p className="font-semibold">
                       {completionData.completedBy === "buyer-conveyancer"
                         ? "Buyer Conveyancer"
@@ -156,13 +156,13 @@ export default function EstateAgentCompletionDatePage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Agreed On</p>
+                    <p className="text-sm font-medium text-grey-600">Agreed On</p>
                     <p className="font-semibold">
                       {completionData.completedAt ? formatDate(completionData.completedAt) : "N/A"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Next Stage</p>
+                    <p className="text-sm font-medium text-grey-600">Next Stage</p>
                     <p className="font-semibold">{completionData.nextStage || "Contract Exchange"}</p>
                   </div>
                 </div>
@@ -181,23 +181,23 @@ export default function EstateAgentCompletionDatePage() {
             <CardDescription>Your role during the completion date coordination</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="p-4 bg-grey-50 rounded-lg">
               <h4 className="font-medium mb-2">Your Responsibilities</h4>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-grey-600">
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Monitor progress and stay informed of the agreed completion date</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Prepare for completion day arrangements and key handover</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Coordinate with buyer and seller for completion day logistics</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Ensure property is ready for handover on the agreed date</span>
                 </li>
               </ul>

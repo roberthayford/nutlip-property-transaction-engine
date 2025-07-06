@@ -146,10 +146,10 @@ export default function BuyerEnquiriesPage() {
                 <p className="text-sm text-muted-foreground mb-2">
                   You will be notified immediately when all enquiries are resolved and this stage is completed.
                 </p>
-                <div className="text-xs text-green-600">✓ Email and in-app notification enabled</div>
+                <div className="text-xs text-grey-600">✓ Email and in-app notification enabled</div>
               </div>
 
-              <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="p-4 bg-grey-50 rounded-lg">
                 <p className="text-sm text-muted-foreground">
                   <strong>Next Steps:</strong>{" "}
                   {enquiriesStatus === "completed"

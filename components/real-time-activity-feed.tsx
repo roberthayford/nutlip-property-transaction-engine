@@ -39,7 +39,7 @@ function getActivityIcon(type: string) {
     case "amendment_replied":
       return <MessageSquare className="h-4 w-4 text-blue-600" />
     default:
-      return <Clock className="h-4 w-4 text-gray-600" />
+      return <Clock className="h-4 w-4 text-grey-600" />
   }
 }
 

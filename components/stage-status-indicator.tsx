@@ -59,8 +59,8 @@ export function StageStatusIndicator({ stageId, className = "" }: StageStatusInd
       default:
         return {
           icon: Circle,
-          color: "text-gray-400",
-          bgColor: "bg-gray-100",
+          color: "text-grey-400",
+          bgColor: "bg-grey-100",
           label: "Pending",
         }
     }

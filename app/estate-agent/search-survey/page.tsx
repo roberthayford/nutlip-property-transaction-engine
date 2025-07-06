@@ -85,13 +85,13 @@ export default function EstateAgentSearchSurveyPage() {
                 </div>
 
                 {completionData && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-grey-50 rounded-lg">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Completed By</p>
+                      <p className="text-sm font-medium text-grey-600">Completed By</p>
                       <p className="text-sm">{completionData.completedBy || "Buyer's Conveyancer"}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Completion Date</p>
+                      <p className="text-sm font-medium text-grey-600">Completion Date</p>
                       <p className="text-sm">
                         {completionData.completedAt
                           ? new Date(completionData.completedAt).toLocaleDateString()
@@ -99,11 +99,11 @@ export default function EstateAgentSearchSurveyPage() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Survey Type</p>
+                      <p className="text-sm font-medium text-grey-600">Survey Type</p>
                       <p className="text-sm">{completionData.surveyType || "Homebuyer Report"}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Next Stage</p>
+                      <p className="text-sm font-medium text-grey-600">Next Stage</p>
                       <p className="text-sm">Enquiries</p>
                     </div>
                   </div>

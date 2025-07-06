@@ -367,7 +367,7 @@ export default function EstateAgentConveyancersPage() {
                 <Clock className="h-5 w-5 text-amber-600" />
                 <div className="flex-1">
                   <div className="font-medium">Awaiting Conveyancer Appointments</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-600">
                     You can help facilitate the process by recommending conveyancers from our directory or adding custom
                     conveyancers.
                   </div>
@@ -384,7 +384,7 @@ export default function EstateAgentConveyancersPage() {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div className="flex-1">
                     <div className="font-medium">Conveyancers Appointed Successfully</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-grey-600">
                       Both buyer and seller have appointed their legal representatives and the transaction can proceed
                       to the draft contract stage.
                     </div>
@@ -396,7 +396,7 @@ export default function EstateAgentConveyancersPage() {
 
                 {/* Conveyancers Summary */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-gray-50 rounded-lg">
+                  <div className="p-4 bg-grey-50 rounded-lg">
                     <h4 className="font-semibold mb-3 text-blue-800">Buyer's Conveyancer</h4>
                     <div className="space-y-2 text-sm">
                       <div>
@@ -414,7 +414,7 @@ export default function EstateAgentConveyancersPage() {
                     </div>
                   </div>
 
-                  <div className="p-4 bg-gray-50 rounded-lg">
+                  <div className="p-4 bg-grey-50 rounded-lg">
                     <h4 className="font-semibold mb-3 text-orange-800">Seller's Conveyancer</h4>
                     <div className="space-y-2 text-sm">
                       <div>
@@ -450,7 +450,7 @@ export default function EstateAgentConveyancersPage() {
             <div className="space-y-4">
               {/* Search */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-grey-400 h-4 w-4" />
                 <Input
                   placeholder="Search by name, firm, or specialization..."
                   value={searchTerm}
@@ -462,7 +462,7 @@ export default function EstateAgentConveyancersPage() {
               {/* Conveyancer List */}
               <div className="grid gap-4">
                 {filteredConveyancers.map((conveyancer) => (
-                  <div key={conveyancer.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div key={conveyancer.id} className="border rounded-lg p-4 hover:bg-grey-50 transition-colors">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
@@ -471,19 +471,19 @@ export default function EstateAgentConveyancersPage() {
                             ★ {conveyancer.rating}
                           </Badge>
                         </div>
-                        <p className="text-gray-600 font-medium mb-2">{conveyancer.firm}</p>
+                        <p className="text-grey-600 font-medium mb-2">{conveyancer.firm}</p>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                           <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <div className="flex items-center gap-2 text-sm text-grey-600">
                               <Mail className="h-4 w-4" />
                               {conveyancer.email}
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <div className="flex items-center gap-2 text-sm text-grey-600">
                               <Phone className="h-4 w-4" />
                               {conveyancer.phone}
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <div className="flex items-center gap-2 text-sm text-grey-600">
                               <MapPin className="h-4 w-4" />
                               {conveyancer.address}
                             </div>
@@ -535,7 +535,7 @@ export default function EstateAgentConveyancersPage() {
               </div>
 
               {filteredConveyancers.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-grey-500">
                   No conveyancers found matching your search criteria.
                 </div>
               )}
@@ -555,9 +555,9 @@ export default function EstateAgentConveyancersPage() {
             </DialogHeader>
             {selectedConveyancer && (
               <div className="space-y-4">
-                <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="p-4 bg-grey-50 rounded-lg">
                   <h4 className="font-semibold mb-2">{selectedConveyancer.name}</h4>
-                  <p className="text-sm text-gray-600 mb-2">{selectedConveyancer.firm}</p>
+                  <p className="text-sm text-grey-600 mb-2">{selectedConveyancer.firm}</p>
                   <div className="text-sm space-y-1">
                     <div>Email: {selectedConveyancer.email}</div>
                     <div>Phone: {selectedConveyancer.phone}</div>
@@ -602,23 +602,23 @@ export default function EstateAgentConveyancersPage() {
             <CardDescription>How you can facilitate the conveyancer appointment process</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="p-4 bg-grey-50 rounded-lg">
               <h4 className="font-medium mb-2">Your Responsibilities</h4>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-grey-600">
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Recommend qualified conveyancers from our verified directory</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Facilitate communication between parties and conveyancers</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Add custom conveyancers when requested by clients</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Monitor appointment progress and resolve any issues</span>
                 </li>
               </ul>

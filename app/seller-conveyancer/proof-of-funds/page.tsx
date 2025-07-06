@@ -74,7 +74,7 @@ export default function SellerConveyancerProofOfFundsPage() {
       case "rejected":
         return <AlertCircle className="h-4 w-4 text-red-600" />
       default:
-        return <Clock className="h-4 w-4 text-gray-400" />
+        return <Clock className="h-4 w-4 text-grey-400" />
     }
   }
 
@@ -87,7 +87,7 @@ export default function SellerConveyancerProofOfFundsPage() {
       case "rejected":
         return <Badge className="bg-red-100 text-red-800 border-red-200">Rejected</Badge>
       default:
-        return <Badge className="bg-gray-100 text-gray-800 border-gray-200">Unknown</Badge>
+        return <Badge className="bg-grey-100 text-grey-800 border-grey-200">Unknown</Badge>
     }
   }
 
@@ -97,8 +97,8 @@ export default function SellerConveyancerProofOfFundsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Proof of Funds Review</h1>
-            <p className="text-sm sm:text-base text-gray-600 mt-1">Review and verify buyer's financial documentation</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-grey-900">Proof of Funds Review</h1>
+            <p className="text-sm sm:text-base text-grey-600 mt-1">Review and verify buyer's financial documentation</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">{getStatusBadge(proofOfFundsStatus)}</div>
         </div>
@@ -114,16 +114,16 @@ export default function SellerConveyancerProofOfFundsPage() {
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <Label className="text-sm font-medium text-gray-700">Full Name</Label>
-                <p className="text-sm text-gray-900 mt-1">{buyerDetails.name}</p>
+                <Label className="text-sm font-medium text-grey-700">Full Name</Label>
+                <p className="text-sm text-grey-900 mt-1">{buyerDetails.name}</p>
               </div>
               <div>
-                <Label className="text-sm font-medium text-gray-700">Email Address</Label>
-                <p className="text-sm text-gray-900 mt-1">{buyerDetails.email}</p>
+                <Label className="text-sm font-medium text-grey-700">Email Address</Label>
+                <p className="text-sm text-grey-900 mt-1">{buyerDetails.email}</p>
               </div>
               <div>
-                <Label className="text-sm font-medium text-gray-700">Phone Number</Label>
-                <p className="text-sm text-gray-900 mt-1">{buyerDetails.phone}</p>
+                <Label className="text-sm font-medium text-grey-700">Phone Number</Label>
+                <p className="text-sm text-grey-900 mt-1">{buyerDetails.phone}</p>
               </div>
             </div>
           </CardContent>
@@ -169,13 +169,13 @@ export default function SellerConveyancerProofOfFundsPage() {
               {documents.map((doc) => (
                 <div
                   key={doc.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-grey-50 transition-colors"
                 >
                   <div className="flex items-center gap-3 mb-3 sm:mb-0">
                     {getStatusIcon(doc.status)}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{doc.name}</p>
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs text-gray-500 mt-1">
+                      <p className="text-sm font-medium text-grey-900 truncate">{doc.name}</p>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs text-grey-500 mt-1">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           {doc.uploadDate}

@@ -61,7 +61,7 @@ export default function BuyerDraftContractPage() {
             <Users className="h-5 w-5 text-blue-600" />
             <div>
               <div className="font-medium">Conveyancer Stage</div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-grey-500">
                 This stage involves your conveyancer and the seller's conveyancer preparing the legal contract for your
                 purchase. You will be notified of progress and any issues.
               </div>
@@ -84,7 +84,7 @@ export default function BuyerDraftContractPage() {
                 <Clock className="h-5 w-5 text-amber-600" />
                 <div className="flex-1">
                   <div className="font-medium">Awaiting Completion Notification</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-500">
                     Your conveyancer is preparing the draft contract for your purchase. You will be notified
                     automatically when complete.
                   </div>
@@ -97,11 +97,11 @@ export default function BuyerDraftContractPage() {
 
             {contractStatus === "completed" && (
               <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-green-50 border border-grey-300 rounded-lg">
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div className="flex-1">
                     <div className="font-medium">Draft Contract Completed</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-grey-500">
                       Your draft contract has been prepared and is ready for the next stage of your purchase.
                     </div>
                   </div>
@@ -111,23 +111,23 @@ export default function BuyerDraftContractPage() {
                 </div>
 
                 {/* Contract Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-grey-50 rounded-lg">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Prepared By</p>
+                    <p className="text-sm font-medium text-grey-500">Prepared By</p>
                     <p className="font-semibold">{contractData.completedBy || "Your Conveyancer"}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Contract Type</p>
+                    <p className="text-sm font-medium text-grey-500">Contract Type</p>
                     <p className="font-semibold">{contractData.contractType || "Standard Residential Purchase"}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Completed</p>
+                    <p className="text-sm font-medium text-grey-500">Completed</p>
                     <p className="font-semibold">
                       {contractData.completedAt ? formatDate(contractData.completedAt) : "N/A"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Next Stage</p>
+                    <p className="text-sm font-medium text-grey-500">Next Stage</p>
                     <p className="font-semibold">{contractData.nextStage || "Property Searches & Survey"}</p>
                   </div>
                 </div>
@@ -146,23 +146,23 @@ export default function BuyerDraftContractPage() {
             <CardDescription>What you need to do during the draft contract stage</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="p-4 bg-grey-50 rounded-lg">
               <h4 className="font-medium mb-2">Your Responsibilities</h4>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-grey-500">
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Stay available for any questions from your conveyancer</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Review contract terms when provided by your conveyancer</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Provide any additional information requested</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Confirm any special requirements for your purchase</span>
                 </li>
               </ul>
@@ -190,7 +190,7 @@ export default function BuyerDraftContractPage() {
               </ul>
             </div>
 
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="p-4 bg-green-50 border border-grey-300 rounded-lg">
               <h4 className="font-medium mb-2 text-green-800 flex items-center gap-2">
                 <Shield className="h-4 w-4" />
                 How Your Conveyancer Protects You

@@ -835,7 +835,7 @@ export default function BuyerConveyancerCompletionDatePage() {
                   <div className="font-medium">
                     {dateConfirmed ? "Completion Date Confirmed" : "Completion Date Pending"}
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-600">
                     {dateConfirmed ? "All parties have agreed" : "Awaiting confirmation from all parties"}
                   </div>
                 </div>
@@ -852,14 +852,14 @@ export default function BuyerConveyancerCompletionDatePage() {
                   value={proposedDate}
                   onChange={(e) => handleDateChange(e.target.value)}
                   disabled={!haveBothConveyancersAgreed()}
-                  className={!haveBothConveyancersAgreed() ? "opacity-50 cursor-not-allowed bg-gray-100" : ""}
+                  className={!haveBothConveyancersAgreed() ? "opacity-50 cursor-not-allowed bg-grey-100" : ""}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label>Days Until Completion</Label>
                 <div
-                  className={`p-2 rounded border ${!haveBothConveyancersAgreed() ? "bg-gray-100 opacity-50 cursor-not-allowed" : "bg-gray-50"}`}
+                  className={`p-2 rounded border ${!haveBothConveyancersAgreed() ? "bg-grey-100 opacity-50 cursor-not-allowed" : "bg-grey-50"}`}
                 >
                   <span className="text-lg font-bold">
                     {Math.ceil((new Date(proposedDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
@@ -1057,7 +1057,7 @@ export default function BuyerConveyancerCompletionDatePage() {
                 <Badge variant="outline">
                   {requirements.filter((r) => r.completed).length} of {requirements.length} Complete
                 </Badge>
-                <div className="w-24 bg-gray-200 rounded-full h-2">
+                <div className="w-24 bg-grey-200 rounded-full h-2">
                   <div
                     className="bg-green-600 h-2 rounded-full transition-all duration-300"
                     style={{
@@ -1198,7 +1198,7 @@ export default function BuyerConveyancerCompletionDatePage() {
                       ? "bg-green-50 border-green-200"
                       : requirement.overdue
                         ? "bg-red-50 border-red-200"
-                        : "bg-white border-gray-200 hover:border-gray-300"
+                        : "bg-white border-grey-200 hover:border-grey-300"
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -1207,7 +1207,7 @@ export default function BuyerConveyancerCompletionDatePage() {
                       className={`mt-1 flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                         requirement.completed
                           ? "bg-green-600 border-green-600 text-white"
-                          : "border-gray-300 hover:border-gray-400"
+                          : "border-grey-300 hover:border-grey-400"
                       }`}
                     >
                       {requirement.completed && <CheckCircle className="h-3 w-3" />}
@@ -1217,7 +1217,7 @@ export default function BuyerConveyancerCompletionDatePage() {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <h4
-                            className={`font-medium text-sm ${requirement.completed ? "line-through text-gray-500" : ""}`}
+                            className={`font-medium text-sm ${requirement.completed ? "line-through text-grey-500" : ""}`}
                           >
                             {requirement.title}
                           </h4>
@@ -1246,7 +1246,7 @@ export default function BuyerConveyancerCompletionDatePage() {
                                   ? "text-red-600"
                                   : new Date(requirement.dueDate) <= new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
                                     ? "text-yellow-600"
-                                    : "text-gray-500"
+                                    : "text-grey-500"
                               }`}
                             >
                               Due: {new Date(requirement.dueDate).toLocaleDateString()}
@@ -1273,7 +1273,7 @@ export default function BuyerConveyancerCompletionDatePage() {
                       </div>
 
                       {requirement.description && (
-                        <p className={`text-sm text-gray-600 mb-2 ${requirement.completed ? "line-through" : ""}`}>
+                        <p className={`text-sm text-grey-600 mb-2 ${requirement.completed ? "line-through" : ""}`}>
                           {requirement.description}
                         </p>
                       )}
@@ -1286,14 +1286,14 @@ export default function BuyerConveyancerCompletionDatePage() {
                       )}
 
                       {requirement.notes && (
-                        <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
+                        <div className="mt-2 p-2 bg-grey-50 rounded text-xs">
                           <strong>Notes:</strong> {requirement.notes}
                         </div>
                       )}
 
                       {/* Edit Form */}
                       {editingRequirement === requirement.id && (
-                        <div className="mt-3 p-3 border rounded bg-gray-50">
+                        <div className="mt-3 p-3 border rounded bg-grey-50">
                           <div className="space-y-2">
                             <div>
                               <Label className="text-xs">Notes</Label>
@@ -1354,8 +1354,8 @@ export default function BuyerConveyancerCompletionDatePage() {
             </div>
 
             {getFilteredRequirements().length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <CheckCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <div className="text-center py-8 text-grey-500">
+                <CheckCircle className="h-12 w-12 mx-auto mb-4 text-grey-300" />
                 <p>No requirements match the current filter</p>
                 <Button variant="outline" onClick={() => setRequirementFilter("all")} className="mt-2">
                   Show All Requirements

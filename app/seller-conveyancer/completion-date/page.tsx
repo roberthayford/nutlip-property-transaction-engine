@@ -519,7 +519,7 @@ export default function SellerConveyancerCompletionDatePage() {
                   <div className="font-medium">
                     {dateConfirmed ? "Completion Date Confirmed" : "Completion Date Pending"}
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-600">
                     {dateConfirmed ? "All parties have agreed" : "Awaiting confirmation from all parties"}
                   </div>
                 </div>
@@ -536,14 +536,14 @@ export default function SellerConveyancerCompletionDatePage() {
                   value={proposedDate}
                   onChange={(e) => handleDateChange(e.target.value)}
                   disabled={!haveBothConveyancersAgreed()}
-                  className={!haveBothConveyancersAgreed() ? "opacity-50 cursor-not-allowed bg-gray-100" : ""}
+                  className={!haveBothConveyancersAgreed() ? "opacity-50 cursor-not-allowed bg-grey-100" : ""}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label>Days Until Completion</Label>
                 <div
-                  className={`p-2 rounded border ${!haveBothConveyancersAgreed() ? "bg-gray-100 opacity-50 cursor-not-allowed" : "bg-gray-50"}`}
+                  className={`p-2 rounded border ${!haveBothConveyancersAgreed() ? "bg-grey-100 opacity-50 cursor-not-allowed" : "bg-grey-50"}`}
                 >
                   <span className="text-lg font-bold">
                     {Math.ceil((new Date(proposedDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
@@ -752,7 +752,7 @@ export default function SellerConveyancerCompletionDatePage() {
                     ) : (
                       <Clock className="h-4 w-4 text-yellow-600" />
                     )}
-                    <span className={`text-sm ${req.completed ? "text-gray-900" : "text-gray-600"}`}>{req.item}</span>
+                    <span className={`text-sm ${req.completed ? "text-grey-900" : "text-grey-600"}`}>{req.item}</span>
                     {req.critical && (
                       <Badge variant="destructive" className="text-xs">
                         Critical

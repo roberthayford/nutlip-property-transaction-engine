@@ -178,7 +178,7 @@ export default function SellerConveyancerMortgageOfferPage() {
                   <Clock className="h-5 w-5 text-amber-600" />
                   <div>
                     <div className="font-medium">Awaiting Mortgage Offer</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-grey-600">
                       Waiting for buyer conveyancer to submit mortgage offer details
                     </div>
                   </div>
@@ -196,7 +196,7 @@ export default function SellerConveyancerMortgageOfferPage() {
                     <CheckCircle className="h-5 w-5 text-green-600" />
                     <div>
                       <div className="font-medium">Mortgage Offer Received</div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-grey-600">
                         Formal offer received from {mortgageData.lenderName || "lender"}
                       </div>
                     </div>
@@ -211,7 +211,7 @@ export default function SellerConveyancerMortgageOfferPage() {
                       <span className="font-medium text-sm">Loan Amount</span>
                     </div>
                     <div className="text-lg font-bold">£{mortgageData.loanAmount || "0"}</div>
-                    <div className="text-xs text-gray-600">
+                    <div className="text-xs text-grey-600">
                       {mortgageData.ltvRatio ? `${mortgageData.ltvRatio}% LTV` : "LTV TBC"}
                     </div>
                   </div>
@@ -230,7 +230,7 @@ export default function SellerConveyancerMortgageOfferPage() {
                           })
                         : "TBC"}
                     </div>
-                    <div className="text-xs text-gray-600">
+                    <div className="text-xs text-grey-600">
                       {mortgageData.offerValidUntil
                         ? `${Math.ceil((new Date(mortgageData.offerValidUntil).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days remaining`
                         : "Validity period TBC"}
@@ -243,7 +243,7 @@ export default function SellerConveyancerMortgageOfferPage() {
                       <span className="font-medium text-sm">Lender</span>
                     </div>
                     <div className="text-lg font-bold">{mortgageData.lenderName || "Unknown"}</div>
-                    <div className="text-xs text-gray-600">
+                    <div className="text-xs text-grey-600">
                       {mortgageData.rateType
                         ? `${mortgageData.interestRate}% ${mortgageData.rateType}${mortgageData.ratePeriod ? ` (${mortgageData.ratePeriod})` : ""}`
                         : "Rate details TBC"}
@@ -260,7 +260,7 @@ export default function SellerConveyancerMortgageOfferPage() {
                     <CheckCircle className="h-5 w-5 text-blue-600" />
                     <div>
                       <div className="font-medium">Mortgage Not Required</div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-grey-600">
                         This is a cash purchase. No mortgage offer is required for this transaction.
                       </div>
                     </div>
@@ -268,14 +268,14 @@ export default function SellerConveyancerMortgageOfferPage() {
                   <Badge className="bg-blue-100 text-blue-800">Cash Purchase</Badge>
                 </div>
 
-                <div className="p-4 bg-gray-50 border rounded-lg">
+                <div className="p-4 bg-grey-50 border rounded-lg">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Purchase Type</p>
+                      <p className="text-sm font-medium text-grey-600">Purchase Type</p>
                       <p className="text-lg font-bold">Cash Purchase</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Confirmed</p>
+                      <p className="text-sm font-medium text-grey-600">Confirmed</p>
                       <p className="text-lg font-bold">
                         {mortgageData.submittedAt ? formatDate(mortgageData.submittedAt) : "N/A"}
                       </p>
@@ -314,7 +314,7 @@ export default function SellerConveyancerMortgageOfferPage() {
                     <h4 className="font-medium">Property Valuation</h4>
                     <Badge variant="default">Confirmed</Badge>
                   </div>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-grey-600">
                     Property valuation of £{mortgageData.propertyValuation || "TBC"} accepted by{" "}
                     {mortgageData.lenderName || "lender"}.
                   </p>
@@ -326,7 +326,7 @@ export default function SellerConveyancerMortgageOfferPage() {
                       <h4 className="font-medium">Building Insurance Required</h4>
                       <Badge variant="secondary">Action Required</Badge>
                     </div>
-                    <p className="text-sm text-gray-600">Buildings insurance must be in place from completion date.</p>
+                    <p className="text-sm text-grey-600">Buildings insurance must be in place from completion date.</p>
                   </div>
                 )}
 
@@ -336,7 +336,7 @@ export default function SellerConveyancerMortgageOfferPage() {
                       <h4 className="font-medium">Life Insurance Required</h4>
                       <Badge variant="secondary">Action Required</Badge>
                     </div>
-                    <p className="text-sm text-gray-600">Life insurance policy required by lender.</p>
+                    <p className="text-sm text-grey-600">Life insurance policy required by lender.</p>
                   </div>
                 )}
 
@@ -346,7 +346,7 @@ export default function SellerConveyancerMortgageOfferPage() {
                       <h4 className="font-medium">Additional Conditions</h4>
                       <Badge variant="secondary">Review Required</Badge>
                     </div>
-                    <p className="text-sm text-gray-600">{mortgageData.specialConditions}</p>
+                    <p className="text-sm text-grey-600">{mortgageData.specialConditions}</p>
                   </div>
                 )}
 
@@ -355,7 +355,7 @@ export default function SellerConveyancerMortgageOfferPage() {
                   !mortgageData.specialConditions && (
                     <div className="border rounded-lg p-4 text-center">
                       <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                      <p className="text-gray-600">No special conditions attached to this mortgage offer</p>
+                      <p className="text-grey-600">No special conditions attached to this mortgage offer</p>
                     </div>
                   )}
               </div>
@@ -449,11 +449,11 @@ export default function SellerConveyancerMortgageOfferPage() {
               )}
 
               {mortgageStatus === "awaiting" && (
-                <div className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                  <Clock className="h-5 w-5 text-gray-600 mt-0.5" />
+                <div className="flex items-start gap-3 p-3 bg-grey-50 border border-grey-200 rounded-lg">
+                  <Clock className="h-5 w-5 text-grey-600 mt-0.5" />
                   <div>
-                    <div className="font-medium text-gray-800">Awaiting Information</div>
-                    <div className="text-sm text-gray-700">
+                    <div className="font-medium text-grey-800">Awaiting Information</div>
+                    <div className="text-sm text-grey-700">
                       Transaction impact will be assessed once mortgage offer details are received.
                     </div>
                   </div>
@@ -482,7 +482,7 @@ export default function SellerConveyancerMortgageOfferPage() {
                 </div>
               </div>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+            <div className="w-full bg-grey-200 rounded-full h-2 mt-2">
               <div
                 className="bg-green-600 h-2 rounded-full transition-all duration-300"
                 style={{
@@ -496,7 +496,7 @@ export default function SellerConveyancerMortgageOfferPage() {
               {actionItems.map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-3 p-3 border rounded-lg hover:bg-grey-50 transition-colors"
                 >
                   {item.completed ? (
                     <CheckCircle className="h-4 w-4 text-green-600" />
@@ -504,11 +504,11 @@ export default function SellerConveyancerMortgageOfferPage() {
                     <Clock className="h-4 w-4 text-yellow-600" />
                   )}
                   <div className="flex-1">
-                    <span className={`text-sm ${item.completed ? "text-gray-900 line-through" : "text-gray-600"}`}>
+                    <span className={`text-sm ${item.completed ? "text-grey-900 line-through" : "text-grey-600"}`}>
                       {item.task}
                     </span>
                     {item.completed && item.completedAt && (
-                      <div className="text-xs text-gray-500 mt-1">Completed on {formatDate(item.completedAt)}</div>
+                      <div className="text-xs text-grey-500 mt-1">Completed on {formatDate(item.completedAt)}</div>
                     )}
                     {item.priority && (
                       <Badge
@@ -546,7 +546,7 @@ export default function SellerConveyancerMortgageOfferPage() {
                       size="sm"
                       variant="ghost"
                       onClick={() => uncompleteActionItem(index)}
-                      className="text-gray-500 hover:text-gray-700"
+                      className="text-grey-500 hover:text-grey-700"
                     >
                       Undo
                     </Button>
@@ -651,9 +651,9 @@ export default function SellerConveyancerMortgageOfferPage() {
               )}
 
               {mortgageStatus === "awaiting" && (
-                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                  <p className="font-medium text-gray-800">Monitoring Required</p>
-                  <p className="text-gray-700">
+                <div className="p-3 bg-grey-50 border border-grey-200 rounded-lg">
+                  <p className="font-medium text-grey-800">Monitoring Required</p>
+                  <p className="text-grey-700">
                     Continue monitoring for updates from the buyer conveyancer regarding mortgage offer status.
                   </p>
                 </div>

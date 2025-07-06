@@ -164,7 +164,7 @@ export default function SellerConveyancerCompletionPage() {
       case "failed":
         return <XCircle className="h-4 w-4 text-red-600" />
       default:
-        return <Clock className="h-4 w-4 text-gray-400" />
+        return <Clock className="h-4 w-4 text-grey-400" />
     }
   }
 

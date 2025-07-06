@@ -13,6 +13,6 @@ export function getPriorityColor(priority: Priority): string {
     case "low":
       return "bg-green-100 text-green-800 border-green-300"
     default:
-      return "bg-gray-100 text-gray-800 border-gray-300"
+      return "bg-grey-100 text-grey-800 border-grey-300"
   }
 }

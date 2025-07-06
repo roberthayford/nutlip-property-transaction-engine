@@ -451,7 +451,7 @@ export default function BuyerConveyancerEnquiriesPage() {
       case "follow-up":
         return "bg-blue-100 text-blue-800"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-grey-100 text-grey-800"
     }
   }
 
@@ -464,7 +464,7 @@ export default function BuyerConveyancerEnquiriesPage() {
       case "medium":
         return "bg-blue-100 text-blue-800"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-grey-100 text-grey-800"
     }
   }
 
@@ -504,8 +504,8 @@ export default function BuyerConveyancerEnquiriesPage() {
         {/* Header with Stats */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Property Enquiries</h1>
-            <p className="text-gray-600">Communicate with the seller's conveyancer</p>
+            <h1 className="text-2xl font-bold text-grey-900">Property Enquiries</h1>
+            <p className="text-grey-600">Communicate with the seller's conveyancer</p>
           </div>
           <Button onClick={() => setShowComposeModal(true)} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
@@ -521,7 +521,7 @@ export default function BuyerConveyancerEnquiriesPage() {
                 <MessageSquare className="h-8 w-8 text-blue-600" />
                 <div>
                   <p className="text-2xl font-bold">{stats.total}</p>
-                  <p className="text-sm text-gray-600">Total Enquiries</p>
+                  <p className="text-sm text-grey-600">Total Enquiries</p>
                 </div>
               </div>
             </CardContent>
@@ -532,7 +532,7 @@ export default function BuyerConveyancerEnquiriesPage() {
                 <Clock className="h-8 w-8 text-yellow-600" />
                 <div>
                   <p className="text-2xl font-bold">{stats.pending}</p>
-                  <p className="text-sm text-gray-600">Pending Response</p>
+                  <p className="text-sm text-grey-600">Pending Response</p>
                 </div>
               </div>
             </CardContent>
@@ -543,7 +543,7 @@ export default function BuyerConveyancerEnquiriesPage() {
                 <CheckCircle className="h-8 w-8 text-green-600" />
                 <div>
                   <p className="text-2xl font-bold">{stats.answered}</p>
-                  <p className="text-sm text-gray-600">Answered</p>
+                  <p className="text-sm text-grey-600">Answered</p>
                 </div>
               </div>
             </CardContent>
@@ -554,7 +554,7 @@ export default function BuyerConveyancerEnquiriesPage() {
                 <Star className="h-8 w-8 text-amber-600" />
                 <div>
                   <p className="text-2xl font-bold">{stats.starred}</p>
-                  <p className="text-sm text-gray-600">Starred</p>
+                  <p className="text-sm text-grey-600">Starred</p>
                 </div>
               </div>
             </CardContent>
@@ -567,7 +567,7 @@ export default function BuyerConveyancerEnquiriesPage() {
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-grey-400" />
                   <Input
                     placeholder="Search enquiries..."
                     value={searchTerm}
@@ -580,7 +580,7 @@ export default function BuyerConveyancerEnquiriesPage() {
                 <select
                   value={filterCategory}
                   onChange={(e) => setFilterCategory(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  className="px-3 py-2 border border-grey-300 rounded-md text-sm"
                 >
                   <option value="all">All Categories</option>
                   <option value="property">Property</option>
@@ -592,7 +592,7 @@ export default function BuyerConveyancerEnquiriesPage() {
                 <select
                   value={filterPriority}
                   onChange={(e) => setFilterPriority(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  className="px-3 py-2 border border-grey-300 rounded-md text-sm"
                 >
                   <option value="all">All Priorities</option>
                   <option value="urgent">Urgent</option>
@@ -606,7 +606,7 @@ export default function BuyerConveyancerEnquiriesPage() {
         </Card>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-grey-200">
           <nav className="-mb-px flex space-x-8">
             {[
               { key: "active", label: "Active", count: stats.total - enquiries.filter((e) => e.isArchived).length },
@@ -620,7 +620,7 @@ export default function BuyerConveyancerEnquiriesPage() {
                 className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
                   activeTab === tab.key
                     ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    : "border-transparent text-grey-500 hover:text-grey-700 hover:border-grey-300"
                 }`}
               >
                 {tab.label}
@@ -637,9 +637,9 @@ export default function BuyerConveyancerEnquiriesPage() {
           {filteredEnquiries.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center">
-                <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Enquiries Found</h3>
-                <p className="text-gray-600 mb-4">
+                <MessageSquare className="h-12 w-12 text-grey-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-grey-900 mb-2">No Enquiries Found</h3>
+                <p className="text-grey-600 mb-4">
                   {activeTab === "active" ? "You haven't sent any enquiries yet." : `No ${activeTab} enquiries found.`}
                 </p>
                 <Button onClick={() => setShowComposeModal(true)} className="flex items-center gap-2">
@@ -655,7 +655,7 @@ export default function BuyerConveyancerEnquiriesPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-gray-900">{enquiry.subject}</h3>
+                        <h3 className="font-semibold text-grey-900">{enquiry.subject}</h3>
                         <Badge variant="outline" className={getStatusColor(enquiry.status)}>
                           {enquiry.status.charAt(0).toUpperCase() + enquiry.status.slice(1)}
                         </Badge>
@@ -667,11 +667,11 @@ export default function BuyerConveyancerEnquiriesPage() {
                         </Badge>
                       </div>
 
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                      <p className="text-grey-600 text-sm mb-3 line-clamp-2">
                         {enquiry.messages[0]?.content || "No content"}
                       </p>
 
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <div className="flex items-center gap-4 text-xs text-grey-500">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           <span>Created: {enquiry.createdAt.toLocaleDateString()}</span>
@@ -696,7 +696,7 @@ export default function BuyerConveyancerEnquiriesPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleToggleStar(enquiry.id)}
-                        className={enquiry.isStarred ? "text-amber-600" : "text-gray-400"}
+                        className={enquiry.isStarred ? "text-amber-600" : "text-grey-400"}
                       >
                         <Star className={`h-4 w-4 ${enquiry.isStarred ? "fill-current" : ""}`} />
                       </Button>
@@ -786,7 +786,7 @@ export default function BuyerConveyancerEnquiriesPage() {
                           id="category"
                           value={newEnquiry.category}
                           onChange={(e) => setNewEnquiry({ ...newEnquiry, category: e.target.value as any })}
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                          className="mt-1 block w-full px-3 py-2 border border-grey-300 rounded-md"
                         >
                           <option value="property">Property</option>
                           <option value="legal">Legal</option>
@@ -801,7 +801,7 @@ export default function BuyerConveyancerEnquiriesPage() {
                           id="priority"
                           value={newEnquiry.priority}
                           onChange={(e) => setNewEnquiry({ ...newEnquiry, priority: e.target.value as any })}
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                          className="mt-1 block w-full px-3 py-2 border border-grey-300 rounded-md"
                         >
                           <option value="low">Low</option>
                           <option value="medium">Medium</option>
@@ -845,7 +845,7 @@ export default function BuyerConveyancerEnquiriesPage() {
                       {ENQUIRY_TEMPLATES.map((template, index) => (
                         <Card
                           key={index}
-                          className="cursor-pointer hover:bg-gray-50"
+                          className="cursor-pointer hover:bg-grey-50"
                           onClick={() => handleTemplateClick(template)}
                         >
                           <CardContent className="p-3">
@@ -855,7 +855,7 @@ export default function BuyerConveyancerEnquiriesPage() {
                               </Badge>
                             </div>
                             <h4 className="font-medium text-sm mb-1">{template.subject}</h4>
-                            <p className="text-xs text-gray-600 line-clamp-2">{template.content}</p>
+                            <p className="text-xs text-grey-600 line-clamp-2">{template.content}</p>
                           </CardContent>
                         </Card>
                       ))}
@@ -905,7 +905,7 @@ export default function BuyerConveyancerEnquiriesPage() {
                           className={`max-w-[70%] rounded-lg p-3 ${
                             message.sender === "buyer-conveyancer"
                               ? "bg-blue-600 text-white"
-                              : "bg-gray-100 text-gray-900"
+                              : "bg-grey-100 text-grey-900"
                           }`}
                         >
                           <div className="flex items-center gap-2 mb-1">

@@ -64,7 +64,7 @@ export default function EstateAgentMortgageOfferPage() {
             <AlertTriangle className="h-5 w-5 text-blue-600" />
             <div>
               <div className="font-medium">Conveyancer & Buyer Stage</div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-grey-600">
                 The buyer conveyancer is handling the mortgage offer process. You will be automatically notified when
                 complete.
               </div>
@@ -87,7 +87,7 @@ export default function EstateAgentMortgageOfferPage() {
                 <Clock className="h-5 w-5 text-amber-600" />
                 <div className="flex-1">
                   <div className="font-medium">Awaiting Completion Notification</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-600">
                     The buyer conveyancer is processing the mortgage offer. You will be notified automatically when
                     complete.
                   </div>
@@ -104,7 +104,7 @@ export default function EstateAgentMortgageOfferPage() {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div className="flex-1">
                     <div className="font-medium">Process Completed</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-grey-600">
                       Mortgage offer has been processed and submitted to the seller conveyancer.
                     </div>
                   </div>
@@ -114,23 +114,23 @@ export default function EstateAgentMortgageOfferPage() {
                 </div>
 
                 {/* Mortgage Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-grey-50 rounded-lg">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Lender</p>
+                    <p className="text-sm font-medium text-grey-600">Lender</p>
                     <p className="font-semibold">{mortgageData.lenderName || "N/A"}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Loan Amount</p>
+                    <p className="text-sm font-medium text-grey-600">Loan Amount</p>
                     <p className="font-semibold">£{mortgageData.loanAmount || "N/A"}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Interest Rate</p>
+                    <p className="text-sm font-medium text-grey-600">Interest Rate</p>
                     <p className="font-semibold">
                       {mortgageData.interestRate}% ({mortgageData.rateType})
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Completed</p>
+                    <p className="text-sm font-medium text-grey-600">Completed</p>
                     <p className="font-semibold">
                       {mortgageData.submittedAt ? formatDate(mortgageData.submittedAt) : "N/A"}
                     </p>
@@ -145,7 +145,7 @@ export default function EstateAgentMortgageOfferPage() {
                   <CheckCircle className="h-5 w-5 text-blue-600" />
                   <div className="flex-1">
                     <div className="font-medium">Mortgage Not Required</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-grey-600">
                       This is a cash purchase. No mortgage offer is required for this transaction.
                     </div>
                   </div>
@@ -154,13 +154,13 @@ export default function EstateAgentMortgageOfferPage() {
                   </Badge>
                 </div>
 
-                <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="p-4 bg-grey-50 rounded-lg">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Purchase Type</p>
+                    <p className="text-sm font-medium text-grey-600">Purchase Type</p>
                     <p className="font-semibold">Cash Purchase</p>
                   </div>
                   <div className="mt-2">
-                    <p className="text-sm font-medium text-gray-600">Confirmed</p>
+                    <p className="text-sm font-medium text-grey-600">Confirmed</p>
                     <p className="font-semibold">
                       {mortgageData.submittedAt ? formatDate(mortgageData.submittedAt) : "N/A"}
                     </p>
@@ -181,19 +181,19 @@ export default function EstateAgentMortgageOfferPage() {
             <CardDescription>Your role during the mortgage offer stage</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="p-4 bg-grey-50 rounded-lg">
               <h4 className="font-medium mb-2">Your Responsibilities</h4>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-grey-600">
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Monitor progress and be available for any queries from conveyancers</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Keep sellers informed of progress when appropriate</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Be prepared to assist with any property-related queries from lenders</span>
                 </li>
               </ul>

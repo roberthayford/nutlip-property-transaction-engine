@@ -217,12 +217,12 @@ export default function EstateAgentCompletionPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Sale Price</p>
-                  <p className="text-2xl font-bold text-gray-900">£{salePrice.toLocaleString()}</p>
+                  <p className="text-sm font-medium text-grey-600">Sale Price</p>
+                  <p className="text-2xl font-bold text-grey-900">£{salePrice.toLocaleString()}</p>
                 </div>
                 <PoundSterling className="h-8 w-8 text-green-600" />
               </div>
-              <p className="text-xs text-gray-500 mt-1">Asking price achieved</p>
+              <p className="text-xs text-grey-500 mt-1">Asking price achieved</p>
             </CardContent>
           </Card>
 
@@ -230,12 +230,12 @@ export default function EstateAgentCompletionPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Commission</p>
-                  <p className="text-2xl font-bold text-gray-900">£{commission.toLocaleString()}</p>
+                  <p className="text-sm font-medium text-grey-600">Commission</p>
+                  <p className="text-2xl font-bold text-grey-900">£{commission.toLocaleString()}</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-blue-600" />
               </div>
-              <p className="text-xs text-gray-500 mt-1">{commissionRate}% commission rate</p>
+              <p className="text-xs text-grey-500 mt-1">{commissionRate}% commission rate</p>
             </CardContent>
           </Card>
 
@@ -243,12 +243,12 @@ export default function EstateAgentCompletionPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Days on Market</p>
-                  <p className="text-2xl font-bold text-gray-900">{daysOnMarket}</p>
+                  <p className="text-sm font-medium text-grey-600">Days on Market</p>
+                  <p className="text-2xl font-bold text-grey-900">{daysOnMarket}</p>
                 </div>
                 <Calendar className="h-8 w-8 text-purple-600" />
               </div>
-              <p className="text-xs text-gray-500 mt-1">Below average time</p>
+              <p className="text-xs text-grey-500 mt-1">Below average time</p>
             </CardContent>
           </Card>
 
@@ -256,12 +256,12 @@ export default function EstateAgentCompletionPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Viewings</p>
-                  <p className="text-2xl font-bold text-gray-900">{viewingsArranged}</p>
+                  <p className="text-sm font-medium text-grey-600">Viewings</p>
+                  <p className="text-2xl font-bold text-grey-900">{viewingsArranged}</p>
                 </div>
                 <Target className="h-8 w-8 text-orange-600" />
               </div>
-              <p className="text-xs text-gray-500 mt-1">{offersReceived} offers received</p>
+              <p className="text-xs text-grey-500 mt-1">{offersReceived} offers received</p>
             </CardContent>
           </Card>
         </div>
@@ -278,7 +278,7 @@ export default function EstateAgentCompletionPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 sm:space-y-4">
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-grey-200 rounded-full h-2">
                 <div
                   className="bg-green-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${progressPercentage}%` }}
@@ -296,7 +296,7 @@ export default function EstateAgentCompletionPage() {
                       className={`mt-0.5 h-4 w-4 sm:h-5 sm:w-5 rounded border-2 flex items-center justify-center transition-colors ${
                         task.completed
                           ? "bg-green-600 border-green-600 text-white"
-                          : "border-gray-300 hover:border-green-600"
+                          : "border-grey-300 hover:border-green-600"
                       }`}
                     >
                       {task.completed && <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />}

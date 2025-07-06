@@ -672,7 +672,7 @@ export default function BuyerConveyancerContractExchangePage() {
                     ? "bg-blue-50 border-blue-200"
                     : exchangeStatus === "ready"
                       ? "bg-yellow-50 border-yellow-200"
-                      : "bg-gray-50 border-gray-200"
+                      : "bg-grey-50 border-grey-200"
               }`}
             >
               <div
@@ -683,7 +683,7 @@ export default function BuyerConveyancerContractExchangePage() {
                       ? "text-blue-700"
                       : exchangeStatus === "ready"
                         ? "text-yellow-700"
-                        : "text-gray-700"
+                        : "text-grey-700"
                 }`}
               >
                 {exchangeStatus === "completed"
@@ -729,7 +729,7 @@ export default function BuyerConveyancerContractExchangePage() {
                       ? "bg-green-50 border-green-200"
                       : step.status === "active"
                         ? "bg-blue-50 border-blue-200"
-                        : "bg-gray-50 border-gray-200"
+                        : "bg-grey-50 border-grey-200"
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -739,7 +739,7 @@ export default function BuyerConveyancerContractExchangePage() {
                           ? "bg-green-600 text-white"
                           : step.status === "active"
                             ? "bg-blue-600 text-white"
-                            : "bg-gray-400 text-white"
+                            : "bg-grey-400 text-white"
                       }`}
                     >
                       {step.status === "completed" ? <CheckCircle className="h-4 w-4" /> : index + 1}
@@ -962,7 +962,7 @@ export default function BuyerConveyancerContractExchangePage() {
                       ? "bg-green-50 border-green-200"
                       : item.critical
                         ? "bg-red-50 border-red-200"
-                        : "bg-white border-gray-200 hover:border-gray-300"
+                        : "bg-white border-grey-200 hover:border-grey-300"
                   }`}
                   onClick={() => toggleChecklistItem(item.id)}
                 >
@@ -970,7 +970,7 @@ export default function BuyerConveyancerContractExchangePage() {
                     <div className="flex-shrink-0 mt-0.5">
                       <div
                         className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                          item.completed ? "bg-green-600 border-green-600" : "border-gray-300 hover:border-gray-400"
+                          item.completed ? "bg-green-600 border-green-600" : "border-grey-300 hover:border-grey-400"
                         }`}
                       >
                         {item.completed && <CheckCircle className="h-3 w-3 text-white" />}
@@ -978,7 +978,7 @@ export default function BuyerConveyancerContractExchangePage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-sm font-medium ${item.completed ? "line-through text-gray-500" : ""}`}>
+                        <span className={`text-sm font-medium ${item.completed ? "line-through text-grey-500" : ""}`}>
                           {item.title}
                         </span>
                         {item.critical && <AlertTriangle className="h-4 w-4 text-red-500" />}
@@ -992,12 +992,12 @@ export default function BuyerConveyancerContractExchangePage() {
 
                       {item.dueDate && (
                         <div className="flex items-center gap-1 mb-2">
-                          <Clock className="h-3 w-3 text-gray-400" />
+                          <Clock className="h-3 w-3 text-grey-400" />
                           <span
                             className={`text-xs ${
                               new Date(item.dueDate) < new Date() && !item.completed
                                 ? "text-red-600 font-medium"
-                                : "text-gray-500"
+                                : "text-grey-500"
                             }`}
                           >
                             Due: {new Date(item.dueDate).toLocaleDateString()}
@@ -1013,7 +1013,7 @@ export default function BuyerConveyancerContractExchangePage() {
                       )}
 
                       {item.notes && (
-                        <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
+                        <div className="mt-2 p-2 bg-grey-50 rounded text-xs">
                           <strong>Notes:</strong> {item.notes}
                         </div>
                       )}
@@ -1080,7 +1080,7 @@ export default function BuyerConveyancerContractExchangePage() {
               ))}
 
               {filteredChecklistItems.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-grey-500">
                   <p className="text-sm">No items match the current filter</p>
                 </div>
               )}
@@ -1089,7 +1089,7 @@ export default function BuyerConveyancerContractExchangePage() {
             {/* Add Custom Item */}
             <div className="border-t pt-4">
               {showAddItem ? (
-                <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
+                <div className="space-y-3 p-4 border rounded-lg bg-grey-50">
                   <input
                     type="text"
                     placeholder="Requirement title..."

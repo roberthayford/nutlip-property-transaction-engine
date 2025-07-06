@@ -370,9 +370,9 @@ export default function SellerConveyancerDraftContractPage() {
       case "not-started":
       case "not-sent":
       case "not-required":
-        return "bg-gray-100 text-gray-600"
+        return "bg-grey-100 text-grey-600"
       default:
-        return "bg-gray-100 text-gray-600"
+        return "bg-grey-100 text-grey-600"
     }
   }
 
@@ -405,7 +405,7 @@ export default function SellerConveyancerDraftContractPage() {
       case "low":
         return "bg-green-100 text-green-800 border-green-300"
       default:
-        return "bg-gray-100 text-gray-800 border-gray-300"
+        return "bg-grey-100 text-grey-800 border-grey-300"
     }
   }
 
@@ -456,7 +456,7 @@ export default function SellerConveyancerDraftContractPage() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-semibold text-gray-900">{request.type}</h4>
+                        <h4 className="font-semibold text-grey-900">{request.type}</h4>
                         <Badge className={getPriorityColor(request.priority)}>{request.priority} priority</Badge>
                         <Badge
                           className={
@@ -477,7 +477,7 @@ export default function SellerConveyancerDraftContractPage() {
                         )}
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-grey-600 mb-3">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           Received: {request.createdAt.toLocaleDateString()} at {request.createdAt.toLocaleTimeString()}
@@ -492,20 +492,20 @@ export default function SellerConveyancerDraftContractPage() {
 
                       <div className="space-y-3">
                         <div>
-                          <p className="text-sm font-medium text-gray-900 mb-1">Description:</p>
-                          <p className="text-sm text-gray-700">{request.description}</p>
+                          <p className="text-sm font-medium text-grey-900 mb-1">Description:</p>
+                          <p className="text-sm text-grey-700">{request.description}</p>
                         </div>
 
                         {request.proposedChange && (
                           <div>
-                            <p className="text-sm font-medium text-gray-900 mb-1">Proposed Solution:</p>
-                            <p className="text-sm text-gray-700">{request.proposedChange}</p>
+                            <p className="text-sm font-medium text-grey-900 mb-1">Proposed Solution:</p>
+                            <p className="text-sm text-grey-700">{request.proposedChange}</p>
                           </div>
                         )}
 
                         {request.affectedClauses.length > 0 && (
                           <div>
-                            <p className="text-sm font-medium text-gray-900 mb-1">Affected Clauses:</p>
+                            <p className="text-sm font-medium text-grey-900 mb-1">Affected Clauses:</p>
                             <div className="flex flex-wrap gap-1">
                               {request.affectedClauses.map((clause, index) => (
                                 <Badge key={index} variant="outline" className="text-xs">
@@ -576,7 +576,7 @@ export default function SellerConveyancerDraftContractPage() {
               {/* Contract Preparation */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-gray-900">Contract Preparation</h4>
+                  <h4 className="font-medium text-grey-900">Contract Preparation</h4>
                   <Badge className={getStatusColor(contractPreparedStatus)}>
                     <div className="flex items-center gap-1">
                       {getStatusIcon(contractPreparedStatus)}
@@ -584,7 +584,7 @@ export default function SellerConveyancerDraftContractPage() {
                     </div>
                   </Badge>
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-grey-600">
                   {contractPreparedStatus === "completed"
                     ? "Contract documents are ready for review"
                     : contractPreparedStatus === "in-progress"
@@ -596,7 +596,7 @@ export default function SellerConveyancerDraftContractPage() {
               {/* Buyer Review */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-gray-900">Buyer Review</h4>
+                  <h4 className="font-medium text-grey-900">Buyer Review</h4>
                   <Badge className={getStatusColor(buyerReviewStatus)}>
                     <div className="flex items-center gap-1">
                       {getStatusIcon(buyerReviewStatus)}
@@ -604,7 +604,7 @@ export default function SellerConveyancerDraftContractPage() {
                     </div>
                   </Badge>
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-grey-600">
                   {buyerReviewStatus === "completed"
                     ? "Buyer's conveyancer has completed review"
                     : buyerReviewStatus === "reviewing"
@@ -615,16 +615,16 @@ export default function SellerConveyancerDraftContractPage() {
                           ? "Documents sent, confirming delivery..."
                           : "Documents not yet sent"}
                 </div>
-                {sentTimestamp && <div className="text-xs text-gray-500">Sent: {sentTimestamp.toLocaleString()}</div>}
+                {sentTimestamp && <div className="text-xs text-grey-500">Sent: {sentTimestamp.toLocaleString()}</div>}
                 {deliveredTimestamp && (
-                  <div className="text-xs text-gray-500">Delivered: {deliveredTimestamp.toLocaleString()}</div>
+                  <div className="text-xs text-grey-500">Delivered: {deliveredTimestamp.toLocaleString()}</div>
                 )}
               </div>
 
               {/* Client Approval */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-gray-900">Client Approval</h4>
+                  <h4 className="font-medium text-grey-900">Client Approval</h4>
                   <Badge className={getStatusColor(clientApprovalStatus)}>
                     <div className="flex items-center gap-1">
                       {getStatusIcon(clientApprovalStatus)}
@@ -632,7 +632,7 @@ export default function SellerConveyancerDraftContractPage() {
                     </div>
                   </Badge>
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-grey-600">
                   {clientApprovalStatus === "approved"
                     ? "Client has approved the contract terms"
                     : clientApprovalStatus === "pending"
@@ -669,9 +669,9 @@ export default function SellerConveyancerDraftContractPage() {
                     multiple
                     accept=".pdf,.doc,.docx"
                     onChange={handleFileUpload}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    className="block w-full text-sm text-grey-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
-                  <p className="mt-1 text-xs text-gray-500">PDF or Word documents, max 10MB each</p>
+                  <p className="mt-1 text-xs text-grey-500">PDF or Word documents, max 10MB each</p>
                 </div>
               </div>
 
@@ -688,15 +688,15 @@ export default function SellerConveyancerDraftContractPage() {
                         <div className="flex items-center gap-3">
                           <FileText className="h-4 w-4 text-blue-600" />
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{file.name}</p>
-                            <p className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                            <p className="text-sm font-medium text-grey-900">{file.name}</p>
+                            <p className="text-xs text-grey-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                           </div>
                         </div>
                         <Button
                           onClick={() => removeFile(index)}
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-grey-50"
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -761,7 +761,7 @@ export default function SellerConveyancerDraftContractPage() {
               <Button
                 onClick={handleSendToBuyer}
                 disabled={isSending || uploadedFiles.length === 0 || !isConnected}
-                className="w-full h-12 text-base font-medium bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300"
+                className="w-full h-12 text-base font-medium bg-blue-600 hover:bg-blue-700 disabled:bg-grey-500"
                 size="lg"
               >
                 {isSending ? (
@@ -838,7 +838,7 @@ export default function SellerConveyancerDraftContractPage() {
                   ) : (
                     <Clock className="h-4 w-4 text-yellow-600" />
                   )}
-                  <span className={task.completed ? "text-gray-900" : "text-gray-600"}>{task.item}</span>
+                  <span className={task.completed ? "text-grey-900" : "text-grey-600"}>{task.item}</span>
                   {!task.completed && (
                     <Badge variant="outline" className="ml-auto">
                       To Complete

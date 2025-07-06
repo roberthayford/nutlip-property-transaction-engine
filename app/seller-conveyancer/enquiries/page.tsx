@@ -295,7 +295,7 @@ export default function SellerConveyancerEnquiriesPage() {
       case "follow-up":
         return "bg-blue-100 text-blue-800"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-grey-100 text-grey-800"
     }
   }
 
@@ -308,7 +308,7 @@ export default function SellerConveyancerEnquiriesPage() {
       case "medium":
         return "bg-blue-100 text-blue-800"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-grey-100 text-grey-800"
     }
   }
 
@@ -329,8 +329,8 @@ export default function SellerConveyancerEnquiriesPage() {
         {/* Header with Stats */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Property Enquiries</h1>
-            <p className="text-gray-600">Respond to enquiries from the buyer's conveyancer</p>
+            <h1 className="text-2xl font-bold text-grey-900">Property Enquiries</h1>
+            <p className="text-grey-600">Respond to enquiries from the buyer's conveyancer</p>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="flex items-center gap-1">
@@ -348,7 +348,7 @@ export default function SellerConveyancerEnquiriesPage() {
                 <MessageSquare className="h-8 w-8 text-blue-600" />
                 <div>
                   <p className="text-2xl font-bold">{stats.total}</p>
-                  <p className="text-sm text-gray-600">Total Enquiries</p>
+                  <p className="text-sm text-grey-600">Total Enquiries</p>
                 </div>
               </div>
             </CardContent>
@@ -359,7 +359,7 @@ export default function SellerConveyancerEnquiriesPage() {
                 <Clock className="h-8 w-8 text-yellow-600" />
                 <div>
                   <p className="text-2xl font-bold">{stats.pending}</p>
-                  <p className="text-sm text-gray-600">Awaiting Response</p>
+                  <p className="text-sm text-grey-600">Awaiting Response</p>
                 </div>
               </div>
             </CardContent>
@@ -370,7 +370,7 @@ export default function SellerConveyancerEnquiriesPage() {
                 <CheckCircle className="h-8 w-8 text-green-600" />
                 <div>
                   <p className="text-2xl font-bold">{stats.answered}</p>
-                  <p className="text-sm text-gray-600">Responded</p>
+                  <p className="text-sm text-grey-600">Responded</p>
                 </div>
               </div>
             </CardContent>
@@ -381,7 +381,7 @@ export default function SellerConveyancerEnquiriesPage() {
                 <Star className="h-8 w-8 text-amber-600" />
                 <div>
                   <p className="text-2xl font-bold">{stats.starred}</p>
-                  <p className="text-sm text-gray-600">Starred</p>
+                  <p className="text-sm text-grey-600">Starred</p>
                 </div>
               </div>
             </CardContent>
@@ -394,7 +394,7 @@ export default function SellerConveyancerEnquiriesPage() {
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-grey-400" />
                   <Input
                     placeholder="Search enquiries..."
                     value={searchTerm}
@@ -407,7 +407,7 @@ export default function SellerConveyancerEnquiriesPage() {
                 <select
                   value={filterCategory}
                   onChange={(e) => setFilterCategory(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  className="px-3 py-2 border border-grey-300 rounded-md text-sm"
                 >
                   <option value="all">All Categories</option>
                   <option value="property">Property</option>
@@ -419,7 +419,7 @@ export default function SellerConveyancerEnquiriesPage() {
                 <select
                   value={filterPriority}
                   onChange={(e) => setFilterPriority(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  className="px-3 py-2 border border-grey-300 rounded-md text-sm"
                 >
                   <option value="all">All Priorities</option>
                   <option value="urgent">Urgent</option>
@@ -433,7 +433,7 @@ export default function SellerConveyancerEnquiriesPage() {
         </Card>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-grey-200">
           <nav className="-mb-px flex space-x-8">
             {[
               { key: "pending", label: "Pending", count: stats.pending },
@@ -447,7 +447,7 @@ export default function SellerConveyancerEnquiriesPage() {
                 className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
                   activeTab === tab.key
                     ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    : "border-transparent text-grey-500 hover:text-grey-700 hover:border-grey-300"
                 }`}
               >
                 {tab.label}
@@ -464,9 +464,9 @@ export default function SellerConveyancerEnquiriesPage() {
           {filteredEnquiries.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center">
-                <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Enquiries Found</h3>
-                <p className="text-gray-600">
+                <MessageSquare className="h-12 w-12 text-grey-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-grey-900 mb-2">No Enquiries Found</h3>
+                <p className="text-grey-600">
                   {activeTab === "pending" ? "No pending enquiries at the moment." : `No ${activeTab} enquiries found.`}
                 </p>
               </CardContent>
@@ -478,7 +478,7 @@ export default function SellerConveyancerEnquiriesPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-gray-900">{enquiry.subject}</h3>
+                        <h3 className="font-semibold text-grey-900">{enquiry.subject}</h3>
                         <Badge variant="outline" className={getStatusColor(enquiry.status)}>
                           {enquiry.status.charAt(0).toUpperCase() + enquiry.status.slice(1)}
                         </Badge>
@@ -490,11 +490,11 @@ export default function SellerConveyancerEnquiriesPage() {
                         </Badge>
                       </div>
 
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                      <p className="text-grey-600 text-sm mb-3 line-clamp-2">
                         {enquiry.messages[0]?.content || "No content"}
                       </p>
 
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <div className="flex items-center gap-4 text-xs text-grey-500">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           <span>Received: {enquiry.createdAt.toLocaleDateString()}</span>
@@ -532,7 +532,7 @@ export default function SellerConveyancerEnquiriesPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleToggleStar(enquiry.id)}
-                        className={enquiry.isStarred ? "text-amber-600" : "text-gray-400"}
+                        className={enquiry.isStarred ? "text-amber-600" : "text-grey-400"}
                       >
                         <Star className={`h-4 w-4 ${enquiry.isStarred ? "fill-current" : ""}`} />
                       </Button>
@@ -565,7 +565,7 @@ export default function SellerConveyancerEnquiriesPage() {
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h2 className="text-xl font-semibold">Respond to Enquiry</h2>
-                    <p className="text-gray-600">{selectedEnquiry.subject}</p>
+                    <p className="text-grey-600">{selectedEnquiry.subject}</p>
                   </div>
                   <Button variant="ghost" size="sm" onClick={() => setShowResponseModal(false)} className="h-8 w-8 p-0">
                     <X className="h-4 w-4" />
@@ -575,7 +575,7 @@ export default function SellerConveyancerEnquiriesPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Original Enquiry */}
                   <div className="lg:col-span-2">
-                    <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div className="bg-grey-50 rounded-lg p-4 mb-6">
                       <h3 className="font-medium mb-2">Original Enquiry</h3>
                       <div className="flex items-center gap-2 mb-2">
                         <Badge className={getPriorityColor(selectedEnquiry.priority)}>
@@ -585,7 +585,7 @@ export default function SellerConveyancerEnquiriesPage() {
                           {selectedEnquiry.category}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-700">{selectedEnquiry.messages[0]?.content}</p>
+                      <p className="text-sm text-grey-700">{selectedEnquiry.messages[0]?.content}</p>
                     </div>
 
                     {/* Response Form */}
@@ -627,7 +627,7 @@ export default function SellerConveyancerEnquiriesPage() {
                       ).map((template, index) => (
                         <Card
                           key={index}
-                          className="cursor-pointer hover:bg-gray-50"
+                          className="cursor-pointer hover:bg-grey-50"
                           onClick={() => setResponseContent(template.content)}
                         >
                           <CardContent className="p-3">
@@ -637,7 +637,7 @@ export default function SellerConveyancerEnquiriesPage() {
                               </Badge>
                             </div>
                             <h4 className="font-medium text-sm mb-1">{template.subject}</h4>
-                            <p className="text-xs text-gray-600 line-clamp-3">{template.content}</p>
+                            <p className="text-xs text-grey-600 line-clamp-3">{template.content}</p>
                           </CardContent>
                         </Card>
                       ))}
@@ -687,7 +687,7 @@ export default function SellerConveyancerEnquiriesPage() {
                           className={`max-w-[70%] rounded-lg p-3 ${
                             message.sender === "seller-conveyancer"
                               ? "bg-blue-600 text-white"
-                              : "bg-gray-100 text-gray-900"
+                              : "bg-grey-100 text-grey-900"
                           }`}
                         >
                           <div className="flex items-center gap-2 mb-1">

@@ -58,7 +58,7 @@ const getPriorityColor = (priority: "low" | "medium" | "high") => {
     case "low":
       return "bg-green-100 text-green-800 border-green-300"
     default:
-      return "bg-gray-100 text-gray-800 border-gray-300"
+      return "bg-grey-100 text-grey-800 border-grey-300"
   }
 }
 
@@ -71,7 +71,7 @@ const getReplyStatusColor = (decision: "accepted" | "rejected" | "counter-propos
     case "counter-proposal":
       return "bg-blue-100 text-blue-800"
     default:
-      return "bg-gray-100 text-gray-800"
+      return "bg-grey-100 text-grey-800"
   }
 }
 
@@ -333,7 +333,7 @@ export default function BuyerConveyancerDraftContractPage() {
       case "reviewed":
         return "bg-purple-100 text-purple-800"
       default:
-        return "bg-gray-100 text-gray-600"
+        return "bg-grey-100 text-grey-600"
     }
   }
 
@@ -676,7 +676,7 @@ export default function BuyerConveyancerDraftContractPage() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-semibold text-gray-900">{request.type}</h4>
+                        <h4 className="font-semibold text-grey-900">{request.type}</h4>
                         <Badge className={getPriorityColor(request.priority)}>{request.priority} priority</Badge>
                         <Badge
                           className={
@@ -699,7 +699,7 @@ export default function BuyerConveyancerDraftContractPage() {
                         )}
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-grey-600 mb-3">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           Sent: {request.createdAt.toLocaleDateString()} at {request.createdAt.toLocaleTimeString()}
@@ -714,20 +714,20 @@ export default function BuyerConveyancerDraftContractPage() {
 
                       <div className="space-y-3">
                         <div>
-                          <p className="text-sm font-medium text-gray-900 mb-1">Your Request:</p>
-                          <p className="text-sm text-gray-700">{request.description}</p>
+                          <p className="text-sm font-medium text-grey-900 mb-1">Your Request:</p>
+                          <p className="text-sm text-grey-700">{request.description}</p>
                         </div>
 
                         {request.proposedChange && (
                           <div>
-                            <p className="text-sm font-medium text-gray-900 mb-1">Proposed Solution:</p>
-                            <p className="text-sm text-gray-700">{request.proposedChange}</p>
+                            <p className="text-sm font-medium text-grey-900 mb-1">Proposed Solution:</p>
+                            <p className="text-sm text-grey-700">{request.proposedChange}</p>
                           </div>
                         )}
 
                         {request.affectedClauses.length > 0 && (
                           <div>
-                            <p className="text-sm font-medium text-gray-900 mb-1">Affected Clauses:</p>
+                            <p className="text-sm font-medium text-grey-900 mb-1">Affected Clauses:</p>
                             <div className="flex flex-wrap gap-1">
                               {request.affectedClauses.map((clause, index) => (
                                 <Badge key={index} variant="outline" className="text-xs">
@@ -858,21 +858,21 @@ export default function BuyerConveyancerDraftContractPage() {
           <CardContent>
             {receivedDocuments.length === 0 ? (
               <div className="text-center py-8">
-                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">No contract documents received yet</p>
-                <p className="text-sm text-gray-500">
+                <FileText className="h-12 w-12 text-grey-400 mx-auto mb-4" />
+                <p className="text-grey-600 mb-2">No contract documents received yet</p>
+                <p className="text-sm text-grey-500">
                   Documents will appear here when sent by the seller's conveyancer
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {receivedDocuments.map((doc) => (
-                  <div key={doc.id} className="border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div key={doc.id} className="border rounded-lg p-4 bg-grey-50 hover:bg-grey-100 transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <FileText className="h-5 w-5 text-blue-600" />
-                          <h4 className="font-medium text-gray-900">{doc.name}</h4>
+                          <h4 className="font-medium text-grey-900">{doc.name}</h4>
                           <Badge className={getStatusColor(doc.status)}>
                             <div className="flex items-center gap-1">
                               {getStatusIcon(doc.status)}
@@ -890,7 +890,7 @@ export default function BuyerConveyancerDraftContractPage() {
                           )}
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-grey-600 mb-3">
                           <div className="flex items-center gap-1">
                             <User className="h-3 w-3" />
                             From: {doc.uploadedBy.replace("-", " ")}
@@ -994,8 +994,8 @@ export default function BuyerConveyancerDraftContractPage() {
             {contractIssues.length === 0 ? (
               <div className="text-center py-8">
                 <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">No issues identified</p>
-                <p className="text-sm text-gray-500">Issues will be tracked here as you review the contract</p>
+                <p className="text-grey-600 mb-2">No issues identified</p>
+                <p className="text-sm text-grey-500">Issues will be tracked here as you review the contract</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -1004,7 +1004,7 @@ export default function BuyerConveyancerDraftContractPage() {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h4 className="font-semibold text-gray-900">{issue.title}</h4>
+                          <h4 className="font-semibold text-grey-900">{issue.title}</h4>
                           <Badge
                             className={
                               issue.severity === "critical"
@@ -1022,14 +1022,14 @@ export default function BuyerConveyancerDraftContractPage() {
                                 ? "bg-green-100 text-green-800"
                                 : issue.status === "in-progress"
                                   ? "bg-blue-100 text-blue-800"
-                                  : "bg-gray-100 text-gray-800"
+                                  : "bg-grey-100 text-grey-800"
                             }
                           >
                             {issue.status}
                           </Badge>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-grey-600 mb-3">
                           <div>Category: {issue.category}</div>
                           <div>Section: {issue.contractSection}</div>
                           <div>Identified: {issue.identifiedAt.toLocaleDateString()}</div>
@@ -1038,21 +1038,21 @@ export default function BuyerConveyancerDraftContractPage() {
 
                         <div className="space-y-2">
                           <div>
-                            <p className="text-sm font-medium text-gray-900">Description:</p>
-                            <p className="text-sm text-gray-700">{issue.description}</p>
+                            <p className="text-sm font-medium text-grey-900">Description:</p>
+                            <p className="text-sm text-grey-700">{issue.description}</p>
                           </div>
 
                           {issue.proposedSolution && (
                             <div>
-                              <p className="text-sm font-medium text-gray-900">Proposed Solution:</p>
-                              <p className="text-sm text-gray-700">{issue.proposedSolution}</p>
+                              <p className="text-sm font-medium text-grey-900">Proposed Solution:</p>
+                              <p className="text-sm text-grey-700">{issue.proposedSolution}</p>
                             </div>
                           )}
 
                           {issue.legalImplications && (
                             <div>
-                              <p className="text-sm font-medium text-gray-900">Legal Implications:</p>
-                              <p className="text-sm text-gray-700">{issue.legalImplications}</p>
+                              <p className="text-sm font-medium text-grey-900">Legal Implications:</p>
+                              <p className="text-sm text-grey-700">{issue.legalImplications}</p>
                             </div>
                           )}
                         </div>
@@ -1099,7 +1099,7 @@ export default function BuyerConveyancerDraftContractPage() {
           </CardHeader>
           <CardContent>
             <div className="text-center py-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-grey-600">
                 Click "New Amendment Request" to request changes to the draft contract
               </p>
             </div>
@@ -1119,17 +1119,17 @@ export default function BuyerConveyancerDraftContractPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">{receivedDocuments.length}</div>
-                <div className="text-sm text-gray-600">Documents Received</div>
+                <div className="text-sm text-grey-600">Documents Received</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">{downloadedDocuments.size}</div>
-                <div className="text-sm text-gray-600">Documents Downloaded</div>
+                <div className="text-sm text-grey-600">Documents Downloaded</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-purple-600">
                   {receivedDocuments.filter((doc) => doc.status === "reviewed").length}
                 </div>
-                <div className="text-sm text-gray-600">Documents Reviewed</div>
+                <div className="text-sm text-grey-600">Documents Reviewed</div>
               </div>
             </div>
 
@@ -1141,7 +1141,7 @@ export default function BuyerConveyancerDraftContractPage() {
                   receivedDocuments.length === 0 ||
                   receivedDocuments.some((doc) => doc.status !== "reviewed")
                 }
-                className="w-full h-12 text-base font-medium bg-green-600 hover:bg-green-700 disabled:bg-gray-300"
+                className="w-full h-12 text-base font-medium bg-green-600 hover:bg-green-700 disabled:bg-grey-300"
                 size="lg"
               >
                 {continuingToNext ? (
@@ -1209,7 +1209,7 @@ export default function BuyerConveyancerDraftContractPage() {
                       value={amendmentRequest.type}
                       onChange={(e) => setAmendmentRequest({ ...amendmentRequest, type: e.target.value })}
                       placeholder="e.g., Price Adjustment, Completion Date, Special Conditions"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-grey-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
 
@@ -1280,7 +1280,7 @@ export default function BuyerConveyancerDraftContractPage() {
                     value={amendmentRequest.deadline}
                     onChange={(e) => setAmendmentRequest({ ...amendmentRequest, deadline: e.target.value })}
                     min={new Date().toISOString().split("T")[0]}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-grey-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
@@ -1361,7 +1361,7 @@ export default function BuyerConveyancerDraftContractPage() {
                       value={issueForm.title}
                       onChange={(e) => setIssueForm({ ...issueForm, title: e.target.value })}
                       placeholder="Brief description of the issue"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-grey-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
 
@@ -1375,7 +1375,7 @@ export default function BuyerConveyancerDraftContractPage() {
                       value={issueForm.category}
                       onChange={(e) => setIssueForm({ ...issueForm, category: e.target.value })}
                       placeholder="e.g., Price, Terms, Conditions"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-grey-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -1425,7 +1425,7 @@ export default function BuyerConveyancerDraftContractPage() {
                       value={issueForm.contractSection}
                       onChange={(e) => setIssueForm({ ...issueForm, contractSection: e.target.value })}
                       placeholder="e.g., Clause 5.2, Schedule A"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-grey-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                 </div>
