@@ -2,7 +2,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { User, Building, Users, Scale } from "lucide-react"
+import { User, Building, Users, Scale, BookOpen } from "lucide-react"
 
 export default function HomePage() {
   return (
@@ -26,7 +26,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 max-w-6xl mx-auto">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 max-w-8xl mx-auto">
           {/* Buyer Dashboard Card */}
           <Link href="/buyer" className="block">
             <Card className="h-full hover:shadow-xl transition-all duration-300 cursor-pointer border-2 border-gray-200 hover:border-[#4299E1] hover:translate-y-[-5px]">
@@ -109,9 +109,22 @@ export default function HomePage() {
         </div>
 
         <div className="text-center mt-12">
-          <p className="text-gray-600">
+          <p className="text-gray-600 mb-8">
             Select your role to access your personalised dashboard and transaction management tools.
           </p>
+          
+          {/* Getting Started Button */}
+          <div className="max-w-md mx-auto">
+            <Link href="/guide">
+              <Button className="w-full bg-[#003366] hover:bg-[#002244] text-white text-lg py-6 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-[#4299E1]/30">
+                <BookOpen className="mr-3 h-6 w-6" />
+                Getting Started Guide
+              </Button>
+            </Link>
+            <p className="text-sm text-gray-500 mt-3">
+              New to Nutlip? Learn how to use the platform effectively
+            </p>
+          </div>
         </div>
       </div>
     </div>
