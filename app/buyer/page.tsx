@@ -33,7 +33,9 @@ export default function BuyerDashboard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 md:space-x-4">
               <Link href="/" className="flex items-center">
-                <img src="/nutlip_logo.webp" alt="Nutlip Logo" className="h-8 w-auto" />
+                <div className="flex items-center">
+                  <img src="/nutlip_logo.webp" alt="Nutlip Logo" className="h-8 w-auto" />
+                </div>
               </Link>
               <Badge variant="secondary" className="text-xs md:text-sm">
                 Buyer Dashboard
