@@ -8,9 +8,9 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F7F9FC] to-[#EDF2F7]">
       {/* Hero Section with Logo */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12 flex flex-col items-center">
-          <div className="mb-6">
+      <div className="container mx-auto px-4 py-20">
+        <div className="text-center mb-20 flex flex-col items-center">
+          <div className="mb-12">
             <Image 
               src="/nutlip_logo.webp" 
               alt="Nutlip Logo" 
@@ -20,8 +20,8 @@ export default function HomePage() {
               className="h-auto"
             />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-[#003366] mb-4">Transform Property Transactions Forever</h1>
-          <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-bold text-[#003366] mb-6">Transform Property Transactions Forever</h1>
+          <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto mb-4">
             One Platform. All Stakeholders. Total Transparency.
           </p>
           <p className="text-lg text-gray-700 max-w-3xl mx-auto mt-6">
@@ -29,97 +29,11 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* Pain Points Section */}
-        <div className="max-w-5xl mx-auto mb-16 bg-white rounded-xl shadow-lg p-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-[#003366] mb-6 text-center">The Current Reality</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="flex items-start">
-              <div className="rounded-full bg-[#E53E3E]/10 p-2 mr-4 flex-shrink-0">
-                <X className="h-5 w-5 text-[#E53E3E]" />
-              </div>
-              <div>
-                <p className="font-semibold text-gray-800">Fragmented Communication</p>
-                <p className="text-gray-600">Endless email chains and phone tag</p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <div className="rounded-full bg-[#E53E3E]/10 p-2 mr-4 flex-shrink-0">
-                <X className="h-5 w-5 text-[#E53E3E]" />
-              </div>
-              <div>
-                <p className="font-semibold text-gray-800">Zero Visibility</p>
-                <p className="text-gray-600">Buyers left in the dark about progress</p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <div className="rounded-full bg-[#E53E3E]/10 p-2 mr-4 flex-shrink-0">
-                <X className="h-5 w-5 text-[#E53E3E]" />
-              </div>
-              <div>
-                <p className="font-semibold text-gray-800">Manual Processes</p>
-                <p className="text-gray-600">Documents lost, delayed, or forgotten</p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <div className="rounded-full bg-[#E53E3E]/10 p-2 mr-4 flex-shrink-0">
-                <X className="h-5 w-5 text-[#E53E3E]" />
-              </div>
-              <div>
-                <p className="font-semibold text-gray-800">Coordination Chaos</p>
-                <p className="text-gray-600">Multiple parties working in isolation</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Solution Section */}
-        <div className="max-w-6xl mx-auto mb-16 bg-white rounded-xl shadow-lg p-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-[#003366] mb-6 text-center">The Nutlip Advantage</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="flex items-start">
-              <div className="rounded-full bg-[#10B981]/10 p-2 mr-4 flex-shrink-0">
-                <CheckCircle2 className="h-5 w-5 text-[#10B981]" />
-              </div>
-              <div>
-                <p className="font-semibold text-gray-800">Unifies all stakeholders</p>
-                <p className="text-gray-600">In a real-time environment</p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <div className="rounded-full bg-[#10B981]/10 p-2 mr-4 flex-shrink-0">
-                <CheckCircle2 className="h-5 w-5 text-[#10B981]" />
-              </div>
-              <div>
-                <p className="font-semibold text-gray-800">Automates document workflows</p>
-                <p className="text-gray-600">With intelligent routing</p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <div className="rounded-full bg-[#10B981]/10 p-2 mr-4 flex-shrink-0">
-                <CheckCircle2 className="h-5 w-5 text-[#10B981]" />
-              </div>
-              <div>
-                <p className="font-semibold text-gray-800">Provides complete transparency</p>
-                <p className="text-gray-600">Through visual progress tracking</p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <div className="rounded-full bg-[#10B981]/10 p-2 mr-4 flex-shrink-0">
-                <CheckCircle2 className="h-5 w-5 text-[#10B981]" />
-              </div>
-              <div>
-                <p className="font-semibold text-gray-800">Enables secure communication</p>
-                <p className="text-gray-600">Between all parties</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Stakeholder Benefits */}
-        <div className="max-w-8xl mx-auto mb-16">
-          <h2 className="text-2xl md:text-3xl font-bold text-[#003366] mb-8 text-center">Choose Your Role</h2>
+        <div className="max-w-8xl mx-auto mb-24">
+          <h2 className="text-2xl md:text-3xl font-bold text-[#003366] mb-12 text-center">Choose Your Role</h2>
 
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 container mx-auto">
+          <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4 container mx-auto">
             {/* Buyer Dashboard Card */}
             <Link href="/buyer" className="block">
               <Card className="h-full hover:shadow-xl transition-all duration-300 cursor-pointer border-2 border-gray-200 hover:border-[#4299E1] hover:translate-y-[-5px]">
@@ -131,7 +45,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="px-6 pb-6">
                   <p className="text-gray-700 text-center mb-6 text-base leading-relaxed">
-                    Complete visibility of your transaction. Peace of mind through every step.
+                    Monitor milestones, review documents, and receive real-time updates throughout your property purchase journey.
                   </p>
                   <Button className="w-full bg-[#E53E3E] hover:bg-[#DC2626] text-white border-2 border-transparent hover:border-[#4299E1]/30">
                     Access Dashboard
@@ -151,7 +65,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="px-6 pb-6">
                   <p className="text-gray-700 text-center mb-6 text-base leading-relaxed">
-                    Manage £15M+ in property with ease. Handle 50+ sales simultaneously.
+                    Streamline communications, track multiple transactions simultaneously, and reduce administrative overhead.
                   </p>
                   <Button className="w-full bg-[#E53E3E] hover:bg-[#DC2626] text-white border-2 border-transparent hover:border-[#10B981]/30">
                     Access Dashboard
@@ -171,7 +85,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="px-6 pb-6">
                   <p className="text-gray-700 text-center mb-6 text-base leading-relaxed">
-                    Smart document management with priority handling. Never miss a deadline again.
+                    Accelerate due diligence with secure document sharing, automated timeline tracking, and instant stakeholder updates.
                   </p>
                   <Button className="w-full bg-[#E53E3E] hover:bg-[#DC2626] text-white border-2 border-transparent hover:border-[#8B5CF6]/30">
                     Access Dashboard
@@ -191,7 +105,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="px-6 pb-6">
                   <p className="text-gray-700 text-center mb-6 text-base leading-relaxed">
-                    Smart document management with priority handling. Never miss a deadline again.
+                    Expedite contract reviews, manage client requirements, and ensure compliance through every stage of the transaction.
                   </p>
                   <Button className="w-full bg-[#E53E3E] hover:bg-[#DC2626] text-white border-2 border-transparent hover:border-[#F59E0B]/30">
                     Access Dashboard
