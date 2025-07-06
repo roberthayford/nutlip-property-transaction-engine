@@ -23,6 +23,10 @@ import {
   ChevronDown,
   RotateCcw,
   Menu,
+  ArrowLeft,
+  Building,
+  ChevronRight,
+  Scale,
 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
@@ -386,24 +390,25 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-white sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+      <header className="border-b sticky top-0 z-50 bg-gradient-to-r from-[#002952] to-[#003366] shadow-md">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 md:space-x-4">
-              <Link href="/" className="flex items-center space-x-2">
-                <img src="/nutlip_logo.webp" alt="Nutlip" className="h-8 md:h-10" />
-                <span className="text-xl md:text-2xl font-bold text-primary">Nutlip</span>
+              <Link href="/" className="group flex items-center space-x-2 transition-transform duration-300 hover:scale-105">
+                <div className="relative overflow-hidden rounded-lg p-0.5 bg-gradient-to-r from-[#4299E1] to-[#003366]">
+                  <img src="/nutlip_logo.webp" alt="Nutlip" className="h-10 md:h-10 relative z-10 bg-white p-1 rounded-md" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-blue-200">Property Transaction Engine</span>
+                </div>
               </Link>
-              <Badge variant="secondary" className="hidden sm:inline-flex">
-                Property Transaction Engine
-              </Badge>
               <Badge
-                className={`text-xs md:text-sm
-                ${role === "buyer" ? "bg-blue-100 text-blue-800" : ""}
-                ${role === "estate-agent" ? "bg-green-100 text-green-800" : ""}
-                ${role === "buyer-conveyancer" ? "bg-purple-100 text-purple-800" : ""}
-                ${role === "seller-conveyancer" ? "bg-orange-100 text-orange-800" : ""}
-              `}
+                className={`ml-2 text-xs md:text-sm font-medium px-3 py-1.5 rounded-full border-2 border-white/20
+                  ${role === "buyer" ? "bg-[#4299E1]/90 text-white" : ""}
+                  ${role === "estate-agent" ? "bg-[#10B981]/90 text-white" : ""}
+                  ${role === "buyer-conveyancer" ? "bg-[#8B5CF6]/90 text-white" : ""}
+                  ${role === "seller-conveyancer" ? "bg-[#F59E0B]/90 text-white" : ""}
+                `}
               >
                 {userRoleLabels[role]}
               </Badge>
@@ -423,7 +428,7 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
                   <div className="flex flex-col space-y-4 mt-6">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start bg-transparent">
+                        <Button variant="outline" className="w-full justify-start bg-transparent !text-white hover:bg-slate-700 hover:border-slate-600">
                           <RotateCcw className="h-4 w-4 mr-2" />
                           Reset Demo
                         </Button>
@@ -446,11 +451,28 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-
-                    <Link href={dashboardUrls[role]} className="w-full">
-                      <Button variant="outline" className="w-full justify-start bg-transparent">
-                        <Home className="h-4 w-4 mr-2" />
-                        Back to Dashboard
+                    <Link href={dashboardUrls[role]} className="group">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="relative overflow-hidden bg-white/10 hover:bg-white/20 !text-white border border-white/20"
+                      >
+                        {/* Background animation on hover */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"></div>
+                        
+                        {/* Role-specific icon */}
+                        <div className={`mr-2 p-1 rounded-full
+                          ${role === "buyer" ? "bg-[#4299E1]/20" : ""}
+                          ${role === "estate-agent" ? "bg-[#10B981]/20" : ""}
+                          ${role === "buyer-conveyancer" ? "bg-[#8B5CF6]/20" : ""}
+                          ${role === "seller-conveyancer" ? "bg-[#F59E0B]/20" : ""}
+                        `}>
+                          {role === "buyer" && <User className="h-4 w-4" />}
+                          {role === "estate-agent" && <Building className="h-4 w-4" />}
+                          {role === "buyer-conveyancer" && <Scale className="h-4 w-4" />}
+                          {role === "seller-conveyancer" && <Users className="h-4 w-4" />}
+                        </div>
+                        Back to {userRoleLabels[role]} Dashboard
                       </Button>
                     </Link>
 
@@ -474,7 +496,7 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
                 {/* Reset Demo Button */}
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="flex items-center space-x-2 bg-transparent">
+                    <Button variant="outline" size="sm" className="flex items-center space-x-2 bg-transparent !text-white hover:bg-slate-700 hover:border-slate-600">
                       <RotateCcw className="h-4 w-4" />
                       <span>Reset Demo</span>
                     </Button>
@@ -498,13 +520,33 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
                   </AlertDialogContent>
                 </AlertDialog>
 
-                <Link href={dashboardUrls[role]}>
-                  <Button variant="outline">Back to Dashboard</Button>
+                <Link href={dashboardUrls[role]} className="group">
+                  <Button 
+                    variant="ghost" 
+                    className="relative overflow-hidden bg-white/10 hover:bg-white/20 !text-white border border-white/20"
+                  >
+                    {/* Background animation on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"></div>
+                    
+                    {/* Role-specific icon */}
+                    <div className={`mr-2 p-1 rounded-full
+                      ${role === "buyer" ? "bg-[#4299E1]/20" : ""}
+                      ${role === "estate-agent" ? "bg-[#10B981]/20" : ""}
+                      ${role === "buyer-conveyancer" ? "bg-[#8B5CF6]/20" : ""}
+                      ${role === "seller-conveyancer" ? "bg-[#F59E0B]/20" : ""}
+                    `}>
+                      {role === "buyer" && <User className="h-4 w-4" />}
+                      {role === "estate-agent" && <Building className="h-4 w-4" />}
+                      {role === "buyer-conveyancer" && <Scale className="h-4 w-4" />}
+                      {role === "seller-conveyancer" && <Users className="h-4 w-4" />}
+                    </div>
+                    Back to {userRoleLabels[role]} Dashboard
+                  </Button>
                 </Link>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="flex items-center space-x-2 bg-transparent">
+                    <Button variant="outline" className="flex items-center space-x-2 bg-transparent !text-white hover:bg-slate-700 hover:border-slate-600 hover:!text-white">
                       <User className="h-4 w-4" />
                       <span>Switch Role</span>
                       <ChevronDown className="h-4 w-4" />

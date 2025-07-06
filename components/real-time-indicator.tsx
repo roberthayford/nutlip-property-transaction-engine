@@ -36,7 +36,7 @@ export function RealTimeIndicator() {
         variant="ghost"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative"
+        className="relative !text-white hover:bg-slate-700 hover:border-slate-600 hover:!text-white"
         aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ""}`}
       >
         <Bell className="h-4 w-4" />
