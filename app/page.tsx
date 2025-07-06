@@ -38,7 +38,7 @@ export default function HomePage() {
               </CardHeader>
               <CardContent className="px-6 pb-6">
                 <p className="text-gray-700 text-center mb-6 text-base leading-relaxed">
-                  Track your property purchase journey from offer to completion.
+                  Monitor milestones, review documents, and receive real-time updates throughout your property purchase journey.
                 </p>
                 <Button className="w-full bg-[#E53E3E] hover:bg-[#DC2626] text-white border-2 border-transparent hover:border-[#4299E1]/30">
                   Access Dashboard
@@ -58,7 +58,7 @@ export default function HomePage() {
               </CardHeader>
               <CardContent className="px-6 pb-6">
                 <p className="text-gray-700 text-center mb-6 text-base leading-relaxed">
-                  Manage property sales and coordinate between buyers and sellers.
+                  Streamline communications, track multiple transactions simultaneously, and reduce administrative overhead.
                 </p>
                 <Button className="w-full bg-[#E53E3E] hover:bg-[#DC2626] text-white border-2 border-transparent hover:border-[#10B981]/30">
                   Access Dashboard
@@ -78,7 +78,7 @@ export default function HomePage() {
               </CardHeader>
               <CardContent className="px-6 pb-6">
                 <p className="text-gray-700 text-center mb-6 text-base leading-relaxed">
-                  Handle legal aspects of property purchases for your clients.
+                  Accelerate due diligence with secure document sharing, automated timeline tracking, and instant stakeholder updates.
                 </p>
                 <Button className="w-full bg-[#E53E3E] hover:bg-[#DC2626] text-white border-2 border-transparent hover:border-[#8B5CF6]/30">
                   Access Dashboard
@@ -98,7 +98,7 @@ export default function HomePage() {
               </CardHeader>
               <CardContent className="px-6 pb-6">
                 <p className="text-gray-700 text-center mb-6 text-base leading-relaxed">
-                  Manage legal requirements for property sales and transactions.
+                  Expedite contract reviews, manage client requirements, and ensure compliance through every stage of the transaction.
                 </p>
                 <Button className="w-full bg-[#E53E3E] hover:bg-[#DC2626] text-white border-2 border-transparent hover:border-[#F59E0B]/30">
                   Access Dashboard
