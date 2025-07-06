@@ -199,3 +199,7 @@ pnpm lint         # Run ESLint
 5. **Explore stages**: Navigate through transaction stages for each role
 
 The application is fully functional as a demo/prototype of a property transaction management system with comprehensive role-based workflows and real-time collaboration features.
+
+## Branding Considerations
+
+- **Brand Logo**: Nutlip brand logo should be "nutlip_logo.webp" which is located in public folder
