@@ -419,7 +419,7 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
 
               {/* Mobile Menu */}
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-                <SheetTrigger asChild className="md:hidden">
+                <SheetTrigger asChild>
                   <Button variant="outline" size="sm">
                     <Menu className="h-4 w-4" />
                   </Button>
