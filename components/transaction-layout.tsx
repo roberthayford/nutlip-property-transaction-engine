@@ -389,8 +389,8 @@ function TransactionLayoutInner({ children, currentStage, userRole }: Transactio
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 md:space-x-4">
-              <Link href="/" className="text-xl md:text-2xl font-bold text-primary">
-                Nutlip
+              <Link href="/" className="flex items-center">
+                <img src="/nutlip_logo.webp" alt="Nutlip" className="h-8 md:h-10" />
               </Link>
               <Badge variant="secondary" className="hidden sm:inline-flex">
                 Property Transaction Engine

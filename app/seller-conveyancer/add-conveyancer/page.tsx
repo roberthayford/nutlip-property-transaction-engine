@@ -183,10 +183,10 @@ export default function SellerConveyancerAddConveyancerPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Conveyancer Appointments</h1>
-            <p className="text-sm sm:text-base text-gray-600 mt-1">Manage your conveyancer appointment requests</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-grey-900">Conveyancer Appointments</h1>
+            <p className="text-sm sm:text-base text-grey-600 mt-1">Manage your conveyancer appointment requests</p>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+          <div className="flex items-center gap-2 text-sm text-grey-500">
             <Bell className="h-4 w-4" />
             <span>
               {pendingRequests.length} Pending Request{pendingRequests.length !== 1 ? "s" : ""}
@@ -227,8 +227,8 @@ export default function SellerConveyancerAddConveyancerPage() {
               <CardDescription>No conveyancer appointment requests have been received yet.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <User className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+              <div className="text-center py-8 text-grey-500">
+                <User className="h-12 w-12 mx-auto mb-3 text-grey-300" />
                 <p className="text-sm">
                   When estate agents or clients request your services as a conveyancer, the requests will appear here
                   for you to accept or decline.
@@ -255,7 +255,7 @@ export default function SellerConveyancerAddConveyancerPage() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">Conveyancer Appointment Request</h3>
+                        <h3 className="text-lg font-semibold text-grey-900">Conveyancer Appointment Request</h3>
                         <Badge className="bg-orange-100 text-orange-800">
                           {request.requestType.charAt(0).toUpperCase() + request.requestType.slice(1)}'s Conveyancer
                         </Badge>
@@ -267,10 +267,10 @@ export default function SellerConveyancerAddConveyancerPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-sm">
-                            <User className="h-4 w-4 text-gray-400" />
+                            <User className="h-4 w-4 text-grey-400" />
                             <span className="font-medium">Your Details:</span>
                           </div>
-                          <div className="ml-6 space-y-1 text-sm text-gray-600">
+                          <div className="ml-6 space-y-1 text-sm text-grey-600">
                             <div>{request.conveyancerName}</div>
                             <div className="flex items-center gap-1">
                               <Building className="h-3 w-3" />
@@ -293,10 +293,10 @@ export default function SellerConveyancerAddConveyancerPage() {
 
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-sm">
-                            <Calendar className="h-4 w-4 text-gray-400" />
+                            <Calendar className="h-4 w-4 text-grey-400" />
                             <span className="font-medium">Request Details:</span>
                           </div>
-                          <div className="ml-6 space-y-1 text-sm text-gray-600">
+                          <div className="ml-6 space-y-1 text-sm text-grey-600">
                             <div>Received: {formatDate(request.createdAt)}</div>
                             <div>
                               Role: {request.requestType.charAt(0).toUpperCase() + request.requestType.slice(1)}'s
@@ -363,44 +363,44 @@ export default function SellerConveyancerAddConveyancerPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
-                <h4 className="font-medium text-gray-900">Your Responsibilities</h4>
-                <ul className="space-y-2 text-sm text-gray-600">
+                <h4 className="font-medium text-grey-900">Your Responsibilities</h4>
+                <ul className="space-y-2 text-sm text-grey-600">
                   <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                     <span>Review and respond to appointment requests promptly</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                     <span>Ensure you have capacity to handle the transaction</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                     <span>Confirm your contact details are accurate</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                     <span>Begin legal work once appointment is confirmed</span>
                   </li>
                 </ul>
               </div>
 
               <div className="space-y-3">
-                <h4 className="font-medium text-gray-900">Next Steps</h4>
-                <ul className="space-y-2 text-sm text-gray-600">
+                <h4 className="font-medium text-grey-900">Next Steps</h4>
+                <ul className="space-y-2 text-sm text-grey-600">
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
                     <span>Accept the conveyancer appointment request</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="w-4 h-4 border-2 border-gray-300 rounded mt-0.5 flex-shrink-0"></div>
+                    <div className="w-4 h-4 border-2 border-grey-300 rounded mt-0.5 flex-shrink-0"></div>
                     <span>Proceed to Draft Contract stage</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="w-4 h-4 border-2 border-gray-300 rounded mt-0.5 flex-shrink-0"></div>
+                    <div className="w-4 h-4 border-2 border-grey-300 rounded mt-0.5 flex-shrink-0"></div>
                     <span>Begin legal due diligence and contract preparation</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="w-4 h-4 border-2 border-gray-300 rounded mt-0.5 flex-shrink-0"></div>
+                    <div className="w-4 h-4 border-2 border-grey-300 rounded mt-0.5 flex-shrink-0"></div>
                     <span>Coordinate with other parties in the transaction</span>
                   </li>
                 </ul>

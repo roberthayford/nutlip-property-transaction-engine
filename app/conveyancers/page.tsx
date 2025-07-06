@@ -80,7 +80,7 @@ export default function ConveyancersPage() {
                       {[1, 2, 3, 4].map((star) => (
                         <Star key={star} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                       ))}
-                      <Star className="h-4 w-4 text-gray-300" />
+                      <Star className="h-4 w-4 text-grey-300" />
                       <span className="text-sm text-muted-foreground ml-2">4.2 (89 reviews)</span>
                     </div>
                   </div>

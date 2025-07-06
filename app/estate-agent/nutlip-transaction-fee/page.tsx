@@ -141,7 +141,7 @@ export default function EstateAgentNutlipTransactionFeePage() {
                   <div className="font-medium">
                     {paymentStatus === "completed" ? "Payment Completed" : "Payment Processing"}
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-600">
                     {paymentStatus === "completed"
                       ? `Successfully paid via ${paymentDetails.bank || "Open Banking"}`
                       : "Buyer's conveyancer handling payment"}
@@ -225,7 +225,7 @@ export default function EstateAgentNutlipTransactionFeePage() {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div>
                     <div className="font-medium">Fee Calculation Confirmed</div>
-                    <div className="text-sm text-gray-600">Buyer's conveyancer verified fee amount</div>
+                    <div className="text-sm text-grey-600">Buyer's conveyancer verified fee amount</div>
                   </div>
                 </div>
                 <Badge className="bg-green-100 text-green-800">Complete</Badge>
@@ -244,7 +244,7 @@ export default function EstateAgentNutlipTransactionFeePage() {
                   )}
                   <div>
                     <div className="font-medium">Payment Processing</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-grey-600">
                       {paymentStatus === "completed"
                         ? "Payment successfully completed"
                         : "Open Banking payment in progress"}
@@ -269,11 +269,11 @@ export default function EstateAgentNutlipTransactionFeePage() {
                   {paymentStatus === "completed" ? (
                     <CheckCircle className="h-5 w-5 text-green-600" />
                   ) : (
-                    <Clock className="h-5 w-5 text-gray-400" />
+                    <Clock className="h-5 w-5 text-grey-500" />
                   )}
                   <div>
                     <div className="font-medium">Payment Confirmation</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-grey-600">
                       {paymentStatus === "completed" ? "Payment confirmed and recorded" : "Awaiting payment completion"}
                     </div>
                   </div>
@@ -295,11 +295,11 @@ export default function EstateAgentNutlipTransactionFeePage() {
                   {paymentStatus === "completed" ? (
                     <CheckCircle className="h-5 w-5 text-green-600" />
                   ) : (
-                    <Clock className="h-5 w-5 text-gray-400" />
+                    <Clock className="h-5 w-5 text-grey-500" />
                   )}
                   <div>
                     <div className="font-medium">Stage Completion</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-grey-600">
                       {paymentStatus === "completed"
                         ? "Transaction ready to proceed to final stages"
                         : "Transaction ready to proceed"}
@@ -329,7 +329,7 @@ export default function EstateAgentNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">Digital Transaction Management</div>
-                    <div className="text-sm text-gray-600">End-to-end transaction coordination platform</div>
+                    <div className="text-sm text-grey-600">End-to-end transaction coordination platform</div>
                   </div>
                   <span className="font-bold">£{(calculatedFee * 0.6).toLocaleString()}</span>
                 </div>
@@ -337,7 +337,7 @@ export default function EstateAgentNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">Document Management System</div>
-                    <div className="text-sm text-gray-600">Secure document storage and sharing</div>
+                    <div className="text-sm text-grey-600">Secure document storage and sharing</div>
                   </div>
                   <span className="font-bold">£{(calculatedFee * 0.2).toLocaleString()}</span>
                 </div>
@@ -345,7 +345,7 @@ export default function EstateAgentNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">Communication & Notifications</div>
-                    <div className="text-sm text-gray-600">Multi-party messaging and real-time updates</div>
+                    <div className="text-sm text-grey-600">Multi-party messaging and real-time updates</div>
                   </div>
                   <span className="font-bold">£{(calculatedFee * 0.15).toLocaleString()}</span>
                 </div>
@@ -353,7 +353,7 @@ export default function EstateAgentNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">Compliance & Support</div>
-                    <div className="text-sm text-gray-600">Regulatory compliance and customer support</div>
+                    <div className="text-sm text-grey-600">Regulatory compliance and customer support</div>
                   </div>
                   <span className="font-bold">£{(calculatedFee * 0.05).toLocaleString()}</span>
                 </div>
@@ -363,7 +363,7 @@ export default function EstateAgentNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 bg-purple-50 border border-purple-200 rounded-lg">
                   <div>
                     <div className="font-bold">Total Fee (Inc. VAT)</div>
-                    <div className="text-sm text-gray-600">Paid by buyer's conveyancer</div>
+                    <div className="text-sm text-grey-600">Paid by buyer's conveyancer</div>
                   </div>
                   <span className="text-xl font-bold text-purple-900">£{totalFeeIncVat.toLocaleString()}</span>
                 </div>
@@ -449,7 +449,7 @@ export default function EstateAgentNutlipTransactionFeePage() {
                 ></div>
                 <div>
                   <div className="font-medium text-sm">Payment Completion Alert</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-600">
                     {paymentStatus === "completed"
                       ? "✓ Notification sent - Fee payment completed successfully"
                       : "Immediate notification when fee payment is completed"}
@@ -465,7 +465,7 @@ export default function EstateAgentNutlipTransactionFeePage() {
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <div>
                   <div className="font-medium text-sm">Stage Progression</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-600">
                     {paymentStatus === "completed"
                       ? "✓ Ready to progress to final completion stages"
                       : "Automatic progression to next transaction stage"}
@@ -477,7 +477,7 @@ export default function EstateAgentNutlipTransactionFeePage() {
                 <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                 <div>
                   <div className="font-medium text-sm">Real-Time Updates</div>
-                  <div className="text-sm text-gray-600">Live status updates on your dashboard</div>
+                  <div className="text-sm text-grey-600">Live status updates on your dashboard</div>
                 </div>
               </div>
             </div>

@@ -151,7 +151,7 @@ export default function BuyerConveyancerNutlipTransactionFeePage() {
                   ? "bg-green-50 border-green-200"
                   : paymentStatus === "processing"
                     ? "bg-yellow-50 border-yellow-200"
-                    : "bg-gray-50 border-gray-200"
+                    : "bg-grey-50 border-grey-200"
               }`}
             >
               <div className="flex items-center gap-3">
@@ -168,7 +168,7 @@ export default function BuyerConveyancerNutlipTransactionFeePage() {
                         ? "Payment Processing"
                         : "Payment Required"}
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-600">
                     {paymentStatus === "paid"
                       ? "Transaction fee successfully paid"
                       : paymentStatus === "processing"
@@ -221,7 +221,7 @@ export default function BuyerConveyancerNutlipTransactionFeePage() {
                   onChange={(e) => setClientReference(e.target.value)}
                   placeholder="Enter payment reference"
                 />
-                <p className="text-xs text-gray-600">This reference will appear on your bank statement</p>
+                <p className="text-xs text-grey-600">This reference will appear on your bank statement</p>
               </div>
 
               {/* Bank Selection */}
@@ -236,7 +236,7 @@ export default function BuyerConveyancerNutlipTransactionFeePage() {
                         className={`p-4 border-2 rounded-lg transition-all hover:shadow-md ${
                           selectedBank === bank.name
                             ? "border-blue-500 bg-blue-50"
-                            : "border-gray-200 hover:border-gray-300"
+                            : "border-grey-200 hover:border-grey-300"
                         }`}
                       >
                         <div className="text-center">
@@ -254,7 +254,7 @@ export default function BuyerConveyancerNutlipTransactionFeePage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="font-medium">Selected Bank: {selectedBank}</div>
-                        <div className="text-sm text-gray-600">You'll be redirected to your bank's secure login</div>
+                        <div className="text-sm text-grey-600">You'll be redirected to your bank's secure login</div>
                       </div>
                       <Button onClick={handlePayment} className="flex items-center gap-2">
                         Pay £{totalFeeIncVat.toLocaleString()}
@@ -294,7 +294,7 @@ export default function BuyerConveyancerNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">Digital Transaction Management</div>
-                    <div className="text-sm text-gray-600">End-to-end transaction coordination platform</div>
+                    <div className="text-sm text-grey-600">End-to-end transaction coordination platform</div>
                   </div>
                   <span className="font-bold">£{(calculatedFee * 0.6).toLocaleString()}</span>
                 </div>
@@ -302,7 +302,7 @@ export default function BuyerConveyancerNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">Document Management System</div>
-                    <div className="text-sm text-gray-600">Secure document storage and sharing</div>
+                    <div className="text-sm text-grey-600">Secure document storage and sharing</div>
                   </div>
                   <span className="font-bold">£{(calculatedFee * 0.2).toLocaleString()}</span>
                 </div>
@@ -310,7 +310,7 @@ export default function BuyerConveyancerNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">Communication & Notifications</div>
-                    <div className="text-sm text-gray-600">Multi-party messaging and real-time updates</div>
+                    <div className="text-sm text-grey-600">Multi-party messaging and real-time updates</div>
                   </div>
                   <span className="font-bold">£{(calculatedFee * 0.15).toLocaleString()}</span>
                 </div>
@@ -318,7 +318,7 @@ export default function BuyerConveyancerNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">Compliance & Support</div>
-                    <div className="text-sm text-gray-600">Regulatory compliance and customer support</div>
+                    <div className="text-sm text-grey-600">Regulatory compliance and customer support</div>
                   </div>
                   <span className="font-bold">£{(calculatedFee * 0.05).toLocaleString()}</span>
                 </div>
@@ -328,7 +328,7 @@ export default function BuyerConveyancerNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">Subtotal (Excl. VAT)</div>
-                    <div className="text-sm text-gray-600">Base platform fee</div>
+                    <div className="text-sm text-grey-600">Base platform fee</div>
                   </div>
                   <span className="font-bold">£{calculatedFee.toLocaleString()}</span>
                 </div>
@@ -336,7 +336,7 @@ export default function BuyerConveyancerNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">VAT (20%)</div>
-                    <div className="text-sm text-gray-600">Value Added Tax</div>
+                    <div className="text-sm text-grey-600">Value Added Tax</div>
                   </div>
                   <span className="font-bold">£{vatAmount.toLocaleString()}</span>
                 </div>
@@ -344,7 +344,7 @@ export default function BuyerConveyancerNutlipTransactionFeePage() {
                 <div className="flex justify-between items-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <div>
                     <div className="font-bold">Total Fee (Inc. VAT)</div>
-                    <div className="text-sm text-gray-600">Payable by buyer conveyancer</div>
+                    <div className="text-sm text-grey-600">Payable by buyer conveyancer</div>
                   </div>
                   <span className="text-xl font-bold text-blue-900">£{totalFeeIncVat.toLocaleString()}</span>
                 </div>

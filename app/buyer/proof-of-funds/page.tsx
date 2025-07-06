@@ -215,7 +215,7 @@ export default function BuyerProofOfFundsPage() {
       case "rejected":
         return <AlertCircle className="h-4 w-4 text-red-600" />
       default:
-        return <AlertCircle className="h-4 w-4 text-gray-400" />
+        return <AlertCircle className="h-4 w-4 text-grey-400" />
     }
   }
 
@@ -257,7 +257,7 @@ export default function BuyerProofOfFundsPage() {
                   ? "bg-green-100 text-green-800"
                   : state.overallStatus === "in-progress"
                     ? "bg-blue-100 text-blue-800"
-                    : "bg-gray-100 text-gray-800"
+                    : "bg-grey-100 text-grey-800"
               }`}
             >
               {state.overallStatus === "completed"
@@ -425,7 +425,7 @@ export default function BuyerProofOfFundsPage() {
                   <CheckCircle className="h-5 w-5 text-blue-600" />
                   <span className="font-medium">Estate Agent Review</span>
                 </div>
-                <Badge className={state.sentToEstateAgent ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-800"}>
+                <Badge className={state.sentToEstateAgent ? "bg-blue-100 text-blue-800" : "bg-grey-100 text-grey-800"}>
                   {state.sentToEstateAgent ? "Submitted" : "Pending"}
                 </Badge>
               </div>

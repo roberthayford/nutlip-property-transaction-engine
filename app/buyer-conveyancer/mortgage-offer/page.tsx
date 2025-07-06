@@ -215,7 +215,7 @@ export default function BuyerConveyancerMortgageOfferPage() {
                 <CheckCircle className="h-5 w-5 text-blue-600" />
                 <div>
                   <div className="font-medium">No Mortgage Required</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-600">
                     This is a cash purchase. The estate agent and seller conveyancer have been notified.
                   </div>
                 </div>
@@ -450,7 +450,7 @@ export default function BuyerConveyancerMortgageOfferPage() {
           </Button>
         </div>
 
-        <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+        <div className="text-sm text-grey-600 bg-grey-50 p-3 rounded-lg">
           <p className="font-medium mb-1">When to use "Mortgage not applicable":</p>
           <p>
             Click this button if the buyer is purchasing with cash and does not require a mortgage. All parties will be

@@ -167,7 +167,7 @@ export default function BuyerConveyancerDashboard() {
         icon: ClipboardList,
       },
     }
-    return stageMap[stage] || { name: stage, color: "bg-gray-100 text-gray-800", icon: FileText }
+    return stageMap[stage] || { name: stage, color: "bg-grey-100 text-grey-800", icon: FileText }
   }
 
   const getFilterTitle = () => {

@@ -184,7 +184,7 @@ export default function EstateAgentProofOfFundsPage() {
       case "in-progress":
         return "bg-blue-100 text-blue-800"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-grey-100 text-grey-800"
     }
   }
 
@@ -234,8 +234,8 @@ export default function EstateAgentProofOfFundsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Proof of Funds</h1>
-            <p className="text-gray-600 mt-1">Review and verify the buyer's financial documentation</p>
+            <h1 className="text-3xl font-bold text-grey-900">Proof of Funds</h1>
+            <p className="text-grey-600 mt-1">Review and verify the buyer's financial documentation</p>
           </div>
           <Badge className={`${getStatusColor(proofOfFundsData.status)} flex items-center gap-2`}>
             {getStatusIcon(proofOfFundsData.status)}
@@ -251,9 +251,9 @@ export default function EstateAgentProofOfFundsPage() {
           <Card>
             <CardContent className="pt-6">
               <div className="text-center py-8">
-                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Documents Submitted</h3>
-                <p className="text-gray-600">
+                <FileText className="h-12 w-12 text-grey-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-grey-900 mb-2">No Documents Submitted</h3>
+                <p className="text-grey-600">
                   The buyer has not yet submitted any proof of funds documents for review.
                 </p>
               </div>
@@ -273,10 +273,10 @@ export default function EstateAgentProofOfFundsPage() {
                 {proofOfFundsData.documents.map((document) => (
                   <div key={document.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center space-x-3">
-                      <FileText className="h-5 w-5 text-gray-400" />
+                      <FileText className="h-5 w-5 text-grey-400" />
                       <div>
                         <div className="font-medium">{document.name}</div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-grey-500">
                           {getDocumentTypeLabel(document.type)} • {formatFileSize(document.size)} • Uploaded{" "}
                           {formatDate(document.uploadedAt)}
                         </div>
@@ -327,7 +327,7 @@ export default function EstateAgentProofOfFundsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {proofOfFundsData.notes && (
-              <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="p-4 bg-grey-50 rounded-lg">
                 <pre className="whitespace-pre-wrap text-sm">{proofOfFundsData.notes}</pre>
               </div>
             )}
@@ -421,7 +421,7 @@ export default function EstateAgentProofOfFundsPage() {
               </Button>
             </Link>
             {!canProceedToAddConveyancer && (
-              <p className="text-sm text-gray-500 mt-2 text-center">Please verify all documents before proceeding</p>
+              <p className="text-sm text-grey-500 mt-2 text-center">Please verify all documents before proceeding</p>
             )}
           </CardContent>
         </Card>

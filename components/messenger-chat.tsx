@@ -59,9 +59,9 @@ const getStatusColor = (status: string) => {
     case "away":
       return "bg-yellow-500"
     case "offline":
-      return "bg-gray-400"
+      return "bg-grey-400"
     default:
-      return "bg-gray-400"
+      return "bg-grey-400"
   }
 }
 
@@ -339,11 +339,11 @@ export function MessengerChat({ currentUserRole, currentUserName }: MessengerCha
                       <div className="space-y-2">
                         {conversationMessages.length === 0 ? (
                           <div className="text-center py-6">
-                            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                              <MessageCircle className="h-5 w-5 text-gray-400" />
+                            <div className="w-10 h-10 bg-grey-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                              <MessageCircle className="h-5 w-5 text-grey-400" />
                             </div>
-                            <p className="text-gray-500 text-xs">No messages yet</p>
-                            <p className="text-gray-400 text-xs">Start chatting with {selectedParticipant.name}</p>
+                            <p className="text-grey-500 text-xs">No messages yet</p>
+                            <p className="text-grey-400 text-xs">Start chatting with {selectedParticipant.name}</p>
                           </div>
                         ) : (
                           conversationMessages.map((message, index) => {
@@ -362,14 +362,14 @@ export function MessengerChat({ currentUserRole, currentUserName }: MessengerCha
                                     className={`inline-block rounded-lg px-3 py-1.5 text-sm ${
                                       isOwn
                                         ? "bg-blue-600 text-white rounded-br-sm"
-                                        : "bg-gray-100 text-gray-900 rounded-bl-sm"
+                                        : "bg-grey-100 text-grey-900 rounded-bl-sm"
                                     }`}
                                   >
                                     <p className="break-words">{message.content}</p>
                                   </div>
                                   {showTime && (
                                     <div
-                                      className={`flex items-center mt-1 space-x-1 text-xs text-gray-400 ${
+                                      className={`flex items-center mt-1 space-x-1 text-xs text-grey-400 ${
                                         isOwn ? "justify-end" : "justify-start"
                                       }`}
                                     >
@@ -392,7 +392,7 @@ export function MessengerChat({ currentUserRole, currentUserName }: MessengerCha
                     </ScrollArea>
 
                     {/* Message Input */}
-                    <div className="p-3 border-t bg-gray-50">
+                    <div className="p-3 border-t bg-grey-50">
                       <div className="flex items-center space-x-2">
                         <Input
                           ref={inputRef}
@@ -400,7 +400,7 @@ export function MessengerChat({ currentUserRole, currentUserName }: MessengerCha
                           onChange={(e) => setNewMessage(e.target.value)}
                           onKeyPress={handleKeyPress}
                           placeholder="Type a message..."
-                          className="flex-1 h-8 text-sm rounded-full border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                          className="flex-1 h-8 text-sm rounded-full border-grey-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                         />
                         <Button
                           onClick={sendMessage}
@@ -416,9 +416,9 @@ export function MessengerChat({ currentUserRole, currentUserName }: MessengerCha
                 ) : (
                   <div className="flex-1 flex items-center justify-center">
                     <div className="text-center">
-                      <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-gray-500 text-sm font-medium">Select a contact</p>
-                      <p className="text-gray-400 text-xs">Click the menu to choose someone to chat with</p>
+                      <Users className="h-8 w-8 text-grey-400 mx-auto mb-2" />
+                      <p className="text-grey-500 text-sm font-medium">Select a contact</p>
+                      <p className="text-grey-400 text-xs">Click the menu to choose someone to chat with</p>
                     </div>
                   </div>
                 )}
@@ -434,9 +434,9 @@ export function MessengerChat({ currentUserRole, currentUserName }: MessengerCha
 
               {/* Sidebar */}
               <Card className="absolute bottom-0 right-72 w-56 h-96 shadow-xl border-0 z-50 animate-in slide-in-from-right-2 duration-200">
-                <CardHeader className="p-3 bg-gray-50 border-b">
+                <CardHeader className="p-3 bg-grey-50 border-b">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-medium text-sm text-gray-900">Contacts</h3>
+                    <h3 className="font-medium text-sm text-grey-900">Contacts</h3>
                     <Button variant="ghost" size="sm" onClick={() => setShowSidebar(false)} className="h-6 w-6 p-0">
                       <X className="h-3 w-3" />
                     </Button>
@@ -454,7 +454,7 @@ export function MessengerChat({ currentUserRole, currentUserName }: MessengerCha
                             key={participant.role}
                             onClick={() => selectParticipant(participant)}
                             className={`flex items-center space-x-2 p-2 rounded-lg cursor-pointer transition-colors ${
-                              isSelected ? "bg-blue-100 border border-blue-200" : "hover:bg-gray-50"
+                              isSelected ? "bg-blue-100 border border-blue-200" : "hover:bg-grey-50"
                             }`}
                           >
                             <div className="relative">
@@ -469,14 +469,14 @@ export function MessengerChat({ currentUserRole, currentUserName }: MessengerCha
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
-                                <p className="font-medium text-gray-900 text-sm truncate">{participant.name}</p>
+                                <p className="font-medium text-grey-900 text-sm truncate">{participant.name}</p>
                                 {unreadCount > 0 && (
                                   <Badge className="bg-red-500 text-white h-4 w-4 rounded-full p-0 flex items-center justify-center text-xs">
                                     {unreadCount}
                                   </Badge>
                                 )}
                               </div>
-                              <p className="text-xs text-gray-500 capitalize truncate">
+                              <p className="text-xs text-grey-500 capitalize truncate">
                                 {participant.role.replace("-", " ")}
                               </p>
                             </div>

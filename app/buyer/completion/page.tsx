@@ -205,7 +205,7 @@ export default function BuyerCompletionPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 sm:space-y-4">
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-grey-200 rounded-full h-2">
                 <div
                   className="bg-green-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${progressPercentage}%` }}
@@ -223,7 +223,7 @@ export default function BuyerCompletionPage() {
                       className={`mt-0.5 h-4 w-4 sm:h-5 sm:w-5 rounded border-2 flex items-center justify-center transition-colors ${
                         task.completed
                           ? "bg-green-600 border-green-600 text-white"
-                          : "border-gray-300 hover:border-green-600"
+                          : "border-grey-300 hover:border-green-600"
                       }`}
                     >
                       {task.completed && <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />}

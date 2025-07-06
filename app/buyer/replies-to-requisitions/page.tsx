@@ -132,23 +132,23 @@ export default function BuyerRepliesToRequisitionsPage() {
                     </div>
 
                     {/* Completion Summary */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-grey-50 rounded-lg">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Completed By</p>
+                        <p className="text-sm font-medium text-grey-600">Completed By</p>
                         <p className="font-semibold">{requisitionsData.completedBy || "Your Conveyancer"}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Total Requisitions</p>
+                        <p className="text-sm font-medium text-grey-600">Total Requisitions</p>
                         <p className="font-semibold">{requisitionsData.totalRequisitions} Items</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Completed</p>
+                        <p className="text-sm font-medium text-grey-600">Completed</p>
                         <p className="font-semibold">
                           {requisitionsData.completedAt ? formatDate(requisitionsData.completedAt) : "Just now"}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Next Stage</p>
+                        <p className="text-sm font-medium text-grey-600">Next Stage</p>
                         <p className="font-semibold">{requisitionsData.nextStage || "Completion"}</p>
                       </div>
                     </div>
@@ -184,7 +184,7 @@ export default function BuyerRepliesToRequisitionsPage() {
                   </h4>
                   <ul className="text-sm space-y-1 text-muted-foreground">
                     <li>• Arrange building insurance from completion date</li>
-                    <li>• Organize utility account transfers</li>
+                    <li>• Organise utility account transfers</li>
                     <li>• Plan your moving arrangements</li>
                     <li>• Prepare final payment if required</li>
                   </ul>
@@ -342,7 +342,7 @@ export default function BuyerRepliesToRequisitionsPage() {
                     Your Next Steps
                   </h4>
                   <ul className={`text-sm space-y-1 ${isCompleted ? "text-green-700" : "text-blue-700"}`}>
-                    <li>• Finalize your building insurance arrangements</li>
+                    <li>• Finalise your building insurance arrangements</li>
                     <li>• Confirm your moving company booking</li>
                     <li>• Set up utility account transfers</li>
                     <li>• Prepare any final payment required</li>

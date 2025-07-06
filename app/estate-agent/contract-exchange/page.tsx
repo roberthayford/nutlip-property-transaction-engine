@@ -116,7 +116,7 @@ export default function EstateAgentContractExchangePage() {
                 <Clock className="h-5 w-5 text-amber-600" />
                 <div className="flex-1">
                   <div className="font-medium">Awaiting Contract Exchange</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-600">
                     The conveyancers are conducting the formal exchange process. You will be notified automatically when
                     contracts are exchanged.
                   </div>
@@ -133,7 +133,7 @@ export default function EstateAgentContractExchangePage() {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div className="flex-1">
                     <div className="font-medium">Contracts Exchanged Successfully</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-grey-600">
                       The contracts have been formally exchanged. Both parties are now legally committed to complete the
                       transaction.
                     </div>
@@ -144,9 +144,9 @@ export default function EstateAgentContractExchangePage() {
                 </div>
 
                 {/* Contract Exchange Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-grey-50 rounded-lg">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Exchange Date</p>
+                    <p className="text-sm font-medium text-grey-600">Exchange Date</p>
                     <p className="font-semibold">
                       {exchangeData.exchangeDate
                         ? formatExchangeDate(exchangeData.exchangeDate)
@@ -154,27 +154,27 @@ export default function EstateAgentContractExchangePage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Completion Date</p>
+                    <p className="text-sm font-medium text-grey-600">Completion Date</p>
                     <p className="font-semibold">
                       {exchangeData.completionDate ? formatExchangeDate(exchangeData.completionDate) : "April 26, 2024"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Contract Price</p>
+                    <p className="text-sm font-medium text-grey-600">Contract Price</p>
                     <p className="font-semibold">{exchangeData.contractPrice || "£450,000"}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Deposit</p>
+                    <p className="text-sm font-medium text-grey-600">Deposit</p>
                     <p className="font-semibold">{exchangeData.deposit || "£45,000 (10%)"}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Exchanged At</p>
+                    <p className="text-sm font-medium text-grey-600">Exchanged At</p>
                     <p className="font-semibold">
                       {exchangeData.exchangedAt ? formatDate(exchangeData.exchangedAt) : "N/A"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Next Stage</p>
+                    <p className="text-sm font-medium text-grey-600">Next Stage</p>
                     <p className="font-semibold">{exchangeData.nextStage || "Completion"}</p>
                   </div>
                 </div>
@@ -194,23 +194,23 @@ export default function EstateAgentContractExchangePage() {
               <CardDescription>Your role during the contract exchange process</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="p-4 bg-grey-50 rounded-lg">
                 <h4 className="font-medium mb-2">Your Responsibilities</h4>
-                <ul className="space-y-2 text-sm text-gray-600">
+                <ul className="space-y-2 text-sm text-grey-600">
                   <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                     <span>Monitor the exchange process and stay informed of completion</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                     <span>Prepare for completion day arrangements and key handover</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                     <span>Coordinate final property preparations with all parties</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                     <span>Arrange completion day logistics and key handover</span>
                   </li>
                 </ul>
@@ -303,7 +303,7 @@ export default function EstateAgentContractExchangePage() {
 
               <div
                 className={`p-4 border rounded-lg ${
-                  exchangeStatus === "completed" ? "bg-green-50 border-green-200" : "bg-gray-50"
+                  exchangeStatus === "completed" ? "bg-green-50 border-green-200" : "bg-grey-50"
                 }`}
               >
                 <h4 className="font-semibold mb-2">Current Status</h4>

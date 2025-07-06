@@ -116,7 +116,7 @@ export default function BuyerContractExchangePage() {
                 <Clock className="h-5 w-5 text-amber-600" />
                 <div className="flex-1">
                   <div className="font-medium">Awaiting Contract Exchange</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-500">
                     Your conveyancer is working with the seller's conveyancer to exchange contracts. You will be
                     notified automatically when this is completed.
                   </div>
@@ -129,11 +129,11 @@ export default function BuyerContractExchangePage() {
 
             {exchangeStatus === "completed" && (
               <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-green-50 border border-grey-300 rounded-lg">
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div className="flex-1">
                     <div className="font-medium">Contracts Exchanged Successfully!</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-grey-500">
                       Congratulations! The contracts have been exchanged. You are now legally committed to purchase the
                       property and the seller is committed to sell it to you.
                     </div>
@@ -144,9 +144,9 @@ export default function BuyerContractExchangePage() {
                 </div>
 
                 {/* Contract Exchange Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-grey-50 rounded-lg">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Exchange Date</p>
+                    <p className="text-sm font-medium text-grey-500">Exchange Date</p>
                     <p className="font-semibold">
                       {exchangeData.exchangeDate
                         ? formatExchangeDate(exchangeData.exchangeDate)
@@ -154,27 +154,27 @@ export default function BuyerContractExchangePage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Completion Date</p>
+                    <p className="text-sm font-medium text-grey-500">Completion Date</p>
                     <p className="font-semibold">
                       {exchangeData.completionDate ? formatExchangeDate(exchangeData.completionDate) : "April 26, 2024"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Purchase Price</p>
+                    <p className="text-sm font-medium text-grey-500">Purchase Price</p>
                     <p className="font-semibold">{exchangeData.contractPrice || "£450,000"}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Deposit Paid</p>
+                    <p className="text-sm font-medium text-grey-500">Deposit Paid</p>
                     <p className="font-semibold">{exchangeData.deposit || "£45,000 (10%)"}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Exchanged At</p>
+                    <p className="text-sm font-medium text-grey-500">Exchanged At</p>
                     <p className="font-semibold">
                       {exchangeData.exchangedAt ? formatDate(exchangeData.exchangedAt) : "N/A"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Next Stage</p>
+                    <p className="text-sm font-medium text-grey-500">Next Stage</p>
                     <p className="font-semibold">{exchangeData.nextStage || "Completion"}</p>
                   </div>
                 </div>
@@ -219,7 +219,7 @@ export default function BuyerContractExchangePage() {
               )}
 
               {exchangeStatus === "completed" && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="p-4 bg-green-50 border border-grey-300 rounded-lg">
                   <h4 className="font-medium mb-2 text-green-800">Now That Contracts Are Exchanged</h4>
                   <ul className="space-y-2 text-sm text-green-700">
                     <li className="flex items-start gap-2">
@@ -328,7 +328,7 @@ export default function BuyerContractExchangePage() {
 
               <div
                 className={`p-4 border rounded-lg ${
-                  exchangeStatus === "completed" ? "bg-green-50 border-green-200" : "bg-gray-50"
+                  exchangeStatus === "completed" ? "bg-green-50 border-grey-300" : "bg-grey-50"
                 }`}
               >
                 <h4 className="font-semibold mb-2">Current Status</h4>

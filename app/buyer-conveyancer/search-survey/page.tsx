@@ -273,7 +273,7 @@ export default function BuyerConveyancerSearchSurveyPage() {
         "Professional asbestos survey to identify presence, condition, and safety risks with removal recommendations.",
       cost: 185,
       estimatedDays: 3,
-      provider: "Licensed Asbestos Surveyor",
+      provider: "Licenced Asbestos Surveyor",
       category: "specialist",
       priority: "recommended",
       riskLevel: "high",
@@ -481,13 +481,13 @@ export default function BuyerConveyancerSearchSurveyPage() {
       case "ordered":
         return <ShoppingCart className="h-4 w-4 text-blue-600" />
       default:
-        return <Clock className="h-4 w-4 text-gray-400" />
+        return <Clock className="h-4 w-4 text-grey-500" />
     }
   }
 
   const getStatusBadge = (status: SearchItem["status"]) => {
     const configs = {
-      pending: { label: "Pending", className: "bg-gray-100 text-gray-800" },
+      pending: { label: "Pending", className: "bg-grey-100 text-grey-800" },
       ordered: { label: "Ordered", className: "bg-blue-100 text-blue-800" },
       completed: { label: "Completed", className: "bg-green-100 text-green-800" },
     }
@@ -504,7 +504,7 @@ export default function BuyerConveyancerSearchSurveyPage() {
   const getPriorityBadge = (priority: AdditionalSearch["priority"]) => {
     const configs = {
       recommended: { label: "Recommended", className: "bg-blue-100 text-blue-800" },
-      optional: { label: "Optional", className: "bg-gray-100 text-gray-800" },
+      optional: { label: "Optional", className: "bg-grey-100 text-grey-600" },
       situational: { label: "Situational", className: "bg-amber-100 text-amber-800" },
     }
 
@@ -570,7 +570,7 @@ export default function BuyerConveyancerSearchSurveyPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Summary Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-grey-50 rounded-lg">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">{completedSearches}</div>
                 <div className="text-sm text-muted-foreground">Completed</div>
@@ -580,7 +580,7 @@ export default function BuyerConveyancerSearchSurveyPage() {
                 <div className="text-sm text-muted-foreground">Ordered</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-600">
+                <div className="text-2xl font-bold text-grey-600">
                   {totalSearches - orderedSearches - completedSearches}
                 </div>
                 <div className="text-sm text-muted-foreground">Pending</div>
@@ -629,7 +629,7 @@ export default function BuyerConveyancerSearchSurveyPage() {
                       className="flex items-center gap-1"
                     >
                       <ShoppingCart className="h-3 w-3" />
-                      {search.status === "ordered" || search.status === "completed" ? "Ordered ✓" : "Mark as Ordered"}
+                      {search.status === "ordered" || search.status === "completed" ? "Ordered " : "Mark as Ordered"}
                     </Button>
 
                     <Button
@@ -640,7 +640,7 @@ export default function BuyerConveyancerSearchSurveyPage() {
                       className="flex items-center gap-1"
                     >
                       <CheckCircle className="h-3 w-3" />
-                      {search.status === "completed" ? "Completed ✓" : "Mark as Completed"}
+                      {search.status === "completed" ? "Completed " : "Mark as Completed"}
                     </Button>
                   </div>
                 </div>
@@ -800,7 +800,7 @@ export default function BuyerConveyancerSearchSurveyPage() {
 
                         <p className="text-sm text-muted-foreground">{search.description}</p>
 
-                        <div className="bg-gray-50 rounded p-2 text-xs">
+                        <div className="bg-grey-50 rounded p-2 text-xs">
                           <p className="mb-1">
                             <strong>When needed:</strong> {search.whenNeeded}
                           </p>
@@ -810,7 +810,7 @@ export default function BuyerConveyancerSearchSurveyPage() {
                         </div>
 
                         <details className="text-sm">
-                          <summary className="cursor-pointer text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                          <summary className="cursor-pointer text-blue-600 hover:text-grey-700 flex items-center gap-1">
                             <Info className="h-3 w-3" />
                             More details
                           </summary>

@@ -310,12 +310,12 @@ export default function SellerConveyancerContractExchangePage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Exchange Progress</span>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-grey-600">
                   {Math.round((exchangeSteps.filter((step) => step.completed).length / exchangeSteps.length) * 100)}%
                   Complete
                 </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-grey-200 rounded-full h-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                   style={{
@@ -351,7 +351,7 @@ export default function SellerConveyancerContractExchangePage() {
                         ? "Exchange in Progress"
                         : "Ready for Contract Exchange"}
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-600">
                     {exchangeCompleted
                       ? `Exchanged on ${exchangeCompletedDate} at ${exchangeCompletedTime}`
                       : exchangeInProgress
@@ -368,7 +368,7 @@ export default function SellerConveyancerContractExchangePage() {
                   {exchangeCompleted ? "Completed" : exchangeInProgress ? "In Progress" : "Ready"}
                 </Badge>
                 {exchangeCompleted && (
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-grey-500">
                     Reference: EX{Math.random().toString(36).substr(2, 6).toUpperCase()}
                   </span>
                 )}
@@ -377,7 +377,7 @@ export default function SellerConveyancerContractExchangePage() {
 
             {/* Interactive Exchange Steps */}
             <div className="space-y-3">
-              <h4 className="font-medium text-sm text-gray-700 mb-3">Exchange Process Steps</h4>
+              <h4 className="font-medium text-sm text-grey-700 mb-3">Exchange Process Steps</h4>
               {exchangeSteps.map((step, index) => (
                 <div
                   key={step.id}
@@ -386,7 +386,7 @@ export default function SellerConveyancerContractExchangePage() {
                       ? "bg-green-50 border-green-200"
                       : step.active
                         ? "bg-blue-50 border-blue-200 shadow-sm"
-                        : "bg-gray-50 border-gray-200"
+                        : "bg-grey-50 border-grey-300"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -397,14 +397,14 @@ export default function SellerConveyancerContractExchangePage() {
                             ? "bg-green-600 text-white"
                             : step.active
                               ? "bg-blue-600 text-white"
-                              : "bg-gray-300 text-gray-600"
+                              : "bg-grey-300 text-grey-600"
                         }`}
                       >
                         {step.completed ? "✓" : index + 1}
                       </div>
                       <div>
                         <div className="font-medium">{step.title}</div>
-                        <div className="text-sm text-gray-600">{step.description}</div>
+                        <div className="text-sm text-grey-600">{step.description}</div>
                         {step.completedAt && (
                           <div className="text-xs text-green-600 mt-1">Completed: {step.completedAt}</div>
                         )}
@@ -431,7 +431,7 @@ export default function SellerConveyancerContractExchangePage() {
 
                   {step.active && step.details && (
                     <div className="mt-3 p-3 bg-white rounded border">
-                      <div className="text-sm text-gray-700">{step.details}</div>
+                      <div className="text-sm text-grey-700">{step.details}</div>
                       {step.requiresInput && (
                         <div className="mt-2 space-y-2">
                           <Input
@@ -481,19 +481,19 @@ export default function SellerConveyancerContractExchangePage() {
                 <h4 className="font-medium text-green-800 mb-2">Exchange Summary</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-gray-600">Exchange Date:</span>
+                    <span className="text-grey-600">Exchange Date:</span>
                     <div className="font-medium">{exchangeCompletedDate}</div>
                   </div>
                   <div>
-                    <span className="text-gray-600">Exchange Time:</span>
+                    <span className="text-grey-600">Exchange Time:</span>
                     <div className="font-medium">{exchangeCompletedTime}</div>
                   </div>
                   <div>
-                    <span className="text-gray-600">Completion Date:</span>
+                    <span className="text-grey-600">Completion Date:</span>
                     <div className="font-medium">{completionDate}</div>
                   </div>
                   <div>
-                    <span className="text-gray-600">Deposit Amount:</span>
+                    <span className="text-grey-600">Deposit Amount:</span>
                     <div className="font-medium">£{Number.parseInt(depositAmount).toLocaleString()}</div>
                   </div>
                 </div>
@@ -535,7 +535,7 @@ export default function SellerConveyancerContractExchangePage() {
               <div className="space-y-2">
                 <Label htmlFor="deposit-amount">Deposit Amount</Label>
                 <div className="relative">
-                  <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-grey-400" />
                   <Input
                     id="deposit-amount"
                     type="number"
@@ -549,7 +549,7 @@ export default function SellerConveyancerContractExchangePage() {
 
               <div className="space-y-2">
                 <Label>Purchase Price</Label>
-                <div className="p-2 bg-gray-50 rounded border">
+                <div className="p-2 bg-grey-50 rounded border">
                   <span className="font-medium">£300,000</span>
                 </div>
               </div>
@@ -573,7 +573,7 @@ export default function SellerConveyancerContractExchangePage() {
                     ) : (
                       <Clock className="h-4 w-4 text-yellow-600" />
                     )}
-                    <span className={`text-sm ${req.completed ? "text-gray-900" : "text-gray-600"}`}>{req.item}</span>
+                    <span className={`text-sm ${req.completed ? "text-grey-900" : "text-grey-600"}`}>{req.item}</span>
                     {req.critical && (
                       <Badge variant="destructive" className="text-xs">
                         Critical
@@ -605,7 +605,7 @@ export default function SellerConveyancerContractExchangePage() {
                 </div>
                 <div>
                   <div className="font-medium">Coordinate with Buyer's Conveyancer</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-600">
                     Agree on exchange date, completion date, and deposit amount
                   </div>
                 </div>
@@ -617,7 +617,7 @@ export default function SellerConveyancerContractExchangePage() {
                 </div>
                 <div>
                   <div className="font-medium">Telephone Exchange</div>
-                  <div className="text-sm text-gray-600">Exchange contracts by telephone using Law Society Formula</div>
+                  <div className="text-sm text-grey-600">Exchange contracts by telephone using Law Society Formula</div>
                 </div>
               </div>
 
@@ -627,7 +627,7 @@ export default function SellerConveyancerContractExchangePage() {
                 </div>
                 <div>
                   <div className="font-medium">Post Exchange</div>
-                  <div className="text-sm text-gray-600">Send signed contract and receive deposit within 24 hours</div>
+                  <div className="text-sm text-grey-600">Send signed contract and receive deposit within 24 hours</div>
                 </div>
               </div>
             </div>

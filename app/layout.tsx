@@ -13,7 +13,12 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "Nutlip - Property Transaction Engine",
   description: "Streamline your property transactions with real-time collaboration",
-    generator: 'v0.dev'
+  generator: 'v0.dev',
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico"
+  }
 }
 
 export default function RootLayout({
@@ -22,8 +27,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="light">
-      <body className={`${poppins.variable} font-sans bg-white text-gray-900`}>
+    <html lang="en" className="light" style={{ colorScheme: 'light' }}>
+      <body className={`${poppins.variable} font-sans bg-white text-grey-900`}>
         <Providers>{children}</Providers>
       </body>
     </html>

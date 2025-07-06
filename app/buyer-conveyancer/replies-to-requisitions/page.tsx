@@ -623,7 +623,7 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
         {/* Header with Continue to Completion Button */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Replies to Requisitions</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-grey-900">Replies to Requisitions</h1>
             <p className="text-sm sm:text-base text-muted-foreground">
               Review and respond to completion requisitions from the seller's conveyancer
             </p>
@@ -680,7 +680,7 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
                         JSON.stringify({ ...newRequisition, subject: e.target.value }),
                       )
                     }}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 border border-grey-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   >
                     <option value="">Select a subject...</option>
@@ -748,7 +748,7 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
                         JSON.stringify({ ...newRequisition, priority: priority }),
                       )
                     }}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 border border-grey-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="medium">Medium Priority</option>
                     <option value="high">High Priority</option>
@@ -775,7 +775,7 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
                       )
                     }}
                     placeholder="Enter custom requisition subject..."
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 border border-grey-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                 </div>
@@ -799,7 +799,7 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
                       )
                     }}
                     min={new Date().toISOString().split("T")[0]}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 border border-grey-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                 </div>
@@ -815,7 +815,7 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
                         JSON.stringify({ ...newRequisition, urgency: e.target.value }),
                       )
                     }}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 border border-grey-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="standard">Standard</option>
                     <option value="urgent">Urgent</option>
@@ -844,7 +844,7 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
                   className="w-full"
                   required
                 />
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-grey-500">
                   Characters: {newRequisition.details.length} | Be specific and clear about your requirements
                 </div>
               </div>
@@ -869,16 +869,16 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
               </div>
 
               {/* Form Validation Summary */}
-              <div className="p-3 bg-gray-50 rounded-lg">
+              <div className="p-3 bg-grey-50 rounded-lg">
                 <div className="text-sm font-medium mb-2">Form Status:</div>
                 <div className="space-y-1 text-xs">
                   <div className="flex items-center gap-2">
                     {newRequisition.subject ? (
                       <CheckCircle className="h-3 w-3 text-green-600" />
                     ) : (
-                      <Clock className="h-3 w-3 text-gray-400" />
+                      <Clock className="h-3 w-3 text-grey-400" />
                     )}
-                    <span className={newRequisition.subject ? "text-green-700" : "text-gray-500"}>
+                    <span className={newRequisition.subject ? "text-green-700" : "text-grey-500"}>
                       Subject selected
                     </span>
                   </div>
@@ -886,9 +886,9 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
                     {newRequisition.details.trim() ? (
                       <CheckCircle className="h-3 w-3 text-green-600" />
                     ) : (
-                      <Clock className="h-3 w-3 text-gray-400" />
+                      <Clock className="h-3 w-3 text-grey-400" />
                     )}
-                    <span className={newRequisition.details.trim() ? "text-green-700" : "text-gray-500"}>
+                    <span className={newRequisition.details.trim() ? "text-green-700" : "text-grey-500"}>
                       Details provided
                     </span>
                   </div>
@@ -896,18 +896,18 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
                     {newRequisition.dueDate ? (
                       <CheckCircle className="h-3 w-3 text-green-600" />
                     ) : (
-                      <Clock className="h-3 w-3 text-gray-400" />
+                      <Clock className="h-3 w-3 text-grey-400" />
                     )}
-                    <span className={newRequisition.dueDate ? "text-green-700" : "text-gray-500"}>Due date set</span>
+                    <span className={newRequisition.dueDate ? "text-green-700" : "text-grey-500"}>Due date set</span>
                   </div>
                   {newRequisition.subject === "custom" && (
                     <div className="flex items-center gap-2">
                       {newRequisition.customSubject.trim() ? (
                         <CheckCircle className="h-3 w-3 text-green-600" />
                       ) : (
-                        <Clock className="h-3 w-3 text-gray-400" />
+                        <Clock className="h-3 w-3 text-grey-400" />
                       )}
-                      <span className={newRequisition.customSubject.trim() ? "text-green-700" : "text-gray-500"}>
+                      <span className={newRequisition.customSubject.trim() ? "text-green-700" : "text-grey-500"}>
                         Custom subject provided
                       </span>
                     </div>
@@ -1030,7 +1030,7 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
                 <span>Overall Progress</span>
                 <span className="font-medium">{progressPercentage}% Complete</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
+              <div className="w-full bg-grey-200 rounded-full h-3">
                 <div
                   className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500"
                   style={{ width: `${progressPercentage}%` }}
@@ -1082,13 +1082,13 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
                   className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 group ${
                     activeFilter === stat.filter
                       ? `border-${stat.color}-500 bg-${stat.color}-50`
-                      : "border-transparent hover:border-gray-200 bg-gray-50"
+                      : "border-transparent hover:border-grey-200 bg-grey-50"
                   }`}
                   onClick={() => handleFilterClick(stat.filter)}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <stat.icon
-                      className={`h-5 w-5 ${activeFilter === stat.filter ? `text-${stat.color}-600` : "text-gray-500"}`}
+                      className={`h-5 w-5 ${activeFilter === stat.filter ? `text-${stat.color}-600` : "text-grey-500"}`}
                     />
                     {stat.value > 0 && stat.filter !== "all" && (
                       <Badge
@@ -1103,13 +1103,13 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
                   </div>
                   <div
                     className={`text-2xl font-bold mb-1 ${
-                      activeFilter === stat.filter ? `text-${stat.color}-700` : "text-gray-700"
+                      activeFilter === stat.filter ? `text-${stat.color}-700` : "text-grey-700"
                     }`}
                   >
                     {stat.value}
                   </div>
-                  <div className="text-sm font-medium text-gray-600">{stat.label}</div>
-                  <div className="text-xs text-gray-500 mt-1">{stat.description}</div>
+                  <div className="text-sm font-medium text-grey-600">{stat.label}</div>
+                  <div className="text-xs text-grey-500 mt-1">{stat.description}</div>
                 </div>
               ))}
             </div>
@@ -1173,11 +1173,11 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
           <CardContent className="space-y-4">
             {filteredRequisitions.length === 0 ? (
               <div className="text-center py-12">
-                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <FileText className="h-12 w-12 text-grey-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-grey-900 mb-2">
                   {activeFilter === "all" ? "No Requisitions Yet" : `No ${activeFilter} Requisitions`}
                 </h3>
-                <p className="text-gray-500 mb-4">
+                <p className="text-grey-500 mb-4">
                   {activeFilter === "all"
                     ? "Requisitions from the seller's conveyancer will appear here"
                     : `No requisitions match the ${activeFilter} filter`}
@@ -1274,7 +1274,7 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="p-3 bg-gray-50 rounded-lg">
+                    <div className="p-3 bg-grey-50 rounded-lg">
                       <p className="text-sm">{requisition.description}</p>
                     </div>
 
@@ -1350,7 +1350,7 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
                       ? "border-l-green-500 bg-green-50/30"
                       : sentReq.status === "acknowledged"
                         ? "border-l-blue-500 bg-blue-50/30"
-                        : "border-l-gray-500 bg-gray-50/30"
+                        : "border-l-grey-500 bg-grey-50/30"
                   }`}
                 >
                   <CardHeader>
@@ -1401,7 +1401,7 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="p-3 bg-gray-50 rounded-lg">
+                    <div className="p-3 bg-grey-50 rounded-lg">
                       <p className="text-sm">{sentReq.description}</p>
                     </div>
 
@@ -1509,21 +1509,21 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
               >
                 <div>
                   <div className="font-medium">Send New Requisition</div>
-                  <div className="text-sm text-gray-600">Create and send a new requisition</div>
+                  <div className="text-sm text-grey-600">Create and send a new requisition</div>
                 </div>
               </Button>
 
               <Button variant="outline" className="h-auto p-4 text-left bg-transparent" onClick={handleBulkReply}>
                 <div>
                   <div className="font-medium">Bulk Reply</div>
-                  <div className="text-sm text-gray-600">Reply to multiple requisitions at once</div>
+                  <div className="text-sm text-grey-600">Reply to multiple requisitions at once</div>
                 </div>
               </Button>
 
               <Button variant="outline" className="h-auto p-4 text-left bg-transparent" onClick={handleGenerateReport}>
                 <div>
                   <div className="font-medium">Generate Report</div>
-                  <div className="text-sm text-gray-600">Create a detailed status report</div>
+                  <div className="text-sm text-grey-600">Create a detailed status report</div>
                 </div>
               </Button>
             </div>
@@ -1587,12 +1587,12 @@ export default function BuyerConveyancerRepliesToRequisitionsPage() {
                   </div>
                 </div>
 
-                <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="p-3 bg-grey-50 rounded-lg">
                   <span className="font-medium text-sm">Subject:</span>
                   <p className="text-sm mt-1">{showSentProof.title}</p>
                 </div>
 
-                <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="p-3 bg-grey-50 rounded-lg">
                   <span className="font-medium text-sm">Message:</span>
                   <p className="text-sm mt-1 whitespace-pre-wrap">{showSentProof.description}</p>
                 </div>

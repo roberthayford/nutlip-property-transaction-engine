@@ -270,7 +270,7 @@ export function BuyerEstateAgentChat({ currentUserRole, currentUserName, current
 
   return (
     <div
-      className={`fixed bottom-4 right-4 w-80 bg-white border border-gray-200 rounded-lg shadow-xl z-40 flex flex-col transition-all duration-200 ${
+      className={`fixed bottom-4 right-4 w-80 bg-white border border-grey-200 rounded-lg shadow-xl z-40 flex flex-col transition-all duration-200 ${
         isMinimized ? "h-16" : "max-h-[600px]"
       }`}
       style={{ maxHeight: isMinimized ? "64px" : "calc(100vh - 2rem)" }}
@@ -341,7 +341,7 @@ export function BuyerEstateAgentChat({ currentUserRole, currentUserName, current
                   <div key={message.id}>
                     {showDate && (
                       <div className="flex justify-center my-4">
-                        <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                        <span className="text-xs text-grey-500 bg-grey-100 px-3 py-1 rounded-full">
                           {formatDate(message.timestamp)}
                         </span>
                       </div>
@@ -361,7 +361,7 @@ export function BuyerEstateAgentChat({ currentUserRole, currentUserName, current
                               "rounded-2xl px-4 py-2 text-sm",
                               isOwn
                                 ? "bg-green-600 text-white rounded-br-md"
-                                : "bg-gray-100 text-gray-900 rounded-bl-md",
+                                : "bg-grey-100 text-grey-900 rounded-bl-md",
                             )}
                           >
                             <p className="break-words leading-relaxed">{message.content}</p>
@@ -369,7 +369,7 @@ export function BuyerEstateAgentChat({ currentUserRole, currentUserName, current
                           <div
                             className={cn(
                               "flex items-center mt-1 space-x-1 text-xs",
-                              isOwn ? "justify-end text-green-600" : "justify-start text-gray-500",
+                              isOwn ? "justify-end text-green-600" : "justify-start text-grey-500",
                             )}
                           >
                             <span>{formatTime(message.timestamp)}</span>
@@ -388,15 +388,15 @@ export function BuyerEstateAgentChat({ currentUserRole, currentUserName, current
 
               {isTyping && (
                 <div className="flex justify-start">
-                  <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3">
+                  <div className="bg-grey-100 rounded-2xl rounded-bl-md px-4 py-3">
                     <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                      <div className="w-2 h-2 bg-grey-400 rounded-full animate-bounce" />
                       <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                        className="w-2 h-2 bg-grey-400 rounded-full animate-bounce"
                         style={{ animationDelay: "0.1s" }}
                       />
                       <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                        className="w-2 h-2 bg-grey-400 rounded-full animate-bounce"
                         style={{ animationDelay: "0.2s" }}
                       />
                     </div>
@@ -409,7 +409,7 @@ export function BuyerEstateAgentChat({ currentUserRole, currentUserName, current
           </ScrollArea>
 
           {/* Message Input */}
-          <div className="p-4 border-t bg-gray-50 rounded-b-lg">
+          <div className="p-4 border-t bg-grey-50 rounded-b-lg">
             <div className="flex space-x-3">
               <Input
                 ref={inputRef}
@@ -417,7 +417,7 @@ export function BuyerEstateAgentChat({ currentUserRole, currentUserName, current
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={`Message ${otherParticipant.name}...`}
-                className="flex-1 rounded-full border-gray-200 focus:border-green-500 focus:ring-green-500"
+                className="flex-1 rounded-full border-grey-200 focus:border-green-500 focus:ring-green-500"
               />
               <Button
                 onClick={sendMessage}
@@ -428,7 +428,7 @@ export function BuyerEstateAgentChat({ currentUserRole, currentUserName, current
                 <Send className="h-4 w-4" />
               </Button>
             </div>
-            <div className="mt-2 text-xs text-gray-500 text-center">
+            <div className="mt-2 text-xs text-grey-500 text-center">
               Available during: Offer Accepted, Proof of Funds & Add Conveyancer stages
             </div>
           </div>

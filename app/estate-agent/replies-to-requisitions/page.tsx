@@ -81,7 +81,7 @@ export default function EstateAgentRepliesToRequisitionsPage() {
             <Users className="h-5 w-5 text-blue-600" />
             <div>
               <div className="font-medium">Conveyancer Completion Process</div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-grey-600">
                 The conveyancers are handling final completion requisitions and responses. This is the final legal step
                 before completion. You will be notified of progress and any issues that may affect the completion
                 timeline.
@@ -105,7 +105,7 @@ export default function EstateAgentRepliesToRequisitionsPage() {
                 <Clock className="h-5 w-5 text-amber-600" />
                 <div className="flex-1">
                   <div className="font-medium">Monitoring Requisitions Progress</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-600">
                     The conveyancers are exchanging completion requisitions and responses. You will be notified
                     automatically when all requisitions are resolved.
                   </div>
@@ -122,7 +122,7 @@ export default function EstateAgentRepliesToRequisitionsPage() {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div className="flex-1">
                     <div className="font-medium">All Requisitions Resolved</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-grey-600">
                       All completion requisitions have been answered and the transaction is ready for completion.
                     </div>
                   </div>
@@ -132,23 +132,23 @@ export default function EstateAgentRepliesToRequisitionsPage() {
                 </div>
 
                 {/* Requisitions Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-grey-50 rounded-lg">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Completed By</p>
+                    <p className="text-sm font-medium text-grey-600">Completed By</p>
                     <p className="font-semibold">{requisitionsData.completedBy || "Both Conveyancers"}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Requisitions</p>
+                    <p className="text-sm font-medium text-grey-600">Total Requisitions</p>
                     <p className="font-semibold">{requisitionsData.totalRequisitions || 6} Items</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Completed</p>
+                    <p className="text-sm font-medium text-grey-600">Completed</p>
                     <p className="font-semibold">
                       {requisitionsData.completedAt ? formatDate(requisitionsData.completedAt) : "Just now"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Next Stage</p>
+                    <p className="text-sm font-medium text-grey-600">Next Stage</p>
                     <p className="font-semibold">{requisitionsData.nextStage || "Completion"}</p>
                   </div>
                 </div>
@@ -167,27 +167,27 @@ export default function EstateAgentRepliesToRequisitionsPage() {
             <CardDescription>Your role during the replies to requisitions stage</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="p-4 bg-grey-50 rounded-lg">
               <h4 className="font-medium mb-2">Your Responsibilities</h4>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-grey-600">
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Monitor progress and stay informed of any completion issues</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Coordinate key handover arrangements for completion day</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Ensure property is ready for vacant possession</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Facilitate final property inspection if required</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Maintain communication with buyer and seller about completion timeline</span>
                 </li>
               </ul>
@@ -234,7 +234,7 @@ export default function EstateAgentRepliesToRequisitionsPage() {
 
             {/* Completion Timeline */}
             <div
-              className={`p-4 border rounded-lg ${requisitionsStatus === "completed" ? "bg-green-50 border-green-200" : "bg-gray-50"}`}
+              className={`p-4 border rounded-lg ${requisitionsStatus === "completed" ? "bg-green-50 border-green-200" : "bg-grey-50"}`}
             >
               <h4 className="font-semibold mb-2 flex items-center">
                 <FileText className="h-4 w-4 mr-2" />

@@ -61,7 +61,7 @@ export default function EstateAgentDraftContractPage() {
             <Users className="h-5 w-5 text-blue-600" />
             <div>
               <div className="font-medium">Conveyancer Stage</div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-grey-600">
                 This stage is handled by the buyer and seller conveyancers. You will be notified of progress and any
                 issues that may affect the sale.
               </div>
@@ -84,7 +84,7 @@ export default function EstateAgentDraftContractPage() {
                 <Clock className="h-5 w-5 text-amber-600" />
                 <div className="flex-1">
                   <div className="font-medium">Awaiting Completion Notification</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-grey-600">
                     The conveyancers are preparing the draft contract. You will be notified automatically when complete.
                   </div>
                 </div>
@@ -100,7 +100,7 @@ export default function EstateAgentDraftContractPage() {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div className="flex-1">
                     <div className="font-medium">Draft Contract Completed</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-grey-600">
                       The draft contract has been prepared and is ready for the next stage of the transaction.
                     </div>
                   </div>
@@ -110,23 +110,23 @@ export default function EstateAgentDraftContractPage() {
                 </div>
 
                 {/* Contract Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-grey-50 rounded-lg">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Completed By</p>
+                    <p className="text-sm font-medium text-grey-600">Completed By</p>
                     <p className="font-semibold">{contractData.completedBy || "Seller Conveyancer"}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Contract Type</p>
+                    <p className="text-sm font-medium text-grey-600">Contract Type</p>
                     <p className="font-semibold">{contractData.contractType || "Standard Residential"}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Completed</p>
+                    <p className="text-sm font-medium text-grey-600">Completed</p>
                     <p className="font-semibold">
                       {contractData.completedAt ? formatDate(contractData.completedAt) : "N/A"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Next Stage</p>
+                    <p className="text-sm font-medium text-grey-600">Next Stage</p>
                     <p className="font-semibold">{contractData.nextStage || "Searches & Survey"}</p>
                   </div>
                 </div>
@@ -145,23 +145,23 @@ export default function EstateAgentDraftContractPage() {
             <CardDescription>Your role during the draft contract stage</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="p-4 bg-grey-50 rounded-lg">
               <h4 className="font-medium mb-2">Your Responsibilities</h4>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-grey-600">
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Monitor progress and stay informed of any issues</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Be available to clarify property details if needed</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Maintain communication with buyer and seller</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-grey-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Assist with any queries about the property or sale terms</span>
                 </li>
               </ul>

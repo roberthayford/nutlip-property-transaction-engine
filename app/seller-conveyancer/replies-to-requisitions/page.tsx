@@ -422,12 +422,12 @@ export default function SellerConveyancerRepliesToRequisitionsPage() {
             {/* Progress Bar */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">Overall Progress</span>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm font-medium text-grey-700">Overall Progress</span>
+                <span className="text-sm text-grey-600">
                   {progressPercentage}% Complete ({stats.replied}/{stats.total})
                 </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
+              <div className="w-full bg-grey-200 rounded-full h-3">
                 <div
                   className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500 ease-out"
                   style={{
@@ -435,7 +435,7 @@ export default function SellerConveyancerRepliesToRequisitionsPage() {
                   }}
                 ></div>
               </div>
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <div className="flex justify-between text-xs text-grey-500 mt-1">
                 <span>Started</span>
                 <span>In Progress</span>
                 <span>Complete</span>
@@ -456,7 +456,7 @@ export default function SellerConveyancerRepliesToRequisitionsPage() {
             )}
 
             {/* Real-time Updates Indicator */}
-            <div className="flex items-center gap-2 text-xs text-gray-500 mb-4">
+            <div className="flex items-center gap-2 text-xs text-grey-500 mb-4">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span>Real-time updates active</span>
               <span>•</span>
@@ -480,7 +480,7 @@ export default function SellerConveyancerRepliesToRequisitionsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {filteredRequisitions.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">No requisitions match the current filter.</div>
+                <div className="text-center py-8 text-grey-500">No requisitions match the current filter.</div>
               ) : (
                 filteredRequisitions.map((requisition) => (
                   <Card
@@ -540,7 +540,7 @@ export default function SellerConveyancerRepliesToRequisitionsPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="p-3 bg-grey-50 rounded-lg">
                         <p className="text-sm font-medium mb-2">Question:</p>
                         <p className="text-sm">{requisition.question}</p>
                       </div>
@@ -634,7 +634,7 @@ export default function SellerConveyancerRepliesToRequisitionsPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="p-3 bg-grey-50 rounded-lg">
                         <p className="text-sm">{requisition.question}</p>
                       </div>
 
@@ -705,7 +705,7 @@ export default function SellerConveyancerRepliesToRequisitionsPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="p-3 bg-grey-50 rounded-lg">
                         <p className="text-sm font-medium mb-2">Question:</p>
                         <p className="text-sm">{requisition.question}</p>
                       </div>
@@ -767,7 +767,7 @@ export default function SellerConveyancerRepliesToRequisitionsPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="p-3 bg-gray-50 rounded-lg">
+                    <div className="p-3 bg-grey-50 rounded-lg">
                       <p className="text-sm">{requisition.question}</p>
                     </div>
                     {requisition.reply && (
@@ -797,28 +797,28 @@ export default function SellerConveyancerRepliesToRequisitionsPage() {
               <Button variant="outline" className="h-auto p-4 text-left bg-transparent">
                 <div>
                   <div className="font-medium">Vacant Possession</div>
-                  <div className="text-sm text-gray-600">Standard confirmation of vacant possession</div>
+                  <div className="text-sm text-grey-600">Standard confirmation of vacant possession</div>
                 </div>
               </Button>
 
               <Button variant="outline" className="h-auto p-4 text-left bg-transparent">
                 <div>
                   <div className="font-medium">Title Confirmation</div>
-                  <div className="text-sm text-gray-600">Confirmation of no title changes</div>
+                  <div className="text-sm text-grey-600">Confirmation of no title changes</div>
                 </div>
               </Button>
 
               <Button variant="outline" className="h-auto p-4 text-left bg-transparent">
                 <div>
                   <div className="font-medium">Keys & Documents</div>
-                  <div className="text-sm text-gray-600">Standard handover arrangements</div>
+                  <div className="text-sm text-grey-600">Standard handover arrangements</div>
                 </div>
               </Button>
 
               <Button variant="outline" className="h-auto p-4 text-left bg-transparent">
                 <div>
                   <div className="font-medium">Completion Statement</div>
-                  <div className="text-sm text-gray-600">Statement approval response</div>
+                  <div className="text-sm text-grey-600">Statement approval response</div>
                 </div>
               </Button>
             </div>
@@ -852,7 +852,7 @@ export default function SellerConveyancerRepliesToRequisitionsPage() {
                     ) : (
                       <Clock className="h-4 w-4 text-yellow-600" />
                     )}
-                    <span className={`text-sm ${item.completed ? "text-gray-900" : "text-gray-600"}`}>{item.item}</span>
+                    <span className={`text-sm ${item.completed ? "text-grey-900" : "text-grey-600"}`}>{item.item}</span>
                     {item.critical && (
                       <Badge variant="destructive" className="text-xs">
                         Critical

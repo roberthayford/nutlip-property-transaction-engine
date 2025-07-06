@@ -204,7 +204,7 @@ export default function BuyerTransactionPage() {
                   <ul className="text-sm text-green-700 space-y-1">
                     <li>• Register to vote at your new address</li>
                     <li>• Find local services (GP, dentist, schools if applicable)</li>
-                    <li>• Update your driving license and vehicle registration</li>
+                    <li>• Update your driving licence and vehicle registration</li>
                     <li>• Notify your employer of your address change</li>
                   </ul>
                 </div>
