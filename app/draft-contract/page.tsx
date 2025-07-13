@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { FileText, Download, Eye, Clock, CheckCircle } from "lucide-react"
+import { trackDocumentAction } from "@/utils/analytics"
 
 export default function DraftContractPage() {
   return (
@@ -65,10 +66,18 @@ export default function DraftContractPage() {
                     </div>
                   </div>
                   <div className="flex space-x-2">
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => trackDocumentAction('view', 'Sale Contract Draft')}
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => trackDocumentAction('download', 'Sale Contract Draft')}
+                    >
                       <Download className="h-4 w-4" />
                     </Button>
                   </div>
@@ -83,10 +92,18 @@ export default function DraftContractPage() {
                     </div>
                   </div>
                   <div className="flex space-x-2">
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => trackDocumentAction('view', 'Property Information Form')}
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => trackDocumentAction('download', 'Property Information Form')}
+                    >
                       <Download className="h-4 w-4" />
                     </Button>
                   </div>
@@ -101,10 +118,18 @@ export default function DraftContractPage() {
                     </div>
                   </div>
                   <div className="flex space-x-2">
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => trackDocumentAction('view', 'Fixtures & Fittings List')}
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => trackDocumentAction('download', 'Fixtures & Fittings List')}
+                    >
                       <Download className="h-4 w-4" />
                     </Button>
                   </div>

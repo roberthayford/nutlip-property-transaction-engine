@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Search, Home, FileText, AlertTriangle, CheckCircle, Clock } from "lucide-react"
+import { trackDocumentAction, trackFeatureUsage } from "@/utils/analytics"
 
 export default function SearchSurveyPage() {
   return (
@@ -104,11 +105,19 @@ export default function SearchSurveyPage() {
               </div>
 
               <div className="space-y-2">
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => trackDocumentAction('view', 'Survey Report')}
+                >
                   <FileText className="h-4 w-4 mr-2" />
                   View Survey Report (Available after survey)
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => trackFeatureUsage('survey', 'reschedule')}
+                >
                   Reschedule Survey
                 </Button>
               </div>

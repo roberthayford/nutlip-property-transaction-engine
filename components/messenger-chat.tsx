@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { MessageCircle, Send, X, Minimize2, Maximize2, Users, Check, CheckCheck, Menu } from "lucide-react"
 import type { Role } from "@/contexts/real-time-context"
+import { trackMessageEvent, trackFeatureUsage } from "@/utils/analytics"
 
 interface Message {
   id: string
@@ -188,6 +189,9 @@ export function MessengerChat({ currentUserRole, currentUserName }: MessengerCha
     saveMessages(updatedMessages)
     setNewMessage("")
 
+    // Track message sent event
+    trackMessageEvent('conversation', 'sent')
+
     // Focus back to input
     setTimeout(() => inputRef.current?.focus(), 100)
   }
@@ -205,6 +209,9 @@ export function MessengerChat({ currentUserRole, currentUserName }: MessengerCha
           messages.filter((msg) => msg.recipient === currentUserRole && msg.sender === participantRole && !msg.read)
             .length,
       )
+      
+      // Track conversation read event
+      trackMessageEvent('conversation', 'viewed')
     }
   }
 
@@ -212,6 +219,8 @@ export function MessengerChat({ currentUserRole, currentUserName }: MessengerCha
   const openChat = () => {
     setIsOpen(true)
     setIsMinimized(false)
+    // Track chat opened event
+    trackFeatureUsage('messenger', 'open')
     // Auto-select first participant if none selected
     if (!selectedParticipant && availableParticipants.length > 0) {
       setSelectedParticipant(availableParticipants[0])
@@ -224,6 +233,8 @@ export function MessengerChat({ currentUserRole, currentUserName }: MessengerCha
     setSelectedParticipant(participant)
     setShowSidebar(false)
     markConversationAsRead(participant.role)
+    // Track participant selection
+    trackMessageEvent('participant_selection', 'selected')
   }
 
   // Format timestamp
