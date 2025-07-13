@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Claude Code - Nutlip Property Transaction Engine
 
 ## Project Overview
@@ -12,7 +16,7 @@ This is the **Nutlip Property Transaction Engine** - a comprehensive property tr
 - **UI Components**: shadcn/ui (Radix UI primitives)
 - **State Management**: React Context API + localStorage
 - **Real-time**: Custom context with localStorage/sessionStorage sync
-- **Package Manager**: pnpm (with yarn.lock present)
+- **Package Manager**: Multiple lock files present (yarn.lock, pnpm-lock.yaml); use npm for development commands
 - **Font**: Poppins (Google Fonts)
 
 ## Architecture Overview
@@ -73,15 +77,14 @@ This is the **Nutlip Property Transaction Engine** - a comprehensive property tr
 
 ```bash
 # Development
-pnpm dev          # Start development server
-npm run dev       # Alternative with npm
+npm run dev       # Start development server on localhost:3000
 
 # Production
-pnpm build        # Build for production
-pnpm start        # Start production server
+npm run build     # Build for production
+npm run start     # Start production server
 
 # Code Quality
-pnpm lint         # Run ESLint
+npm run lint      # Run ESLint
 ```
 
 ## Key Features
@@ -147,10 +150,11 @@ pnpm lint         # Run ESLint
 
 ### Important Considerations
 1. **Light Mode Only**: Dark mode is explicitly disabled in CSS
-2. **Error Handling**: ESLint and TypeScript errors are ignored in build
-3. **Image Optimization**: Disabled in Next.js config
+2. **Error Handling**: ESLint and TypeScript errors are ignored in build (next.config.mjs:3-7)
+3. **Image Optimization**: Disabled in Next.js config (next.config.mjs:9-11) 
 4. **State Persistence**: All state is stored in localStorage with cross-tab sync
 5. **Demo Reset**: Full application reset functionality included
+6. **v0.dev Integration**: Project is auto-synced with v0.dev deployments
 
 ### Common Patterns
 - **Role Detection**: Extracted from URL pathname (`/[role]/[stage]`)
@@ -192,8 +196,8 @@ pnpm lint         # Run ESLint
 
 ## Getting Started
 
-1. **Install dependencies**: `pnpm install`
-2. **Start development**: `pnpm dev`
+1. **Install dependencies**: `npm install`
+2. **Start development**: `npm run dev`
 3. **Open**: `http://localhost:3000`
 4. **Select role**: Choose from homepage or navigate directly to `/{role}`
 5. **Explore stages**: Navigate through transaction stages for each role

@@ -4,6 +4,7 @@ import { Poppins } from "next/font/google"
 import "./globals.css"
 import { Providers } from "@/components/providers"
 import Analytics from "@/components/google-analytics"
+import Script from "next/script"
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -29,6 +30,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="light" style={{ colorScheme: 'light' }}>
+      <head>
+        <Script 
+          id="cookieyes" 
+          src="https://cdn-cookieyes.com/client_data/5ff7591dc6b2ba95444ac9b0/script.js"
+          strategy="afterInteractive"
+        />
+      </head>
       <body className={`${poppins.variable} font-sans bg-white text-grey-900`}>
         <Providers>{children}</Providers>
         <Analytics />
