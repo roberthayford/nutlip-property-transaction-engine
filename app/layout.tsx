@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Poppins } from "next/font/google"
 import "./globals.css"
 import { Providers } from "@/components/providers"
+import Analytics from "@/components/google-analytics"
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -30,6 +31,7 @@ export default function RootLayout({
     <html lang="en" className="light" style={{ colorScheme: 'light' }}>
       <body className={`${poppins.variable} font-sans bg-white text-grey-900`}>
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   )
