@@ -20,7 +20,7 @@ export default function HomePage() {
               className="h-auto"
             />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-[#003366] mb-6">Transform Property Transactions Forever</h1>
+          <h1 className="text-4xl md:text-5xl font-bold text-[#003366] mb-6">Transform Property Transactions from Listing to Sale Completion</h1>
           <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto mb-4">
             One Platform. All Stakeholders. Total Transparency.
           </p>
